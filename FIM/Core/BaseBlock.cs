@@ -211,7 +211,7 @@ namespace FIM.Core
 
                 }
 
-                accumulation_term = 1 / time_step * ((block.Vp[1] * block.So[1] / block.Bo[1]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
+                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.So[1] / block.Bo[1]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
                 block.accumulation_term_oil = accumulation_term;
 
                 R -= accumulation_term;
@@ -248,7 +248,7 @@ namespace FIM.Core
                     R += temp;
                 }
 
-                accumulation_term = 1 / time_step * ((block.Vp[1] * block.Sw[1] / block.Bw[1]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
+                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.Sw[1] / block.Bw[1]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
                 block.accumulation_term_water = accumulation_term;
 
                 R -= accumulation_term;
@@ -285,12 +285,12 @@ namespace FIM.Core
                     R += temp;
                 }
 
-                accumulation_term = 1 / time_step * ((block.Vp[1] * block.Sg[1] / block.Bg[1]) - (block.Vp[0] * block.Sg[0] / block.Bg[0])) + block.q_gas[1];
+                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.Sg[1] / block.Bg[1]) - (block.Vp[0] * block.Sg[0] / block.Bg[0])) + block.q_gas[1];
 
                 // check for presence of soluble_gas in simulation_data
                 if (solubleGasPresent)
                 {
-                    accumulation_term += 1 / time_step * ((block.Rso[1] * block.Vp[1] * block.So[1] / block.Bo[1]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
+                    accumulation_term += 1 / (Global.a * time_step) * ((block.Rso[1] * block.Vp[1] * block.So[1] / block.Bo[1]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
                 }
 
                 block.accumulation_term_gas = accumulation_term;
@@ -376,7 +376,7 @@ namespace FIM.Core
 
                     }
 
-                    accumulation_term = 1 / time_step * ((block.Vp[pd] * block.So[sd] / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * block.So[sd] / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
 
                     R -= accumulation_term;
                 }
@@ -452,7 +452,8 @@ namespace FIM.Core
                         R += temp;
                     }
 
-                    accumulation_term = 1 / time_step * ((block.Vp[pd] * block.Sw[sd] / block.Bw[pd]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
+                    // here there is no Sw "instead (1 - So - Sg)". so when differentiating with respect to either So or Sg, we increment either one of them.
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (1 - block.So[sd] - block.Sg[1]) / block.Bw[pd]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
 
                     R -= accumulation_term;
                 }
@@ -528,12 +529,12 @@ namespace FIM.Core
                         R += temp;
                     }
 
-                    accumulation_term = 1 / time_step * ((block.Vp[pd] * block.Sg[sd] / block.Bg[pd]) - (block.Vp[0] * block.Sg[0] / block.Bg[0])) + block.q_gas[1];
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * block.Sg[sd] / block.Bg[pd]) - (block.Vp[0] * block.Sg[0] / block.Bg[0])) + block.q_gas[1];
 
                     // check for presence of soluble_gas in simulation_data
                     if (solubleGasPresent)
                     {
-                        accumulation_term += 1 / time_step * ((block.Rso[pd] * block.Vp[pd] * block.So[sd] / block.Bo[pd]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
+                        accumulation_term += 1 / (Global.a * time_step) * ((block.Rso[pd] * block.Vp[pd] * block.So[sd] / block.Bo[pd]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
                     }
 
                     block.accumulation_term_gas = accumulation_term;
