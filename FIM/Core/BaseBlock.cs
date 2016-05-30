@@ -117,7 +117,9 @@ namespace FIM.Core
             this.Sg[0] = Sg; this.Sg[1] = Sg; this.Sg[2] = Sg + Global.epsilon;
 
             // Kro is only dependent on Sg. Sw is irreducible and won't increase.
-            this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, Sg - Global.epsilon);
+            // if So is at max "Sg = 0" , then So can not increment up.
+            double S = Sg >= Global.epsilon ? Sg - Global.epsilon : Sg;
+            this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, S);
             this.Krw[0] = 0; this.Krw[1] = this.Krw[0]; this.Krw[2] = 0;
             this.Krg[0] = kr.getKr(Global.Phase.Gas, Sg); this.Krg[1] = this.Krg[0]; this.Krg[2] = kr.getKr(Global.Phase.Gas, this.Sg[2]);
 
