@@ -116,8 +116,9 @@ namespace FIM.Core
             this.Sw[0] = Sw; this.Sw[1] = Sw; this.Sw[2] = Sw + Global.epsilon;
             this.Sg[0] = Sg; this.Sg[1] = Sg; this.Sg[2] = Sg + Global.epsilon;
 
-            this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, this.Sg[2]);
-            this.Krw[0] = kr.getKr(Global.Phase.Water, Sg); this.Krw[1] = this.Krw[0]; this.Krw[2] = kr.getKr(Global.Phase.Water, this.Sg[2]);
+            // Kro is only dependent on Sg. Sw is irreducible and won't increase.
+            this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, Sg - Global.epsilon);
+            this.Krw[0] = 0; this.Krw[1] = this.Krw[0]; this.Krw[2] = 0;
             this.Krg[0] = kr.getKr(Global.Phase.Gas, Sg); this.Krg[1] = this.Krg[0]; this.Krg[2] = kr.getKr(Global.Phase.Gas, this.Sg[2]);
 
             //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
