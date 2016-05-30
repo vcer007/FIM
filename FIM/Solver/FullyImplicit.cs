@@ -60,10 +60,10 @@ namespace FIM.Solver
                 #region Water
                 // with respect to P
                 jacobians[counter + 2][block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Water, data.time_stpe, -1, Global.Variable.Pressure, true) - Global.epsilon) / Global.epsilon;
-                // with respect to So
-                jacobians[counter + 2][block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Water, data.time_stpe, -1, Global.Variable.Saturation, true) - Global.epsilon) / Global.epsilon;
-                // with respect to Sg
-                jacobians[counter + 2][block.index + 2] = ( block.calculateDerivative(data.grid, Global.Phase.Water, data.time_stpe, -1, Global.Variable.Saturation, true) - Global.epsilon) / Global.epsilon;
+                // with respect to So "is equal to zero"
+                jacobians[counter + 2][block.index + 1] = 0;
+                // with respect to Sg "is equal to zero"
+                jacobians[counter + 2][block.index + 2] = 0;
                 #endregion
 
                 counter += 3;
