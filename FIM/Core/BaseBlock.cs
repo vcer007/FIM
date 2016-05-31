@@ -58,8 +58,6 @@ namespace FIM.Core
 
         public double[] BHP;
 
-        public double[] BHP_gas_derivative;
-
         public double well_radius, skin;
 
         public double[] q_water, q_oil, q_gas;
@@ -100,7 +98,6 @@ namespace FIM.Core
             this.type = Global.BlockType.Normal_Block;
             this.well_type = Global.WellType.ShutIn;
             this.BHP = new double[steps_memory];
-            this.BHP_gas_derivative = new double[2];
             this.q_oil = new double[steps_memory]; this.q_gas = new double[steps_memory]; this.q_water = new double[steps_memory];
         }
 
@@ -140,6 +137,8 @@ namespace FIM.Core
             this.Vp[0] = this.bulk_volume * this.porosity[0]; this.Vp[1] = this.Vp[0]; this.Vp[2] = this.bulk_volume * this.porosity[2];
 
             // well
+            this.BHP[0] = Well.WellData.calculatePwf(this, this.P[0], this.Kro[0], this.viscosity_oil[0]);
+            this.BHP[1] = this.BHP[0];
         }
 
         public void updateProperties_n1(PVT pvt, Kr kr, Porosity porosity, double P, double Sw, double So, double Sg)
@@ -175,7 +174,7 @@ namespace FIM.Core
             this.Vp[1] = this.bulk_volume * this.porosity[1];
 
             // well
-            this.BHP[1] = this.BHP[0];
+            this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1]);
         }
 
         public double calculateR(BaseBlock[] grid, Global.Phase phase, double time_step, bool solubleGasPresent = true)

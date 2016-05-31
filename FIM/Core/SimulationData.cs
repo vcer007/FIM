@@ -11,7 +11,7 @@ namespace FIM.Core
     /// </summary>
     class SimulationData
     {
-        public double time_stpe;
+        public double time_step;
 
         public int x, y, z;
 
