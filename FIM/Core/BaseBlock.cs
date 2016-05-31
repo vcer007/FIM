@@ -121,14 +121,16 @@ namespace FIM.Core
             this.Rso[0] = pvt.getRs(Global.Phase.Oil, P); this.Rso[1] = this.Rso[0]; this.Rso[2] = pvt.getRs(Global.Phase.Oil, this.P[2]);
 
             this.So[0] = So; this.So[1] = So; this.So[2] = So + Global.epsilon;
-            this.Sw[0] = Sw; this.Sw[1] = Sw; this.Sw[2] = Sw + Global.epsilon;
+            // for the Sw value is constant.
+            this.Sw[0] = Sw; this.Sw[1] = Sw; this.Sw[2] = Sw;
             this.Sg[0] = Sg; this.Sg[1] = Sg; this.Sg[2] = Sg + Global.epsilon;
 
             // Kro is only dependent on Sg. Sw is irreducible and won't increase.
             // if So is at max "Sg = 0" , then So can not increment up.
             double S = Sg >= Global.epsilon ? Sg - Global.epsilon : Sg;
             this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, S);
-            this.Krw[0] = 0; this.Krw[1] = this.Krw[0]; this.Krw[2] = 0;
+            // Krw value is always equal to zero in this case.
+            this.Krw[0] = 0; this.Krw[1] = this.Krw[0]; this.Krw[2] = this.Krw[0];
             this.Krg[0] = kr.getKr(Global.Phase.Gas, Sg); this.Krg[1] = this.Krg[0]; this.Krg[2] = kr.getKr(Global.Phase.Gas, this.Sg[2]);
 
             //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
