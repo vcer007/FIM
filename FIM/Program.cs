@@ -17,8 +17,6 @@ namespace FIM
             SimulationData data = Initialize.Odeh.initiaize();
             double[] R = FullyImplicit.calculate_R(data);
             double[][] jacobians = FullyImplicit.calculateJacobians(data, R);
-
-            Console.WriteLine("Done");
         }
     }
 }

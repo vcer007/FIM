@@ -21,54 +21,46 @@ namespace FIM.Solver
             for (int i = 0; i < data.grid.Length; i++)
             {
                 block = data.grid[i];
+
                 jacobians[counter] = new double[size];
                 jacobians[counter + 1] = new double[size];
-                jacobians[counter + 2] = new double[size];
 
                 #region Oil
                 // with respect to P
                 jacobians[counter][block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, -1, Global.Variable.Pressure, true) - R[counter]) / Global.epsilon;
-                // with respect to So
-                jacobians[counter][block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, -1, Global.Variable.Saturation_Oil, true) - R[counter]) / Global.epsilon;
+                // with respect to Sg
+
+                jacobians[counter][block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, -1, Global.Variable.Saturation_Gas, true) - R[counter]) / Global.epsilon;
                 for (int j = 0; j < block.neighbour_blocks_indices.Length; j++)
                 {
                     if (block.neighbour_blocks_indices[j] >= 0)
                     {
                         // with respect to P
-                        jacobians[counter][3 * block.neighbour_blocks_indices[j]] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, j, Global.Variable.Pressure, true) - R[counter]) / Global.epsilon;
-                        // with respect to So
-                        jacobians[counter][3 * block.neighbour_blocks_indices[j] + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, j, Global.Variable.Saturation_Oil, true) - R[counter]) / Global.epsilon;
+                        jacobians[counter][data.phases.Length * block.neighbour_blocks_indices[j]] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, j, Global.Variable.Pressure, true) - R[counter]) / Global.epsilon;
+                        // with respect to Sg
+                        jacobians[counter][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, j, Global.Variable.Saturation_Gas, true) - R[counter]) / Global.epsilon;
                     }
                 }
                 #endregion
                 #region Gas
                 // with respect to P
                 jacobians[counter + 1][block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Pressure, true) - R[counter + 1]) / Global.epsilon;
-                // with respect to So
-                jacobians[counter + 1][block.index + 1] = (block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Saturation_Oil, true) - R[counter + 1]) / Global.epsilon;
                 // with respect to Sg
-                jacobians[counter + 1][block.index + 2] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Saturation_Gas, true) - R[counter + 1]) / Global.epsilon;
+                jacobians[counter + 1][block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Saturation_Gas, true) - R[counter + 1]) / Global.epsilon;
+
                 for (int j = 0; j < block.neighbour_blocks_indices.Length; j++)
                 {
                     if (block.neighbour_blocks_indices[j] >= 0)
                     {
                         // with respect to P
-                        jacobians[counter + 1][3 * block.neighbour_blocks_indices[j]] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, j, Global.Variable.Pressure, true) - R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j]] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, j, Global.Variable.Pressure, true) - R[counter + 1]) / Global.epsilon;
                         // with respect to Sg
-                        jacobians[counter + 1][3 * block.neighbour_blocks_indices[j] + 2] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, j, Global.Variable.Saturation_Gas, true) - R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, j, Global.Variable.Saturation_Gas, true) - R[counter + 1]) / Global.epsilon;
                     }
                 }
                 #endregion
-                #region Water
-                // with respect to P
-                jacobians[counter + 2][block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Water, data.time_step, -1, Global.Variable.Pressure, true) - R[counter + 2]) / Global.epsilon;
-                // with respect to So "is equal to zero"
-                jacobians[counter + 2][block.index + 1] = 0;
-                // with respect to Sg "is equal to zero"
-                jacobians[counter + 2][block.index + 2] = 0;
-                #endregion
 
-                counter += 3;
+                counter += data.phases.Length;
             }
 
             return jacobians;
@@ -88,9 +80,8 @@ namespace FIM.Solver
 
                 R[counter] = block.calculateR(data.grid, Global.Phase.Oil, data.time_step, true);
                 R[counter + 1] = block.calculateR(data.grid, Global.Phase.Water, data.time_step, true);
-                R[counter + 2] = block.calculateR(data.grid, Global.Phase.Gas, data.time_step, true);
 
-                counter += 3;
+                counter += data.phases.Length;
             }
 
             return R;

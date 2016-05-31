@@ -127,8 +127,7 @@ namespace FIM.Core
 
             // Kro is only dependent on Sg. Sw is irreducible and won't increase.
             // if So is at max "Sg = 0" , then So can not increment up.
-            double S = Sg >= Global.epsilon ? Sg - Global.epsilon : Sg;
-            this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, S);
+            this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, this.Sg[2]);
             // Krw value is always equal to zero in this case.
             this.Krw[0] = 0; this.Krw[1] = this.Krw[0]; this.Krw[2] = this.Krw[0];
             this.Krg[0] = kr.getKr(Global.Phase.Gas, Sg); this.Krg[1] = this.Krg[0]; this.Krg[2] = kr.getKr(Global.Phase.Gas, this.Sg[2]);
@@ -438,7 +437,7 @@ namespace FIM.Core
                             downstream_block = block;
                         }
 
-                        Kr = upstream_block.Kro[sod];
+                        Kr = upstream_block.Kro[sgd];
                         B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
                         viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
 
@@ -448,7 +447,7 @@ namespace FIM.Core
 
                     }
 
-                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * block.So[sod] / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (1 - block.Sw[1] - block.Sg[sgd]) / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
 
                     R -= accumulation_term;
 
@@ -471,7 +470,7 @@ namespace FIM.Core
                         downstream_block = block;
                     }
 
-                    Kr = upstream_block.Kro[sod];
+                    Kr = upstream_block.Kro[sgd];
                     B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
                     viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
 
@@ -612,14 +611,14 @@ namespace FIM.Core
                     // check for presence of soluble_gas in simulation_data
                     if (solubleGasPresent)
                     {
-                        accumulation_term += 1 / (Global.a * time_step) * ((block.Rso[pd] * block.Vp[pd] * block.So[sod] / block.Bo[pd]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
+                        accumulation_term += 1 / (Global.a * time_step) * ((block.Rso[pd] * block.Vp[pd] * (1 - block.Sw[1] - block.Sg[sgd]) / block.Bo[pd]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
                     }
 
                     if (block.type == Global.BlockType.Well_Block)
                     {
                         if (block.well_type == Global.WellType.Production)
                         {
-                            block.BHP[2] = Well.WellData.calculatePwf(block, block.P[pd], block.Kro[sod], block.viscosity_oil[pd]);
+                            block.BHP[2] = Well.WellData.calculatePwf(block, block.P[pd], block.Kro[sgd], block.viscosity_oil[pd]);
                             block.q_gas[2] = Well.WellData.calculateFlow_Rate(block.P[pd], block.BHP[2], block.Krg[sgd], block.viscosity_gas[pd], block.WI);
 
                             // check for presence of soluble_gas in simulation_data

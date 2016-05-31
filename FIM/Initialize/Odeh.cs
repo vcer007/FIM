@@ -30,7 +30,7 @@ namespace FIM.Initialize
             initializeTransmissibilities(simulation_data);
             initializeWells(simulation_data.grid);
 
-            simulation_data.phases = new Global.Phase[] { Global.Phase.Water, Global.Phase.Oil, Global.Phase.Gas };
+            simulation_data.phases = new Global.Phase[] {Global.Phase.Oil, Global.Phase.Gas };
             simulation_data.solubleGasPresent = true;
 
             simulation_data.time_step = 10;
