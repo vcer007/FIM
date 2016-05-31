@@ -16,6 +16,7 @@ namespace FIM.Core
         public const double Bc = 0.001127;
         public const double a = 5.614583;
         public const double epsilon = 0.0000001;
+        public const double PI = Math.PI;
 
         // Enumerations.
 
@@ -26,7 +27,7 @@ namespace FIM.Core
         public enum SolutionProcedure { IMPES, Fully_Implicit }
         public enum UnitConvention { Field, Metric, Lab }
         public enum LinearInterpolation {TableLookUp, PolynomialFunction, PowerFunction}
-        public enum Variable {Pressure, Saturation}
+        public enum Variable {Pressure, Saturation_Oil, Saturation_Gas, Saturation_Water}
 
         // Delegates "functions with a defined form and (return and input) types but with no specific form"
 

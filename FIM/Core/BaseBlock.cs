@@ -42,15 +42,23 @@ namespace FIM.Core
 
         // Volumetric data
 
-        public double[] area_list, delta_x_list;
+        public double[] area_list, delta_x_list, boundary_length_list;
 
         public double h, bulk_volume;
 
         public double[] Vp;
 
         // Well data
+        public Global.BlockType type;
+        public Global.WellType well_type;
 
-        public double[] flow_rate, BHP, J;
+        public double r_equivalent, WI;
+
+        public double specified_flow_rate, specified_BHP;
+
+        public double[] BHP;
+
+        public double[] BHP_gas_derivative;
 
         public double well_radius, skin;
 
@@ -89,7 +97,10 @@ namespace FIM.Core
             this.Vp = new double[steps_memory];
 
             // well
-            this.flow_rate = new double[steps_memory]; this.BHP = new double[steps_memory]; this.J = new double[steps_memory];
+            this.type = Global.BlockType.Normal_Block;
+            this.well_type = Global.WellType.ShutIn;
+            this.BHP = new double[steps_memory];
+            this.BHP_gas_derivative = new double[2];
             this.q_oil = new double[steps_memory]; this.q_gas = new double[steps_memory]; this.q_water = new double[steps_memory];
         }
 
@@ -164,6 +175,7 @@ namespace FIM.Core
             this.Vp[1] = this.bulk_volume * this.porosity[1];
 
             // well
+            this.BHP[1] = this.BHP[0];
         }
 
         public double calculateR(BaseBlock[] grid, Global.Phase phase, double time_step, bool solubleGasPresent = true)
@@ -214,10 +226,13 @@ namespace FIM.Core
 
                 }
 
-                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.So[1] / block.Bo[1]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
+                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.So[1] / block.Bo[1]) - (block.Vp[0] * block.So[0] / block.Bo[0]));
                 block.accumulation_term_oil = accumulation_term;
 
+                block.production_term_oil = block.q_oil[1];
+
                 R -= accumulation_term;
+                R -= block.production_term_oil;
             }
             else if (phase == Global.Phase.Water)
             {
@@ -251,10 +266,15 @@ namespace FIM.Core
                     R += temp;
                 }
 
-                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.Sw[1] / block.Bw[1]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
+                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.Sw[1] / block.Bw[1]) - (block.Vp[0] * block.Sw[0] / block.Bw[0]));
                 block.accumulation_term_water = accumulation_term;
 
+                block.q_water[1] = 0;
+                block.production_term_water = block.q_water[1];
+
+
                 R -= accumulation_term;
+                R -= block.production_term_water;
             }
             else
             {
@@ -288,7 +308,7 @@ namespace FIM.Core
                     R += temp;
                 }
 
-                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.Sg[1] / block.Bg[1]) - (block.Vp[0] * block.Sg[0] / block.Bg[0])) + block.q_gas[1];
+                accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[1] * block.Sg[1] / block.Bg[1]) - (block.Vp[0] * block.Sg[0] / block.Bg[0]));
 
                 // check for presence of soluble_gas in simulation_data
                 if (solubleGasPresent)
@@ -296,9 +316,31 @@ namespace FIM.Core
                     accumulation_term += 1 / (Global.a * time_step) * ((block.Rso[1] * block.Vp[1] * block.So[1] / block.Bo[1]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
                 }
 
+                if (block.type == Global.BlockType.Well_Block)
+                {
+                    if (block.well_type == Global.WellType.Production)
+                    {
+                        block.BHP[1] = Well.WellData.calculatePwf(block, block.P[1], block.Kro[1], block.viscosity_oil[1]);
+                        block.q_gas[1] = Well.WellData.calculateFlow_Rate(block.P[1], block.BHP[1], block.Krg[1], block.viscosity_gas[1], block.WI);
+
+                        // check for presence of soluble_gas in simulation_data
+                        if (solubleGasPresent)
+                        {
+                            block.q_gas[1] += block.Rso[1] * block.q_oil[1];
+                        }
+                    }
+                    else if (block.well_type == Global.WellType.Injection)
+                    {
+
+                    }
+                }
+                
+
                 block.accumulation_term_gas = accumulation_term;
+                block.production_term_gas = block.q_gas[1];
 
                 R -= accumulation_term;
+                R -= block.production_term_gas;
             }
 
             return R;
@@ -317,12 +359,15 @@ namespace FIM.Core
 
             double temp, accumulation_term, production_term;
 
-            // pressure-dependent saturation-dependent, neighbour block pressure-dependent saturation-dependent.
-            int pd = 1, sd = 1, npd = 1, nsd = 1;
+
+            #region pressure-dependent saturation-dependent, neighbour block pressure-dependent saturation-dependent.
+            int pd = 1, npd = 1, sod = 1, nsod = 1, sgd = 1, nsgd = 1, swd = 1, nswd = 1;
+            bool this_block = false;
+            this_block = neighbour_block_index >= 0 ? false : true;
 
             if (variable == Global.Variable.Pressure)
             {
-                if (neighbour_block_index >= 0)
+                if (!this_block)
                 {
                     npd = 2;
                 }
@@ -331,23 +376,46 @@ namespace FIM.Core
                     pd = 2;
                 }
             }
-            else
+            else if (variable == Global.Variable.Saturation_Oil)
             {
-                if (neighbour_block_index >= 0)
+                if (!this_block)
                 {
-                    nsd = 2;
+                    nsod = 2;
                 }
                 else
                 {
-                    sd = 2;
+                    sod = 2;
                 }
             }
-            
+            else if(variable == Global.Variable.Saturation_Gas)
+            {
+                if (!this_block)
+                {
+                    nsgd = 2;
+                }
+                else
+                {
+                    sgd = 2;
+                }
+            }
+            else
+            {
+                if (!this_block)
+                {
+                    nswd = 2;
+                }
+                else
+                {
+                    swd = 2;
+                }
+            }
+            #endregion
 
             #region Oil
             if (phase == Global.Phase.Oil)
             {
-                if (pd == 2 || sd == 2)
+                #region Block
+                if (this_block)
                 {
                     for (int i = 0; i < block.neighbour_blocks_indices.Length; i++)
                     {
@@ -369,7 +437,7 @@ namespace FIM.Core
                             downstream_block = block;
                         }
 
-                        Kr = upstream_block.Kro[sd];
+                        Kr = upstream_block.Kro[sod];
                         B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
                         viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
 
@@ -379,10 +447,13 @@ namespace FIM.Core
 
                     }
 
-                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * block.So[sd] / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * block.So[sod] / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
 
                     R -= accumulation_term;
+
                 }
+                #endregion
+                #region NextBlock
                 else
                 {
                     neighbour_block = grid[block.neighbour_blocks_indices[neighbour_block_index]];
@@ -399,7 +470,7 @@ namespace FIM.Core
                         downstream_block = block;
                     }
 
-                    Kr = upstream_block.Kro[sd];
+                    Kr = upstream_block.Kro[sod];
                     B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
                     viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
 
@@ -418,13 +489,14 @@ namespace FIM.Core
                     R -= block.accumulation_term_oil;
                     R -= block.production_term_oil;
                 }
-                
+                #endregion
             }
             #endregion
             #region Water
             else if (phase == Global.Phase.Water)
             {
-                if (pd == 2 || sd == 2)
+                #region Block
+                if (this_block)
                 {
                     for (int i = 0; i < block.neighbour_blocks_indices.Length; i++)
                     {
@@ -446,7 +518,7 @@ namespace FIM.Core
                             downstream_block = block;
                         }
 
-                        Kr = upstream_block.Krw[sd];
+                        Kr = upstream_block.Krw[swd];
                         B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
                         viscosity = 0.5 * (block.viscosity_water[pd] + neighbour_block.viscosity_water[npd]);
 
@@ -456,10 +528,12 @@ namespace FIM.Core
                     }
 
                     // here there is no Sw "instead (1 - So - Sg)". so when differentiating with respect to either So or Sg, we increment either one of them.
-                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (1 - block.So[sd] - block.Sg[1]) / block.Bw[pd]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (1 - block.So[sod] - block.Sg[1]) / block.Bw[pd]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
 
                     R -= accumulation_term;
                 }
+                #endregion
+                #region NextBlock
                 else
                 {
                     neighbour_block = grid[block.neighbour_blocks_indices[neighbour_block_index]];
@@ -476,7 +550,7 @@ namespace FIM.Core
                         downstream_block = block;
                     }
 
-                    Kr = upstream_block.Krw[sd];
+                    Kr = upstream_block.Krw[swd];
                     B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
                     viscosity = 0.5 * (block.viscosity_water[pd] + neighbour_block.viscosity_water[npd]);
 
@@ -495,13 +569,14 @@ namespace FIM.Core
                     R -= block.accumulation_term_water;
                     R -= block.production_term_water;
                 }
-                
+                #endregion
             }
             #endregion
             #region Gas
             else
             {
-                if (pd == 2 || sd == 2)
+                #region Block
+                if (this_block)
                 {
                     for (int i = 0; i < block.neighbour_blocks_indices.Length; i++)
                     {
@@ -523,7 +598,7 @@ namespace FIM.Core
                             downstream_block = block;
                         }
 
-                        Kr = upstream_block.Krg[sd];
+                        Kr = upstream_block.Krg[sgd];
                         B = 0.5 * (block.Bg[pd] + neighbour_block.Bg[npd]);
                         viscosity = 0.5 * (block.viscosity_gas[pd] + neighbour_block.viscosity_gas[npd]);
 
@@ -532,18 +607,40 @@ namespace FIM.Core
                         R += temp;
                     }
 
-                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * block.Sg[sd] / block.Bg[pd]) - (block.Vp[0] * block.Sg[0] / block.Bg[0])) + block.q_gas[1];
-
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * block.Sg[sgd] / block.Bg[pd]) - (block.Vp[0] * block.Sg[0] / block.Bg[0]));
                     // check for presence of soluble_gas in simulation_data
                     if (solubleGasPresent)
                     {
-                        accumulation_term += 1 / (Global.a * time_step) * ((block.Rso[pd] * block.Vp[pd] * block.So[sd] / block.Bo[pd]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
+                        accumulation_term += 1 / (Global.a * time_step) * ((block.Rso[pd] * block.Vp[pd] * block.So[sod] / block.Bo[pd]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
                     }
 
-                    block.accumulation_term_gas = accumulation_term;
+                    if (block.type == Global.BlockType.Well_Block)
+                    {
+                        if (block.well_type == Global.WellType.Production)
+                        {
+                            block.BHP[2] = Well.WellData.calculatePwf(block, block.P[pd], block.Kro[sod], block.viscosity_oil[pd]);
+                            block.q_gas[2] = Well.WellData.calculateFlow_Rate(block.P[pd], block.BHP[2], block.Krg[sgd], block.viscosity_gas[pd], block.WI);
+
+                            // check for presence of soluble_gas in simulation_data
+                            if (solubleGasPresent)
+                            {
+                                block.q_gas[2] += block.Rso[pd] * block.q_oil[1];
+                            }
+                        }
+                        else if (block.well_type == Global.WellType.Injection)
+                        {
+
+                        }
+
+                        production_term_gas = block.q_gas[2];
+                    }
+                    
 
                     R -= accumulation_term;
+                    R -= production_term_gas;
                 }
+                #endregion
+                #region NextBlock
                 else
                 {
                     neighbour_block = grid[block.neighbour_blocks_indices[neighbour_block_index]];
@@ -560,7 +657,7 @@ namespace FIM.Core
                         downstream_block = block;
                     }
 
-                    Kr = upstream_block.Krg[sd];
+                    Kr = upstream_block.Krg[sgd];
                     B = 0.5 * (block.Bg[pd] + neighbour_block.Bg[npd]);
                     viscosity = 0.5 * (block.viscosity_gas[pd] + neighbour_block.viscosity_gas[npd]);
 
@@ -579,7 +676,7 @@ namespace FIM.Core
                     R -= block.accumulation_term_gas;
                     R -= block.production_term_gas;
                 }
-                
+                #endregion
             }
             #endregion
 

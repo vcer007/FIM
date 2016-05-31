@@ -56,6 +56,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rock\Porosity.cs" />
     <Compile Include="Solver\FullyImplicit.cs" />
+    <Compile Include="Well\WellData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

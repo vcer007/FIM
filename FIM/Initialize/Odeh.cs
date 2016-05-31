@@ -2,11 +2,14 @@
 using FIM.Fluid;
 using FIM.Misc;
 using FIM.Rock;
+using FIM.Well;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace FIM.Initialize
 {
@@ -23,10 +26,12 @@ namespace FIM.Initialize
             intializePorosity(out porosity);
 
             initializeGrid(out simulation_data, pvt, kr);
-            // initialize "n1" time level intitial guess
-            initializen1(simulation_data);
 
             initializeTransmissibilities(simulation_data);
+            initializeWells(simulation_data.grid);
+
+            // initialize "n1" time level intitial guess
+            initializen1(simulation_data);
 
             simulation_data.phases = new Global.Phase[] { Global.Phase.Water, Global.Phase.Oil, Global.Phase.Gas };
             simulation_data.solubleGasPresent = true;
@@ -39,6 +44,29 @@ namespace FIM.Initialize
             }
 
             return simulation_data;
+        }
+
+        private static void initializeWells(BaseBlock[] grid)
+        {
+            for (int i = 0; i < grid.Length; i++)
+            {
+                if (grid[i].type == Global.BlockType.Well_Block)
+                {
+                    WellData.setR_equivalent(grid[i], grid);
+                    WellData.setWI(grid[i]);
+                }
+            }
+
+            // production well
+            grid[299].well_type = Global.WellType.Production;
+            grid[299].specified_flow_rate = 20000;
+            grid[299].specified_BHP = 1000;
+            grid[299].q_oil[0] = grid[299].specified_flow_rate;
+            grid[299].BHP[0] = WellData.calculatePwf(grid[299], grid[299].P[0], grid[299].Kro[0], grid[299].viscosity_oil[0]);
+
+            grid[0].well_type = Global.WellType.Injection;
+            grid[0].specified_flow_rate = 1000000;
+            grid[0].q_gas[0] = grid[0].specified_flow_rate;
         }
 
         private static void initializen1(SimulationData simulation_data)
@@ -65,9 +93,8 @@ namespace FIM.Initialize
                 block.Vp[1] = block.Vp[0];
 
                 // well
-                block.flow_rate[1] = block.flow_rate[0]; block.BHP[1] = block.BHP[0]; block.J[1] = block.J[0];
                 block.q_oil[1] = block.q_oil[0]; block.q_gas[1] = block.q_gas[0]; block.q_water[1] = block.q_water[0];
-
+                block.BHP[1] = block.BHP[0];
             }
         }
 
@@ -95,6 +122,10 @@ namespace FIM.Initialize
 
             double delta_x = 1000, delta_y = 1000;
             double[] h = new double[] { 20, 30, 50 };
+
+            int[] well_indices = new int[] { 0, 299 };
+            double well_radius = 0.25;
+            double skin = 0;
 
             int size = x * y * z;
 
@@ -127,6 +158,15 @@ namespace FIM.Initialize
                         grid[counter].neighbour_blocks_indices = temp.ToArray();
                         grid[counter].index = Rectangular.xyzToNatural(x, y, z, i, j, k);
                         grid[counter].layer = k;
+
+                        grid[counter].type = Global.BlockType.Normal_Block;
+
+                        grid[counter].boundary_length_list = new double[temp.Count];
+                        for (int a = 0; a < temp.Count; a++)
+                        {
+                            // for the Odeh problem, delta_x = delta_y = 1000 for all blocks.
+                            grid[counter].boundary_length_list[a] = delta_x;
+                        }
 
                         //
                         grid[counter].transmissibility_terms_oil = new double[temp.Count];
@@ -208,6 +248,14 @@ namespace FIM.Initialize
                 grid[i].bulk_volume = grid[i].h * delta_x;
 
                 grid[i].Vp[0] = grid[i].bulk_volume * porosity;
+            }
+
+            // well data
+            for (int i = 0; i < well_indices.Length; i++)
+            {
+                grid[i].type = Global.BlockType.Well_Block;
+                grid[i].well_radius = well_radius;
+                grid[i].skin = skin;
             }
 
             simulation_data = new SimulationData(x, y, z, grid);
