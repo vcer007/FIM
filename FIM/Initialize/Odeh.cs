@@ -40,6 +40,12 @@ namespace FIM.Initialize
                 simulation_data.grid[i].updateProperties(pvt, kr, porosity, 4800, 0.12, 0.88, 0);
             }
 
+            simulation_data.pvt = pvt;
+            simulation_data.kr = kr;
+            simulation_data.porosity = porosity;
+
+            simulation_data.tolerance = 0.0001;
+
             return simulation_data;
         }
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FIM.Fluid;
+using FIM.Rock;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +19,13 @@ namespace FIM.Core
 
         public Global.Phase[] phases;
         public bool solubleGasPresent;
+
+        public double tolerance;
+
+        // PVT and Rock data calculators
+        public PVT pvt;
+        public Kr kr;
+        public Porosity porosity;
 
         // the grid "a list of the blocks"
         public BaseBlock[] grid;

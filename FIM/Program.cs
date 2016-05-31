@@ -15,8 +15,7 @@ namespace FIM
         static void Main(string[] args)
         {
             SimulationData data = Initialize.Odeh.initiaize();
-            double[] R = FullyImplicit.calculate_R(data);
-            double[][] jacobians = FullyImplicit.calculateJacobians(data, R);
+            FullyImplicit.iterativeSolver(data);
         }
     }
 }
