@@ -140,6 +140,9 @@ namespace FIM.Core
             // well
             this.BHP[0] = Well.WellData.calculatePwf(this, this.P[0], this.Kro[0], this.viscosity_oil[0]);
             this.BHP[1] = this.BHP[0];
+
+            this.q_oil[1] = this.q_oil[0];
+            this.q_gas[1] = this.q_gas[0];
         }
 
         public void updateProperties_n1(PVT pvt, Kr kr, Porosity porosity, double P, double Sw, double So, double Sg)
@@ -219,7 +222,7 @@ namespace FIM.Core
                     B = 0.5 * (block.Bo[1] + neighbour_block.Bo[1]);
                     viscosity = 0.5 * (block.viscosity_oil[1] + neighbour_block.viscosity_oil[1]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (block.P[1] - neighbour_block.P[1]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
                     block.transmissibility_terms_oil[i] = temp;
 
                     R += temp;
@@ -260,7 +263,7 @@ namespace FIM.Core
                     B = 0.5 * (block.Bw[1] + neighbour_block.Bw[1]);
                     viscosity = 0.5 * (block.viscosity_water[1] + neighbour_block.viscosity_water[1]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (block.P[1] - neighbour_block.P[1]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
                     block.transmissibility_terms_water[i] = temp;
 
                     R += temp;
@@ -302,7 +305,7 @@ namespace FIM.Core
                     B = 0.5 * (block.Bg[1] + neighbour_block.Bg[1]);
                     viscosity = 0.5 * (block.viscosity_gas[1] + neighbour_block.viscosity_gas[1]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (block.P[1] - neighbour_block.P[1]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
                     block.transmissibility_terms_gas[i] = temp;
 
                     R += temp;
@@ -426,7 +429,7 @@ namespace FIM.Core
                         neighbour_block = grid[block.neighbour_blocks_indices[i]];
                         transmissibility = block.transmissibility_list[i];
 
-                        if (block.P[0] >= neighbour_block.P[0])
+                        if (block.P[pd] >= neighbour_block.P[npd])
                         {
                             upstream_block = block;
                             downstream_block = neighbour_block;
@@ -441,7 +444,7 @@ namespace FIM.Core
                         B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
                         viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
 
-                        temp = transmissibility * Kr / (viscosity * B) * (block.P[pd] - neighbour_block.P[npd]);
+                        temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
 
                         R += temp;
 
@@ -459,7 +462,7 @@ namespace FIM.Core
                     neighbour_block = grid[block.neighbour_blocks_indices[neighbour_block_index]];
                     transmissibility = block.transmissibility_list[neighbour_block_index];
 
-                    if (block.P[0] >= neighbour_block.P[0])
+                    if (block.P[pd] >= neighbour_block.P[npd])
                     {
                         upstream_block = block;
                         downstream_block = neighbour_block;
@@ -474,7 +477,7 @@ namespace FIM.Core
                     B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
                     viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (block.P[pd] - neighbour_block.P[npd]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
 
                     R += temp;
 
@@ -507,7 +510,7 @@ namespace FIM.Core
                         neighbour_block = grid[block.neighbour_blocks_indices[i]];
                         transmissibility = block.transmissibility_list[i];
 
-                        if (block.P[0] >= neighbour_block.P[0])
+                        if (block.P[pd] >= neighbour_block.P[npd])
                         {
                             upstream_block = block;
                             downstream_block = neighbour_block;
@@ -522,7 +525,7 @@ namespace FIM.Core
                         B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
                         viscosity = 0.5 * (block.viscosity_water[pd] + neighbour_block.viscosity_water[npd]);
 
-                        temp = transmissibility * Kr / (viscosity * B) * (block.P[pd] - neighbour_block.P[npd]);
+                        temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
 
                         R += temp;
                     }
@@ -539,7 +542,7 @@ namespace FIM.Core
                     neighbour_block = grid[block.neighbour_blocks_indices[neighbour_block_index]];
                     transmissibility = block.transmissibility_list[neighbour_block_index];
 
-                    if (block.P[0] >= neighbour_block.P[0])
+                    if (block.P[pd] >= neighbour_block.P[npd])
                     {
                         upstream_block = block;
                         downstream_block = neighbour_block;
@@ -554,7 +557,7 @@ namespace FIM.Core
                     B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
                     viscosity = 0.5 * (block.viscosity_water[pd] + neighbour_block.viscosity_water[npd]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (block.P[pd] - neighbour_block.P[npd]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
 
                     R += temp;
 
@@ -587,7 +590,7 @@ namespace FIM.Core
                         neighbour_block = grid[block.neighbour_blocks_indices[i]];
                         transmissibility = block.transmissibility_list[i];
 
-                        if (block.P[0] >= neighbour_block.P[0])
+                        if (block.P[pd] >= neighbour_block.P[npd])
                         {
                             upstream_block = block;
                             downstream_block = neighbour_block;
@@ -602,7 +605,7 @@ namespace FIM.Core
                         B = 0.5 * (block.Bg[pd] + neighbour_block.Bg[npd]);
                         viscosity = 0.5 * (block.viscosity_gas[pd] + neighbour_block.viscosity_gas[npd]);
 
-                        temp = transmissibility * Kr / (viscosity * B) * (block.P[pd] - neighbour_block.P[npd]);
+                        temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
 
                         R += temp;
                     }
@@ -629,7 +632,7 @@ namespace FIM.Core
                         }
                         else if (block.well_type == Global.WellType.Injection)
                         {
-
+                            block.q_gas[2] = block.q_gas[1];
                         }
 
                         production_term_gas = block.q_gas[2];
@@ -646,7 +649,7 @@ namespace FIM.Core
                     neighbour_block = grid[block.neighbour_blocks_indices[neighbour_block_index]];
                     transmissibility = block.transmissibility_list[neighbour_block_index];
 
-                    if (block.P[0] >= neighbour_block.P[0])
+                    if (block.P[pd] >= neighbour_block.P[npd])
                     {
                         upstream_block = block;
                         downstream_block = neighbour_block;
@@ -661,7 +664,7 @@ namespace FIM.Core
                     B = 0.5 * (block.Bg[pd] + neighbour_block.Bg[npd]);
                     viscosity = 0.5 * (block.viscosity_gas[pd] + neighbour_block.viscosity_gas[npd]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (block.P[pd] - neighbour_block.P[npd]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
 
                     R += temp;
 

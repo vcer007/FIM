@@ -53,7 +53,7 @@ namespace FIM.Well
 
         public static double calculatePwf(BaseBlock block, double pressure, double Kr, double viscosity)
         {
-            return pressure - (block.specified_flow_rate / (Kr / viscosity * block.WI));
+            return pressure - (block.specified_flow_rate / (Kr / viscosity) * block.WI);
         }
 
         public static double calculateFlow_Rate(double P, double Pwf, double Kr, double viscosity, double WI)

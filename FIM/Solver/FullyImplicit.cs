@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using MathNet.Numerics.LinearAlgebra.Double;
+using MathNet.Numerics.LinearAlgebra.Double.Solvers;
+using MathNet.Numerics.LinearAlgebra.Solvers;
 using FIM.Core;
 using FIM.Rock;
 using FIM.Fluid;
@@ -25,7 +28,7 @@ namespace FIM.Solver
                 block = data.grid[i];
 
                 R[counter] = -block.calculateR(data.grid, Global.Phase.Oil, data.time_step, true);
-                R[counter + 1] = -block.calculateR(data.grid, Global.Phase.Water, data.time_step, true);
+                R[counter + 1] = -block.calculateR(data.grid, Global.Phase.Gas, data.time_step, true);
 
                 counter += data.phases.Length;
             }
@@ -50,10 +53,10 @@ namespace FIM.Solver
 
                 #region Oil
                 // with respect to P
-                jacobians[counter][block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, -1, Global.Variable.Pressure, true) + minus_R[counter]) / Global.epsilon;
+                jacobians[counter][data.phases.Length * block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, -1, Global.Variable.Pressure, true) + minus_R[counter]) / Global.epsilon;
                 // with respect to Sg
 
-                jacobians[counter][block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, -1, Global.Variable.Saturation_Gas, true) + minus_R[counter]) / Global.epsilon;
+                jacobians[counter][data.phases.Length * block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Oil, data.time_step, -1, Global.Variable.Saturation_Gas, true) + minus_R[counter]) / Global.epsilon;
                 for (int j = 0; j < block.neighbour_blocks_indices.Length; j++)
                 {
                     if (block.neighbour_blocks_indices[j] >= 0)
@@ -67,9 +70,9 @@ namespace FIM.Solver
                 #endregion
                 #region Gas
                 // with respect to P
-                jacobians[counter + 1][block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Pressure, true) + minus_R[counter + 1]) / Global.epsilon;
+                jacobians[counter + 1][data.phases.Length * block.index] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Pressure, true) + minus_R[counter + 1]) / Global.epsilon;
                 // with respect to Sg
-                jacobians[counter + 1][block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Saturation_Gas, true) + minus_R[counter + 1]) / Global.epsilon;
+                jacobians[counter + 1][data.phases.Length * block.index + 1] = ( block.calculateDerivative(data.grid, Global.Phase.Gas, data.time_step, -1, Global.Variable.Saturation_Gas, true) + minus_R[counter + 1]) / Global.epsilon;
 
                 for (int j = 0; j < block.neighbour_blocks_indices.Length; j++)
                 {
@@ -93,9 +96,20 @@ namespace FIM.Solver
         public static double[] solveForDelta(double[][] jacobian, double[] minus_R)
         {
             int size = minus_R.Length;
-            double[] delta = new double[size];
 
-            return delta;
+            var vector_B = new DenseVector(minus_R);
+            var matrix_A = DenseMatrix.OfRowArrays(jacobian);
+
+            //var iteration_count_stop_criterion = new IterationCountStopCriterion<double>(1000);
+            //var residual_stop_criterion = new ResidualStopCriterion<double>(1e-10);
+            //var monitor = new Iterator<double>(iteration_count_stop_criterion, residual_stop_criterion);
+            //var solver = new TFQMR();
+
+            //var delta = matrix_A.SolveIterative(vector_B, solver, monitor);
+
+            var delta = matrix_A.Solve(vector_B);
+
+            return delta.ToArray(); ;
         }
 
         public static void iterativeSolver(SimulationData data)
@@ -127,8 +141,8 @@ namespace FIM.Solver
 
             for (int i = 0; i < data.grid.Length; i++)
             {
-                P = data.grid[i].P[1] + delta[1];
-                Sg = data.grid[i].Sg[1] + delta[2];
+                P = data.grid[i].P[1] - delta[i];
+                Sg = data.grid[i].Sg[1] - delta[i + 1];
                 So = 1 - data.grid[i].Sw[1] - Sg;
                 Sw = data.grid[i].Sw[1];
 
@@ -146,6 +160,18 @@ namespace FIM.Solver
         private static double checkTolerance(double[] delta)
         {
             return delta.Min();
+        }
+
+        public static void RunSimulation(SimulationData data)
+        {
+            double end_time = 365;
+
+            for (double current_time = 0; current_time < end_time; current_time += data.time_step)
+            {
+                iterativeSolver(data);
+
+                Console.WriteLine(data.grid[0].Sg[0]);
+            }
         }
 
     }

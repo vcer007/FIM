@@ -94,7 +94,7 @@ namespace FIM.Fluid
                 case Global.Phase.Water:
                     return getRsw(pressure);
                 case Global.Phase.Oil:
-                    return getRso(pressure);
+                    return getRso(pressure) / Global.a;
                 case Global.Phase.Gas:
                     return 1;
                 default:

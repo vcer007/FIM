@@ -15,7 +15,9 @@ namespace FIM
         static void Main(string[] args)
         {
             SimulationData data = Initialize.Odeh.initiaize();
-            FullyImplicit.iterativeSolver(data);
+            FullyImplicit.RunSimulation(data);
+
+            Console.ReadKey();
         }
     }
 }

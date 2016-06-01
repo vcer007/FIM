@@ -33,7 +33,7 @@ namespace FIM.Initialize
             simulation_data.phases = new Global.Phase[] {Global.Phase.Oil, Global.Phase.Gas };
             simulation_data.solubleGasPresent = true;
 
-            simulation_data.time_step = 10;
+            simulation_data.time_step = 30;
 
             for (int i = 0; i < simulation_data.grid.Length; i++)
             {
@@ -225,9 +225,9 @@ namespace FIM.Initialize
             // well data
             for (int i = 0; i < well_indices.Length; i++)
             {
-                grid[i].type = Global.BlockType.Well_Block;
-                grid[i].well_radius = well_radius;
-                grid[i].skin = skin;
+                grid[well_indices[i]].type = Global.BlockType.Well_Block;
+                grid[well_indices[i]].well_radius = well_radius;
+                grid[well_indices[i]].skin = skin;
             }
 
             simulation_data = new SimulationData(x, y, z, grid);
@@ -266,13 +266,13 @@ namespace FIM.Initialize
 
             // production well
             grid[299].well_type = Global.WellType.Production;
-            grid[299].specified_flow_rate = 20000;
+            grid[299].specified_flow_rate = 1000;
             grid[299].specified_BHP = 1000;
             grid[299].q_oil[0] = grid[299].specified_flow_rate;
             grid[299].BHP[0] = WellData.calculatePwf(grid[299], grid[299].P[0], grid[299].Kro[0], grid[299].viscosity_oil[0]);
 
             grid[0].well_type = Global.WellType.Injection;
-            grid[0].specified_flow_rate = 1000000;
+            grid[0].specified_flow_rate = 0;
             grid[0].q_gas[0] = grid[0].specified_flow_rate;
         }
 
