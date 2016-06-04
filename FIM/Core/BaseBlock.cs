@@ -181,6 +181,85 @@ namespace FIM.Core
             this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1]);
         }
 
+        public void updateProperties_n1_k1(PVT pvt, Kr kr, Porosity porosity, double P, double Sw, double So, double Sg)
+        {
+            // time level n+1
+            ////////////////////////////////////////////////////////////////
+
+            // pressure
+            this.P[1] = P;
+
+            // rock
+            this.porosity[1] = porosity.getPorosity(P);
+
+            // fluid
+            this.Bo[1] = pvt.getFVF(Global.Phase.Oil, P);
+            this.Bw[1] = pvt.getFVF(Global.Phase.Water, P);
+            this.Bg[1] = pvt.getFVF(Global.Phase.Gas, P);
+
+            this.viscosity_oil[1] = pvt.getViscosity(Global.Phase.Oil, P);
+            this.viscosity_water[1] = pvt.getViscosity(Global.Phase.Water, P);
+            this.viscosity_gas[1] = pvt.getViscosity(Global.Phase.Gas, P);
+
+            this.Rso[1] = pvt.getRs(Global.Phase.Oil, P);
+
+            this.So[1] = So;
+            this.Sw[1] = Sw;
+            this.Sg[1] = Sg;
+
+            this.Kro[1] = kr.getKr(Global.Phase.Oil, Sg);
+            this.Krw[1] = kr.getKr(Global.Phase.Water, Sg);
+            this.Krg[1] = kr.getKr(Global.Phase.Gas, Sg);
+
+            //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
+
+            // volumetric
+            this.Vp[1] = this.bulk_volume * this.porosity[1];
+
+            // well
+            this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1]);
+
+
+            // time level k+1
+            ////////////////////////////////////////////////////////////////
+            P += Global.epsilon;
+
+            // pressure
+            this.P[2] = P;
+
+            // rock
+            this.porosity[2] = porosity.getPorosity(P);
+
+            // fluid
+            this.Bo[2] = pvt.getFVF(Global.Phase.Oil, P);
+            this.Bw[2] = pvt.getFVF(Global.Phase.Water, P);
+            this.Bg[2] = pvt.getFVF(Global.Phase.Gas, P);
+
+            this.viscosity_oil[2] = pvt.getViscosity(Global.Phase.Oil, P);
+            this.viscosity_water[2] = pvt.getViscosity(Global.Phase.Water, P);
+            this.viscosity_gas[2] = pvt.getViscosity(Global.Phase.Gas, P);
+
+            this.Rso[2] = pvt.getRs(Global.Phase.Oil, P);
+
+            this.So[2] = So + Global.epsilon;
+            this.Sw[2] = Sw;
+            this.Sg[2] = Sg + Global.epsilon;
+
+            Sg += Global.epsilon;
+
+            this.Kro[2] = kr.getKr(Global.Phase.Oil, Sg);
+            this.Krw[2] = kr.getKr(Global.Phase.Water, Sg);
+            this.Krg[2] = kr.getKr(Global.Phase.Gas, Sg);
+
+            //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
+
+            // volumetric
+            this.Vp[2] = this.bulk_volume * this.porosity[2];
+
+            // well
+            this.BHP[2] = Well.WellData.calculatePwf(this, this.P[2], this.Kro[2], this.viscosity_oil[2]);
+        }
+
         public double calculateR(BaseBlock[] grid, Global.Phase phase, double time_step, bool solubleGasPresent = true)
         {
             // Note : Kro, Krw, Krg are all calculated based on Sg.
@@ -190,7 +269,7 @@ namespace FIM.Core
             BaseBlock upstream_block, downstream_block, neighbour_block;
             double transmissibility;
 
-            double Kr, B, viscosity;
+            double Kr, B, viscosity, Rso;
             double R = 0;
 
             double temp, accumulation_term, production_term;
@@ -306,6 +385,17 @@ namespace FIM.Core
                     viscosity = 0.5 * (block.viscosity_gas[1] + neighbour_block.viscosity_gas[1]);
 
                     temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
+
+                    if (solubleGasPresent)
+                    {
+                        Kr = upstream_block.Kro[1];
+                        B = 0.5 * (block.Bo[1] + neighbour_block.Bo[1]);
+                        viscosity = 0.5 * (block.viscosity_oil[1] + neighbour_block.viscosity_oil[1]);
+                        Rso = 0.5 * (block.Rso[1] + neighbour_block.Rso[1]);
+
+                        temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
+                    }
+
                     block.transmissibility_terms_gas[i] = temp;
 
                     R += temp;
@@ -357,7 +447,7 @@ namespace FIM.Core
             BaseBlock upstream_block, downstream_block, neighbour_block;
             double transmissibility;
 
-            double Kr, B, viscosity;
+            double Kr, B, viscosity, Rso;
             double R = 0;
 
             double temp, accumulation_term, production_term;
@@ -412,6 +502,8 @@ namespace FIM.Core
                     swd = 2;
                 }
             }
+
+
             #endregion
 
             #region Oil
@@ -607,6 +699,16 @@ namespace FIM.Core
 
                         temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
 
+                        if (solubleGasPresent)
+                        {
+                            Kr = upstream_block.Kro[sgd];
+                            B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
+                            viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
+                            Rso = 0.5 * (block.Rso[pd] + neighbour_block.Rso[npd]);
+
+                            temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbour_block.P[pd] - block.P[npd]);
+                        }
+
                         R += temp;
                     }
 
@@ -665,6 +767,16 @@ namespace FIM.Core
                     viscosity = 0.5 * (block.viscosity_gas[pd] + neighbour_block.viscosity_gas[npd]);
 
                     temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+
+                    if (solubleGasPresent)
+                    {
+                        Kr = upstream_block.Kro[sgd];
+                        B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
+                        viscosity = 0.5 * (block.viscosity_oil[pd] + neighbour_block.viscosity_oil[npd]);
+                        Rso = 0.5 * (block.Rso[pd] + neighbour_block.Rso[npd]);
+
+                        temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbour_block.P[pd] - block.P[npd]);
+                    }
 
                     R += temp;
 

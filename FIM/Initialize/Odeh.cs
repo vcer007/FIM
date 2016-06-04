@@ -44,7 +44,7 @@ namespace FIM.Initialize
             simulation_data.kr = kr;
             simulation_data.porosity = porosity;
 
-            simulation_data.tolerance = 0.0001;
+            simulation_data.tolerance = 0.00001;
 
             return simulation_data;
         }
@@ -119,7 +119,7 @@ namespace FIM.Initialize
             double delta_x = 1000, delta_y = 1000;
             double[] h = new double[] { 20, 30, 50 };
 
-            int[] well_indices = new int[] { 0, 299 };
+            int[] well_indices = new int[] { 0 , 299};
             double well_radius = 0.25;
             double skin = 0;
 
@@ -217,7 +217,7 @@ namespace FIM.Initialize
                     grid[i].area_list[a] = grid[i].h * delta_x;
                 }
 
-                grid[i].bulk_volume = grid[i].h * delta_x;
+                grid[i].bulk_volume = grid[i].h * delta_x * delta_x;
 
                 grid[i].Vp[0] = grid[i].bulk_volume * porosity;
             }
@@ -266,8 +266,8 @@ namespace FIM.Initialize
 
             // production well
             grid[299].well_type = Global.WellType.Production;
-            grid[299].specified_flow_rate = 1000;
-            grid[299].specified_BHP = 1000;
+            grid[299].specified_flow_rate = 20000;
+            grid[299].specified_BHP = 0;
             grid[299].q_oil[0] = grid[299].specified_flow_rate;
             grid[299].BHP[0] = WellData.calculatePwf(grid[299], grid[299].P[0], grid[299].Kro[0], grid[299].viscosity_oil[0]);
 

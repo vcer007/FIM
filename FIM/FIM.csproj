@@ -55,6 +55,7 @@
     <Compile Include="Fluid\Kr.cs" />
     <Compile Include="Fluid\PVT.cs" />
     <Compile Include="Initialize\Odeh.cs" />
+    <Compile Include="MaterialBalance\MBE.cs" />
     <Compile Include="Misc\Rectangular.cs" />
     <Compile Include="Misc\TestFluidData.cs" />
     <Compile Include="Program.cs" />
@@ -68,7 +69,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="MaterialBalance\" />
     <Folder Include="Math\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

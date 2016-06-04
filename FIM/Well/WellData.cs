@@ -40,7 +40,7 @@ namespace FIM.Well
 
         public static void setWI(BaseBlock block)
         {
-            double K = 0;
+            double K = 1;
             // starting from index = 2, to avoid top and bottom directions permeabilities.
             for (int i = 2; i < block.permeability_list.Length; i++)
             {
@@ -48,12 +48,12 @@ namespace FIM.Well
             }
             K = Math.Sqrt(K);
 
-            block.WI = 2 * Global.PI * K * block.h / (Math.Log(block.r_equivalent / block.well_radius) + block.skin);
+            block.WI = 2 * Global.Bc * Global.PI * K * block.h / (Math.Log(block.r_equivalent / block.well_radius) + block.skin);
         }
 
         public static double calculatePwf(BaseBlock block, double pressure, double Kr, double viscosity)
         {
-            return pressure - (block.specified_flow_rate / (Kr / viscosity) * block.WI);
+            return pressure - (block.specified_flow_rate / ( (Kr / viscosity) * block.WI) );
         }
 
         public static double calculateFlow_Rate(double P, double Pwf, double Kr, double viscosity, double WI)
