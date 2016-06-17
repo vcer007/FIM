@@ -60,5 +60,28 @@ namespace FIM.MaterialBalance
 
             return OGIP - (GIP + q * data.time_step);
         }
+
+        internal static double checkWater(SimulationData data)
+        {
+            double tolerance = 1e-7;
+
+            double OWIP = 0, WIP = 0, q = 0;
+            BaseBlock block;
+
+            for (int i = 0; i < data.grid.Length; i++)
+            {
+                block = data.grid[i];
+
+                OWIP += block.Vp[0] * block.Sw[0] / block.Bw[0];
+                WIP += block.Vp[1] * block.Sw[1] / block.Bw[1];
+
+                if (block.type == Global.BlockType.Well_Block)
+                {
+                    q += Global.a * block.q_water[1] * data.time_step;
+                }
+            }
+
+            return OWIP - (WIP + q);
+        }
     }
 }

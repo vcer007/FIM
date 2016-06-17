@@ -1,4 +1,5 @@
-﻿using FIM.Fluid;
+﻿using System;
+using FIM.Fluid;
 using FIM.Rock;
 
 namespace FIM.Core
@@ -121,15 +122,14 @@ namespace FIM.Core
             this.Rso[0] = pvt.getRs(Global.Phase.Oil, P); this.Rso[1] = this.Rso[0]; this.Rso[2] = pvt.getRs(Global.Phase.Oil, this.P[2]);
 
             this.So[0] = So; this.So[1] = So; this.So[2] = So + Global.epsilon;
-            // for the Sw value is constant.
-            this.Sw[0] = Sw; this.Sw[1] = Sw; this.Sw[2] = Sw;
+            this.Sw[0] = Sw; this.Sw[1] = Sw; this.Sw[2] = Sw + Global.epsilon;
             this.Sg[0] = Sg; this.Sg[1] = Sg; this.Sg[2] = Sg + Global.epsilon;
 
-            // Kro is only dependent on Sg. Sw is irreducible and won't increase.
+            // Kro is only dependent on Sg.
             // if So is at max "Sg = 0" , then So can not increment up.
             this.Kro[0] = kr.getKr(Global.Phase.Oil, Sg); this.Kro[1] = this.Kro[0]; this.Kro[2] = kr.getKr(Global.Phase.Oil, this.Sg[2]);
             // Krw value is always equal to zero in this case.
-            this.Krw[0] = 0; this.Krw[1] = this.Krw[0]; this.Krw[2] = this.Krw[0];
+            this.Krw[0] = kr.getKr(Global.Phase.Water, Sg); this.Krw[1] = this.Krw[0]; this.Krw[2] = this.Krw[0];
             this.Krg[0] = kr.getKr(Global.Phase.Gas, Sg); this.Krg[1] = this.Krg[0]; this.Krg[2] = kr.getKr(Global.Phase.Gas, this.Sg[2]);
 
             //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
@@ -138,7 +138,7 @@ namespace FIM.Core
             this.Vp[0] = this.bulk_volume * this.porosity[0]; this.Vp[1] = this.Vp[0]; this.Vp[2] = this.bulk_volume * this.porosity[2];
 
             // well
-            this.BHP[0] = Well.WellData.calculatePwf(this, this.P[0], this.Kro[0], this.viscosity_oil[0]);
+            this.BHP[0] = Well.WellData.calculatePwf(this, this.P[0], this.Kro[0], this.viscosity_oil[0], this.Bo[0]);
             this.BHP[1] = this.BHP[0];
 
             this.q_oil[1] = this.q_oil[0];
@@ -178,7 +178,7 @@ namespace FIM.Core
             this.Vp[1] = this.bulk_volume * this.porosity[1];
 
             // well
-            this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1]);
+            this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1], this.Bo[1]);
         }
 
         public void updateProperties_n1_k1(PVT pvt, Kr kr, Porosity porosity, double P, double Sw, double So, double Sg)
@@ -217,7 +217,7 @@ namespace FIM.Core
             this.Vp[1] = this.bulk_volume * this.porosity[1];
 
             // well
-            this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1]);
+            this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1], this.Bo[1]);
 
 
             // time level k+1
@@ -242,7 +242,7 @@ namespace FIM.Core
             this.Rso[2] = pvt.getRs(Global.Phase.Oil, P);
 
             this.So[2] = So + Global.epsilon;
-            this.Sw[2] = Sw;
+            this.Sw[2] = Sw + Global.epsilon;
             this.Sg[2] = Sg + Global.epsilon;
 
             Sg += Global.epsilon;
@@ -257,7 +257,87 @@ namespace FIM.Core
             this.Vp[2] = this.bulk_volume * this.porosity[2];
 
             // well
-            this.BHP[2] = Well.WellData.calculatePwf(this, this.P[2], this.Kro[2], this.viscosity_oil[2]);
+            //this.BHP[2] = Well.WellData.calculatePwf(this, this.P[2], this.Kro[2], this.viscosity_oil[2]);
+        }
+
+        internal void reset_n1(PVT pvt, Kr kr, Porosity porosity)
+        {
+            // time level n+1
+            ////////////////////////////////////////////////////////////////
+
+            // pressure
+            this.P[1] = this.P[0];
+
+            // rock
+            this.porosity[1] = this.porosity[0];
+
+            // fluid
+            this.Bo[1] = this.Bo[0];
+            this.Bw[1] = this.Bw[0];
+            this.Bg[1] = this.Bg[0];
+
+            this.viscosity_oil[1] = this.viscosity_oil[0];
+            this.viscosity_water[1] = this.viscosity_water[0];
+            this.viscosity_gas[1] = this.viscosity_gas[0];
+
+            this.Rso[1] = this.Rso[0];
+
+            this.So[1] = this.So[0];
+            this.Sw[1] = this.Sw[0];
+            this.Sg[1] = this.Sg[0];
+
+            this.Kro[1] = this.Kro[0];
+            this.Krw[1] = this.Krw[0];
+            this.Krg[1] = this.Krg[0];
+
+            //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
+
+            // volumetric
+            this.Vp[1] = this.Vp[0];
+
+            // well
+            this.BHP[1] = this.BHP[0];
+
+
+            // time level k+1
+            ////////////////////////////////////////////////////////////////
+            double P = this.P[0];
+            P += Global.epsilon;
+
+            // pressure
+            this.P[2] = P;
+
+            // rock
+            this.porosity[2] = porosity.getPorosity(P);
+
+            // fluid
+            this.Bo[2] = pvt.getFVF(Global.Phase.Oil, P);
+            this.Bw[2] = pvt.getFVF(Global.Phase.Water, P);
+            this.Bg[2] = pvt.getFVF(Global.Phase.Gas, P);
+
+            this.viscosity_oil[2] = pvt.getViscosity(Global.Phase.Oil, P);
+            this.viscosity_water[2] = pvt.getViscosity(Global.Phase.Water, P);
+            this.viscosity_gas[2] = pvt.getViscosity(Global.Phase.Gas, P);
+
+            this.Rso[2] = pvt.getRs(Global.Phase.Oil, P);
+
+            this.So[2] = this.So[1] + Global.epsilon;
+            this.Sw[2] = this.Sw[1] + Global.epsilon;
+            this.Sg[2] = this.Sg[1] + Global.epsilon;
+
+            double Sg = this.Sg[2];
+
+            this.Kro[2] = kr.getKr(Global.Phase.Oil, Sg);
+            this.Krw[2] = kr.getKr(Global.Phase.Water, Sg);
+            this.Krg[2] = kr.getKr(Global.Phase.Gas, Sg);
+
+            //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
+
+            // volumetric
+            this.Vp[2] = this.bulk_volume * this.porosity[2];
+
+            // well
+            //this.BHP[2] = Well.WellData.calculatePwf(this, this.P[2], this.Kro[2], this.viscosity_oil[2]);
         }
 
         public double calculateR(BaseBlock[] grid, Global.Phase phase, double time_step, bool solubleGasPresent = true)
@@ -413,8 +493,8 @@ namespace FIM.Core
                 {
                     if (block.well_type == Global.WellType.Production)
                     {
-                        block.BHP[1] = Well.WellData.calculatePwf(block, block.P[1], block.Kro[1], block.viscosity_oil[1]);
-                        block.q_gas[1] = Well.WellData.calculateFlow_Rate(block.P[1], block.BHP[1], block.Krg[1], block.viscosity_gas[1], block.WI);
+                        //block.BHP[1] = Well.WellData.calculatePwf(block, block.P[1], block.Kro[1], block.viscosity_oil[1], block.Bo[1]);
+                        block.q_gas[1] = Well.WellData.calculateFlow_Rate(block.P[1], block.BHP[1], block.Krg[1], block.viscosity_gas[1], block.WI, block.Bg[1]);
 
                         // check for presence of soluble_gas in simulation_data
                         if (solubleGasPresent)
@@ -424,7 +504,7 @@ namespace FIM.Core
                     }
                     else if (block.well_type == Global.WellType.Injection)
                     {
-
+                        production_term_gas = block.q_gas[0];
                     }
                 }
                 
@@ -542,7 +622,7 @@ namespace FIM.Core
 
                     }
 
-                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (1 - block.Sw[1] - block.Sg[sgd]) / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (1 - block.Sw[swd] - block.Sg[sgd]) / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0])) + block.q_oil[1];
 
                     R -= accumulation_term;
 
@@ -613,7 +693,7 @@ namespace FIM.Core
                             downstream_block = block;
                         }
 
-                        Kr = upstream_block.Krw[swd];
+                        Kr = upstream_block.Krw[sgd];
                         B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
                         viscosity = 0.5 * (block.viscosity_water[pd] + neighbour_block.viscosity_water[npd]);
 
@@ -622,8 +702,7 @@ namespace FIM.Core
                         R += temp;
                     }
 
-                    // here there is no Sw "instead (1 - So - Sg)". so when differentiating with respect to either So or Sg, we increment either one of them.
-                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (1 - block.So[sod] - block.Sg[1]) / block.Bw[pd]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
+                    accumulation_term = 1 / (Global.a * time_step) * ((block.Vp[pd] * (block.Sw[swd]) / block.Bw[pd]) - (block.Vp[0] * block.Sw[0] / block.Bw[0])) + block.q_water[1];
 
                     R -= accumulation_term;
                 }
@@ -645,7 +724,7 @@ namespace FIM.Core
                         downstream_block = block;
                     }
 
-                    Kr = upstream_block.Krw[swd];
+                    Kr = upstream_block.Krw[sgd];
                     B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
                     viscosity = 0.5 * (block.viscosity_water[pd] + neighbour_block.viscosity_water[npd]);
 
@@ -723,8 +802,8 @@ namespace FIM.Core
                     {
                         if (block.well_type == Global.WellType.Production)
                         {
-                            block.BHP[2] = Well.WellData.calculatePwf(block, block.P[pd], block.Kro[sgd], block.viscosity_oil[pd]);
-                            block.q_gas[2] = Well.WellData.calculateFlow_Rate(block.P[pd], block.BHP[2], block.Krg[sgd], block.viscosity_gas[pd], block.WI);
+                            block.BHP[2] = Well.WellData.calculatePwf(block, block.P[pd], block.Kro[sgd], block.viscosity_oil[pd], block.Bo[pd]);
+                            block.q_gas[2] = Well.WellData.calculateFlow_Rate(block.P[pd], block.BHP[2], block.Krg[sgd], block.viscosity_gas[pd], block.WI, block.Bg[pd]);
 
                             // check for presence of soluble_gas in simulation_data
                             if (solubleGasPresent)

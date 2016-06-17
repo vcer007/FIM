@@ -30,10 +30,10 @@ namespace FIM.Initialize
             initializeTransmissibilities(simulation_data);
             initializeWells(simulation_data.grid);
 
-            simulation_data.phases = new Global.Phase[] {Global.Phase.Oil, Global.Phase.Gas };
+            simulation_data.phases = new Global.Phase[] {Global.Phase.Oil, Global.Phase.Gas , Global.Phase.Water};
             simulation_data.solubleGasPresent = true;
 
-            simulation_data.time_step = 30;
+            simulation_data.original_time_step = 5;
 
             for (int i = 0; i < simulation_data.grid.Length; i++)
             {
@@ -113,7 +113,7 @@ namespace FIM.Initialize
             permeability[1] = new double[] { 50, 25, 50 };
             permeability[2] = new double[] { 25, 25, 200 };
 
-            double Sw = 0.12, So = 0.88, Sg = 0;
+            double So = 0.88, Sg = 0, Sw = 1 - So - Sg;
             double pressure = 4800;
 
             double delta_x = 1000, delta_y = 1000;
@@ -269,7 +269,7 @@ namespace FIM.Initialize
             grid[299].specified_flow_rate = 20000;
             grid[299].specified_BHP = 0;
             grid[299].q_oil[0] = grid[299].specified_flow_rate;
-            grid[299].BHP[0] = WellData.calculatePwf(grid[299], grid[299].P[0], grid[299].Kro[0], grid[299].viscosity_oil[0]);
+            grid[299].BHP[0] = WellData.calculatePwf(grid[299], grid[299].P[0], grid[299].Kro[0], grid[299].viscosity_oil[0], grid[299].Bo[0]);
 
             grid[0].well_type = Global.WellType.Injection;
             grid[0].specified_flow_rate = 0;

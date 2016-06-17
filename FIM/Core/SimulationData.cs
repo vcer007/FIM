@@ -13,7 +13,17 @@ namespace FIM.Core
     /// </summary>
     class SimulationData
     {
+        public double minimum_relaxation = 0.5;
+
+        public double original_relaxation_factor = 1;
+        public double original_time_step;
+
+        public double relaxation_factor = 1;
         public double time_step;
+
+
+        public double MBE_Gas;
+
 
         public int x, y, z;
 

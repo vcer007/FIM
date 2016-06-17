@@ -13,25 +13,25 @@ namespace FIM.Well
         {
             double r_equivalnt = 0;
 
+            double distance = 0;
             double numerator = 0, denominator = 0;
 
             BaseBlock neighbour;
             // neighbour block internal index of "block".
             int index;
 
-            for (int i = 0; i < block.neighbour_blocks_indices.Length; i++)
+            for (int i = 2; i < block.neighbour_blocks_indices.Length; i++)
             {
                 if (block.neighbour_blocks_indices[i] >= 0)
                 {
                     neighbour = grid[block.neighbour_blocks_indices[i]];
                     index = Array.IndexOf(neighbour.neighbour_blocks_indices, block.index);
 
-                    numerator += block.boundary_length_list[i] / (block.delta_x_list[i] + neighbour.delta_x_list[index]) * Math.Log(block.delta_x_list[i] + neighbour.delta_x_list[index]);
-                    denominator += (block.boundary_length_list[i]) / (block.delta_x_list[i] + neighbour.delta_x_list[index]);
+                    distance = (block.delta_x_list[i] + neighbour.delta_x_list[index]) / 2;
+                    numerator += block.boundary_length_list[i] / distance * Math.Log(distance) - 0.5 * Math.PI;
+                    denominator += (block.boundary_length_list[i]) / distance;
                 }
             }
-
-            numerator -= Global.PI;
 
             r_equivalnt = Math.Exp(numerator / denominator);
 
@@ -40,25 +40,36 @@ namespace FIM.Well
 
         public static void setWI(BaseBlock block)
         {
-            double K = 1;
+            double K = 0;
             // starting from index = 2, to avoid top and bottom directions permeabilities.
+            int counter = 0;
             for (int i = 2; i < block.permeability_list.Length; i++)
             {
-                K *= block.permeability_list[i] > 0 ? block.permeability_list[i] : 1;
+                if (block.permeability_list[i] > 0)
+                {
+                    K += block.permeability_list[i];
+                    counter += 1;
+                }
+                else
+                {
+                    
+                }
             }
-            K = Math.Sqrt(K);
+
+            K = K / counter;
 
             block.WI = 2 * Global.Bc * Global.PI * K * block.h / (Math.Log(block.r_equivalent / block.well_radius) + block.skin);
         }
 
-        public static double calculatePwf(BaseBlock block, double pressure, double Kr, double viscosity)
+        public static double calculatePwf(BaseBlock block, double pressure, double Kr, double viscosity, double FVF)
         {
-            return pressure - (block.specified_flow_rate / ( (Kr / viscosity) * block.WI) );
+            double mobility = Kr / (viscosity * FVF);
+            return pressure - ( block.specified_flow_rate / (mobility * block.WI) );
         }
 
-        public static double calculateFlow_Rate(double P, double Pwf, double Kr, double viscosity, double WI)
+        public static double calculateFlow_Rate(double P, double Pwf, double Kr, double viscosity, double WI, double FVF)
         {
-            return (P - Pwf) * (Kr / viscosity) * WI;
+            return (P - Pwf) * (Kr / (viscosity * FVF)) * WI;
         }
     }
 }
