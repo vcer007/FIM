@@ -14,7 +14,7 @@ using FIM.MaterialBalance;
 
 namespace FIM.Solver
 {
-    class FullyImplicit
+    class FIM_SingleLayer
     {
 
         public static void calculate_minus_R(SimulationData data, double[] minus_R)
@@ -225,11 +225,11 @@ namespace FIM.Solver
 
 
                 convergenceError[0] = convergenceError[1];
-                
+
                 convergenceError[1] = checkTolerance(data);
 
                 bool repeat = stabilize_newton(delta, ref data.relaxation_factor, convergenceError, data);
-                
+
                 if (!repeat)
                 {
                     updatePropertiesFromDelta(1, delta, data);
@@ -329,7 +329,7 @@ namespace FIM.Solver
             return temmp;
         }
 
-        private static bool stabilize_newton(double[] delta_x,ref double relaxation_factor, double[] convergenceError, SimulationData data)
+        private static bool stabilize_newton(double[] delta_x, ref double relaxation_factor, double[] convergenceError, SimulationData data)
         {
             if (convergenceError[0] != 0 && ((convergenceError[1] > convergenceError[0]) || convergenceError[1] / convergenceError[0] > 0.5))
             {
@@ -366,10 +366,12 @@ namespace FIM.Solver
             double[] minus_R = new double[jacobian.Length];
             double[] delta = new double[jacobian.Length];
 
-            double end_time = 8 * 365;
+            double end_time = 5 * 46;
 
-            for (double current_time = 0; current_time < end_time; current_time += data.time_step)
+            for (double current_time = data.time_step; current_time <= end_time; current_time += data.time_step)
             {
+                double temp = MBE.GIP(data, 0);
+
                 iterativeSolver(data, jacobian, minus_R, delta);
 
 
@@ -379,12 +381,14 @@ namespace FIM.Solver
                 }
 
                 //Console.WriteLine("###################################################################");
-                Console.WriteLine(current_time + ", " + data.grid[299].P[0] + ", " + data.grid[299].Rso[0] + ", " + data.grid[299].Sg[0] + ", " + data.MBE_Gas + ", " + data.grid[299].q_gas[0] + ", " + data.grid[299].BHP[1]);
+                //Console.WriteLine(current_time + ", " + data.grid[99].P[0] + ", " + data.grid[99].Sg[0] + ", " + data.grid[99].Rso[0]  + ", " + data.grid[99].BHP[1] + ", " + data.grid[99].q_gas[0]);
+                Console.WriteLine(data.MBE_Gas);
+                //Console.ReadKey();
                 //Console.WriteLine("###################################################################");
             }
         }
 
-        
+
 
     }
 }

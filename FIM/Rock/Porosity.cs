@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FIM.Rock
 {
-    class Porosity
+    public class Porosity
     {
         //Rock compressibility factor
         double Cf;

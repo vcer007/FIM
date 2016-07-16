@@ -11,7 +11,7 @@ namespace FIM.Fluid
     //Objectives: calculate the corresponding Kr value at a certain saturation
     //Inputs: a variable representing the value of the saturation
     //Outputs: the corresponding Kr value
-    class Kr
+    public class Kr
     {
         private double[][] Kr_data;
 

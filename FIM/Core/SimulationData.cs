@@ -11,7 +11,7 @@ namespace FIM.Core
     /// <summary>
     /// This class contains all the general data of the simulation run "Run Specifications".
     /// </summary>
-    class SimulationData
+    public class SimulationData
     {
         public double minimum_relaxation = 0.5;
 
@@ -22,7 +22,7 @@ namespace FIM.Core
         public double time_step;
 
 
-        public double MBE_Gas;
+        public double MBE_Gas, MBE_Oil;
 
 
         public int x, y, z;

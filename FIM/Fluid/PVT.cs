@@ -18,9 +18,9 @@ namespace FIM.Fluid
     //Objectives: calculate the corresponding PVT value at a certain pressure
     //Inputs: a variable representing the value of the pressure
     //Outputs: the corresponding PVT value
-    class PVT
+    public class PVT
     {
-        private double bubble_point_pressure;
+        public double bubble_point_pressure;
         private double[][] oil_data, oil_us_data, water_data, water_us_data, gas_data;
 
         //Constructor Name: PVT
@@ -51,7 +51,7 @@ namespace FIM.Fluid
                 case Global.Phase.Oil:
                     return getOilFVF(pressure);
                 case Global.Phase.Gas:
-                    return getGasFVF(pressure);
+                    return getGasFVF(pressure) * Global.a;
                 default:
                     return 1;
             }
@@ -102,6 +102,20 @@ namespace FIM.Fluid
             }
         }
 
+        public double Rs_SG(double Sg)
+        {
+            //if (Sg > Math.Sqrt(Global.epsilon))
+            //{
+            //    return 1;
+            //}
+            //else
+            //{
+            //    return Sg / (Sg + Global.epsilon);
+            //}
+
+            return 1;
+        }
+
 
 
         //Internal helper method to do the table lookups and interpolations
@@ -148,7 +162,7 @@ namespace FIM.Fluid
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 Y = oil_us_data[0]; X = oil_us_data[1];
                 return extrapolate(Y, X, pressure);
@@ -159,12 +173,14 @@ namespace FIM.Fluid
                 return lookUp(Y, X, pressure);
             }
 
+            //return -2E-08 * Math.Pow(pressure, 2) + 0.0002 * pressure + 1.0803;
+
         }
         private double getWaterFVF(double pressure)
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 Y = water_us_data[0]; X = water_us_data[1];
                 return extrapolate(Y, X, pressure);
@@ -189,7 +205,7 @@ namespace FIM.Fluid
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 Y = oil_us_data[0]; X = oil_us_data[2];
                 return extrapolate(Y, X, pressure);
@@ -204,7 +220,7 @@ namespace FIM.Fluid
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 Y = water_us_data[0]; X = water_us_data[2];
                 return extrapolate(Y, X, pressure);
@@ -231,7 +247,7 @@ namespace FIM.Fluid
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 Y = oil_us_data[0]; X = oil_us_data[3];
                 return extrapolate(Y, X, pressure);
@@ -247,7 +263,7 @@ namespace FIM.Fluid
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 Y = water_us_data[0]; X = water_us_data[3];
                 return extrapolate(Y, X, pressure);
@@ -272,7 +288,7 @@ namespace FIM.Fluid
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 return oil_us_data[4][0];
             }
@@ -281,12 +297,15 @@ namespace FIM.Fluid
                 Y = oil_data[0]; X = oil_data[4];
                 return lookUp(Y, X, pressure);
             }
+
+            //return 3E-09 * Math.Pow(pressure, 3) - 7E-05 * Math.Pow(pressure, 2) + 0.5573 * pressure - 179.85;
+
         }
         private double getRsw(double pressure)
         {
             double[] Y, X;
 
-            if (pressure >= bubble_point_pressure)
+            if (pressure > bubble_point_pressure)
             {
                 return water_us_data[4][0];
             }

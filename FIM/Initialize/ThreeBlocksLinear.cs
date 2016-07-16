@@ -3,17 +3,15 @@ using FIM.Fluid;
 using FIM.Misc;
 using FIM.Rock;
 using FIM.Well;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace FIM.Initialize
 {
-    class Odeh
+    class ThreeBlocksLinear
     {
         public static SimulationData initiaize()
         {
@@ -30,7 +28,7 @@ namespace FIM.Initialize
             initializeTransmissibilities(simulation_data);
             initializeWells(simulation_data.grid);
 
-            simulation_data.phases = new Global.Phase[] {Global.Phase.Oil, Global.Phase.Gas , Global.Phase.Water};
+            simulation_data.phases = new Global.Phase[] { Global.Phase.Oil, Global.Phase.Gas, Global.Phase.Water };
             simulation_data.solubleGasPresent = true;
 
             simulation_data.original_time_step = 5;
@@ -105,21 +103,19 @@ namespace FIM.Initialize
 
         private static void initializeGrid(out SimulationData simulation_data, PVT pvt, Kr kr)
         {
-            int x = 10, y = 10, z = 3;
+            int x = 3, y = 1, z = 1;
 
             double porosity = 0.3;
-            double[][] permeability = new double[3][];
+            double[][] permeability = new double[1][];
             permeability[0] = new double[] { 50, 50, 500 };
-            permeability[1] = new double[] { 50, 25, 50 };
-            permeability[2] = new double[] { 25, 25, 200 };
 
             double So = 0.88, Sg = 0, Sw = 1 - So - Sg;
             double pressure = 4800;
 
             double delta_x = 1000, delta_y = 1000;
-            double[] h = new double[] { 20, 30, 50 };
+            double[] h = new double[] { 20};
 
-            int[] well_indices = new int[] {0, 299};
+            int[] well_indices = new int[] { 0, 2 };
             double well_radius = 0.25;
             double skin = 0;
 
@@ -273,13 +269,12 @@ namespace FIM.Initialize
             }
 
             // production well
-            grid[299].well_type = Global.WellType.Production;
-            grid[299].specified_BHP = 0;
-            grid[299].q_oil[0] = 20000;
+            grid[2].well_type = Global.WellType.Production;
+            grid[2].specified_BHP = 0;
+            grid[2].q_oil[0] = 1000;
 
             grid[0].well_type = Global.WellType.Injection;
-            grid[0].specified_flow_rate = -100000000 / Global.a;
+            grid[0].specified_flow_rate = 0;
         }
-
     }
 }

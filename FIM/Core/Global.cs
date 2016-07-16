@@ -9,18 +9,22 @@ namespace FIM.Core
     /// <summary>
     /// This class contains all constants and enumerations declarations.
     /// </summary>
-    class Global
+    public class Global
     {
         // Constants.
 
         public const double Bc = 0.001127;
         public const double a = 5.614583;
-        public const double epsilon = 0.0000001;
+        //public const double a = 5.615;
+        public const double epsilon = 1E-5;
+        public const double initial_Sg = 0;
+        public const double epsilon_p = 1E-5;
+        public const double epsilon_s = 1E-5;
         public const double PI = Math.PI;
 
         // Enumerations.
 
-        public enum Phase {Water, Oil, Gas}
+        public enum Phase {Water, Oil, Gas, SolubleGas}
         public enum WellType {Injection, Production, ShutIn}
         public enum BlockType { Well_Block, Normal_Block, Inactive_Block }
         public enum DataFileSection { RunSpec }

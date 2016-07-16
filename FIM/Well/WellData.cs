@@ -35,6 +35,11 @@ namespace FIM.Well
 
             r_equivalnt = Math.Exp(numerator / denominator);
 
+            if (grid.Length == 1)
+            {
+                r_equivalnt = 0.2 * block.delta_x_list[3];
+            }
+
             block.r_equivalent = r_equivalnt;
         }
 
@@ -64,12 +69,13 @@ namespace FIM.Well
         public static double calculatePwf(BaseBlock block, double pressure, double Kr, double viscosity, double FVF)
         {
             double mobility = Kr / (viscosity * FVF);
-            return pressure - ( block.specified_flow_rate / (mobility * block.WI) );
+            return pressure - ( block.q_oil[0] / (mobility * block.WI) );
         }
 
         public static double calculateFlow_Rate(double P, double Pwf, double Kr, double viscosity, double WI, double FVF)
         {
             return (P - Pwf) * (Kr / (viscosity * FVF)) * WI;
+            //return 0;
         }
     }
 }

@@ -3,17 +3,15 @@ using FIM.Fluid;
 using FIM.Misc;
 using FIM.Rock;
 using FIM.Well;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
 namespace FIM.Initialize
 {
-    class Odeh
+    class SingleBlockModel
     {
         public static SimulationData initiaize()
         {
@@ -30,14 +28,14 @@ namespace FIM.Initialize
             initializeTransmissibilities(simulation_data);
             initializeWells(simulation_data.grid);
 
-            simulation_data.phases = new Global.Phase[] {Global.Phase.Oil, Global.Phase.Gas , Global.Phase.Water};
+            simulation_data.phases = new Global.Phase[] { Global.Phase.Oil, Global.Phase.Gas};
             simulation_data.solubleGasPresent = true;
 
-            simulation_data.original_time_step = 5;
+            simulation_data.original_time_step = 1;
 
             for (int i = 0; i < simulation_data.grid.Length; i++)
             {
-                simulation_data.grid[i].updateProperties(pvt, kr, porosity, 4800, 0.12, 0.88, 0);
+                simulation_data.grid[i].updateProperties(pvt, kr, porosity, 4800, 0, 1 - Global.initial_Sg, Global.initial_Sg);
             }
 
             simulation_data.pvt = pvt;
@@ -105,21 +103,19 @@ namespace FIM.Initialize
 
         private static void initializeGrid(out SimulationData simulation_data, PVT pvt, Kr kr)
         {
-            int x = 10, y = 10, z = 3;
+            int x = 1, y = 1, z = 1;
 
             double porosity = 0.3;
-            double[][] permeability = new double[3][];
+            double[][] permeability = new double[1][];
             permeability[0] = new double[] { 50, 50, 500 };
-            permeability[1] = new double[] { 50, 25, 50 };
-            permeability[2] = new double[] { 25, 25, 200 };
 
-            double So = 0.88, Sg = 0, Sw = 1 - So - Sg;
+            double So = 1 - Global.initial_Sg, Sg = Global.initial_Sg, Sw = 1 - So - Sg;
             double pressure = 4800;
 
             double delta_x = 1000, delta_y = 1000;
-            double[] h = new double[] { 20, 30, 50 };
+            double[] h = new double[] { 20 };
 
-            int[] well_indices = new int[] {0, 299};
+            int[] well_indices = new int[] { 0 };
             double well_radius = 0.25;
             double skin = 0;
 
@@ -232,10 +228,12 @@ namespace FIM.Initialize
 
             for (int i = 0; i < grid.Length; i++)
             {
+
                 grid[i].P[0] = pressure;
                 grid[i].So[0] = So;
                 grid[i].Sw[0] = Sw;
                 grid[i].Sg[0] = Sg;
+
             }
 
             simulation_data = new SimulationData(x, y, z, grid);
@@ -273,13 +271,12 @@ namespace FIM.Initialize
             }
 
             // production well
-            grid[299].well_type = Global.WellType.Production;
-            grid[299].specified_BHP = 0;
-            grid[299].q_oil[0] = 20000;
+            grid[0].well_type = Global.WellType.Production;
+            grid[0].specified_BHP = 3500;
+            grid[0].q_oil[0] = 500;
 
-            grid[0].well_type = Global.WellType.Injection;
-            grid[0].specified_flow_rate = -100000000 / Global.a;
+            //grid[0].well_type = Global.WellType.Injection;
+            //grid[0].specified_flow_rate = 10000;
         }
-
     }
 }
