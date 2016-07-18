@@ -23,7 +23,6 @@ namespace FIM.Core
         // Rock properties
 
         public double[] porosity;
-
         public double[] permeability_list;
 
         // Fluid properties
@@ -39,6 +38,7 @@ namespace FIM.Core
         public double[] Rso;
 
         public double[] P, Pw, Po, Pg;
+
         public double P_previous_step;
 
 
@@ -173,49 +173,6 @@ namespace FIM.Core
             GOR = total_qg / q_oil[0];
 
         }
-
-        // this method is not used
-        //public void updateProperties_n1(PVT pvt, Kr kr, Porosity porosity, double P, double Sw, double So, double Sg)
-        //{
-        //    // pressure
-        //    this.P[1] = P;
-
-        //    // rock
-        //    this.porosity[1] = porosity.getPorosity(P);
-
-        //    // fluid
-        //    this.Bo[1] = pvt.getFVF(Global.Phase.Oil, P);
-        //    this.Bw[1] = pvt.getFVF(Global.Phase.Water, P);
-        //    this.Bg[1] = pvt.getFVF(Global.Phase.Gas, P);
-
-        //    this.viscosity_oil[1] = pvt.getViscosity(Global.Phase.Oil, P);
-        //    this.viscosity_water[1] = pvt.getViscosity(Global.Phase.Water, P);
-        //    this.viscosity_gas[1] = pvt.getViscosity(Global.Phase.Gas, P);
-
-        //    this.Rso[1] = pvt.getRs(Global.Phase.Oil, P);
-
-        //    this.So[1] = So;
-        //    this.Sw[1] = Sw;
-        //    this.Sg[1] = Sg;
-
-        //    this.Kro[1] = kr.getKr(Global.Phase.Oil, Sg);
-        //    this.Krw[1] = kr.getKr(Global.Phase.Water, Sg);
-        //    this.Krg[1] = kr.getKr(Global.Phase.Gas, Sg);
-
-        //    //this.Po = new double[steps_memory]; this.Pg = new double[steps_memory]; this.Pw = new double[steps_memory];
-
-        //    // volumetric
-        //    this.Vp[1] = this.bulk_volume * this.porosity[1];
-
-        //    // well
-        //    if (this.type == Global.BlockType.Well_Block)
-        //    {
-        //        this.BHP[1] = Well.WellData.calculatePwf(this, this.P[1], this.Kro[1], this.viscosity_oil[1], this.Bo[1]);
-
-        //        this.q_gas[1] = Well.WellData.calculateFlow_Rate(this.P[1], this.BHP[1], this.Krg[1], this.viscosity_gas[1], this.WI, this.Bg[1]);
-        //    }
-           
-        //}
 
         public void updateProperties_n1_k1(PVT pvt, Kr kr, Porosity porosity, double P, double Sw, double So, double Sg)
         {
