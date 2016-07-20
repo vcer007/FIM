@@ -594,6 +594,10 @@ namespace FIM.Extensions
 
         public static void calculateMinusR_Matrix(SimulationData data, double[] minus_R)
         {
+            //for (int i = 0; i < minus_R.Length; i++)
+            //{
+            //    minus_R[i] = 0;
+            //}
 
             BaseBlock block;
             int counter = 0;
@@ -613,8 +617,15 @@ namespace FIM.Extensions
 
         public static void calculateJacobi_Matrix(SimulationData data, double[] minus_R, double[][] jacobians)
         {
+            //for (int i = 0; i < jacobians.Length; i++)
+            //{
+            //    for (int j = 0; j < jacobians[i].Length; j++)
+            //    {
+            //        jacobians[i][j] = 0;
+            //    }
+            //}
             //int size = data.grid.Length * data.phases.Length;
-            //double[][] jacobians = new double[size][];
+            ///*double[][] */jacobians = new double[size][];
 
             BaseBlock block;
 
