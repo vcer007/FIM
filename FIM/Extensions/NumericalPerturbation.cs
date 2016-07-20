@@ -19,7 +19,6 @@ namespace FIM.Extensions
             // Note : Kro, Krw, Krg are all calculated based on Sg.
 
             BaseBlock upstream_block, downstream_block, neighbour_block;
-
             double transmissibility;
 
             double Kr, B, viscosity, Rso;
@@ -64,10 +63,10 @@ namespace FIM.Extensions
                 accumulation_term = 1 / (Global.a * data.time_step) * ((block.Vp[1] * (1 - block.Sw[1] - block.Sg[1]) / block.Bo[1]) - (block.Vp[0] * block.So[0] / block.Bo[0]));
                 block.accumulation_term_oil = accumulation_term;
 
-                //production_term = block.q_oil[1];
+                production_term = 0;
                 block.production_term_oil = production_term;
 
-                R -= (accumulation_term /*+ production_term*/);
+                R -= (accumulation_term + production_term);
             }
             else if (phase == Global.Phase.Water)
             {
@@ -104,11 +103,11 @@ namespace FIM.Extensions
                 accumulation_term = 1 / (Global.a * data.time_step) * ((block.Vp[1] * block.Sw[1] / block.Bw[1]) - (block.Vp[0] * block.Sw[0] / block.Bw[0]));
                 block.accumulation_term_water = accumulation_term;
 
-                //production_term = block.q_water[1];
+                production_term = 0;
                 block.production_term_water = production_term;
 
 
-                R -= (accumulation_term /*+ production_term*/);
+                R -= (accumulation_term + production_term);
             }
             else
             {
@@ -169,7 +168,7 @@ namespace FIM.Extensions
                 //    {
                 //        production_term = block.q_gas[1];
                 //        // check for presence of soluble_gas in simulation_data
-                //        if (data.solubleGasPresent)
+                //        if (solubleGasPresent)
                 //        {
                 //            production_term += block.Rso[1] * block.q_oil[1];
                 //        }
@@ -179,13 +178,14 @@ namespace FIM.Extensions
                 //        production_term = block.specified_flow_rate;
                 //    }
                 //}
-                block.production_term_gas = production_term;
+                block.production_term_gas = 0;
 
 
-                R -= (accumulation_term /*+ production_term*/);
+                R -= (accumulation_term + 0);
             }
 
             return R;
+
 
         }
 
