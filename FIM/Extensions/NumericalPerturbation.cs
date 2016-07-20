@@ -693,11 +693,11 @@ namespace FIM.Extensions
                     if (block.neighbour_blocks_indices[j] >= 0)
                     {
                         // with respect to P
-                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minus_R[counter + 2]) / Global.epsilon;
                         // with respect to Sg
-                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Gas) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Gas) + minus_R[counter + 2]) / Global.epsilon;
                         // with respect to Sw
-                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Water) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Water) + minus_R[counter + 2]) / Global.epsilon;
                     }
                 }
                 #endregion
