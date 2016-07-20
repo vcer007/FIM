@@ -1,7 +1,7 @@
 ﻿using FIM.Core;
-using FIM.Fluid;
+using FIM.FluidData;
 using FIM.Misc;
-using FIM.Rock;
+using FIM.RockData;
 using FIM.Well;
 
 using System;
@@ -19,8 +19,8 @@ namespace FIM.Initialize
         {
             SimulationData simulation_data;
             PVT pvt;
-            Kr kr;
-            Porosity porosity;
+            SCAL kr;
+            PorosityCalculator porosity;
 
             initializeFluidData(out pvt, out kr);
             intializePorosity(out porosity);
@@ -35,21 +35,21 @@ namespace FIM.Initialize
 
             simulation_data.original_time_step = 5;
 
+            simulation_data.pvt = pvt;
+            simulation_data.scal = kr;
+            simulation_data.porosity_calculator = porosity;
+
             for (int i = 0; i < simulation_data.grid.Length; i++)
             {
-                simulation_data.grid[i].updateProperties(pvt, kr, porosity, 4800, 0.12, 0.88, 0);
+                simulation_data.grid[i].updateProperties(simulation_data, 4800, 0.12, 0, 0);
             }
-
-            simulation_data.pvt = pvt;
-            simulation_data.kr = kr;
-            simulation_data.porosity = porosity;
 
             simulation_data.tolerance = 1;
 
             return simulation_data;
         }
 
-        private static void initializeFluidData(out PVT pvt, out Kr kr)
+        private static void initializeFluidData(out PVT pvt, out SCAL kr)
         {
             double[][] oil, oil_us, water, water_us, gas;
 
@@ -91,19 +91,19 @@ namespace FIM.Initialize
             Kr_data[3] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
             pvt = new PVT(oil, oil_us, water, water_us, gas, 4014.7);
-            kr = new Kr(Kr_data);
+            kr = new SCAL(Kr_data);
         }
 
-        private static void intializePorosity(out Porosity porosity)
+        private static void intializePorosity(out PorosityCalculator porosity)
         {
             double Cf = 0.000003;
             double porosity_ref = 0.3;
             double porosity_pressure_ref = 14.7;
 
-            porosity = new Porosity(Cf, porosity_ref, porosity_pressure_ref);
+            porosity = new PorosityCalculator(Cf, porosity_ref, porosity_pressure_ref);
         }
 
-        private static void initializeGrid(out SimulationData simulation_data, PVT pvt, Kr kr)
+        private static void initializeGrid(out SimulationData simulation_data, PVT pvt, SCAL kr)
         {
             int x = 10, y = 10, z = 3;
 
@@ -174,7 +174,7 @@ namespace FIM.Initialize
             }
 
 
-            // initialize rock properties
+            // initialize porosity_calculator properties
             for (int i = 0; i < grid.Length; i++)
             {
                 size = grid[i].neighbour_blocks_indices.Length;
@@ -223,12 +223,12 @@ namespace FIM.Initialize
             }
 
             // well data
-            for (int i = 0; i < well_indices.Length; i++)
-            {
-                grid[well_indices[i]].type = Global.BlockType.Well_Block;
-                grid[well_indices[i]].well_radius = well_radius;
-                grid[well_indices[i]].skin = skin;
-            }
+            //for (int i = 0; i < well_indices.Length; i++)
+            //{
+            //    //grid[well_indices[i]].type = Global.BlockType.Well_Block;
+            //    grid[well_indices[i]].well_radius = well_radius;
+            //    grid[well_indices[i]].skin = skin;
+            //}
 
             for (int i = 0; i < grid.Length; i++)
             {
@@ -238,7 +238,7 @@ namespace FIM.Initialize
                 grid[i].Sg[0] = Sg;
             }
 
-            simulation_data = new SimulationData(x, y, z, grid);
+            simulation_data = new SimulationData(grid);
         }
 
         private static void initializeTransmissibilities(SimulationData simulation_data)
@@ -263,22 +263,22 @@ namespace FIM.Initialize
 
         private static void initializeWells(BaseBlock[] grid)
         {
-            for (int i = 0; i < grid.Length; i++)
-            {
-                if (grid[i].type == Global.BlockType.Well_Block)
-                {
-                    WellData.setR_equivalent(grid[i], grid);
-                    WellData.setWI(grid[i]);
-                }
-            }
+            //for (int i = 0; i < grid.Length; i++)
+            //{
+            //    if (grid[i].type == Global.BlockType.Well_Block)
+            //    {
+            //        WellData.getR_equivalent(grid[i], grid);
+            //        WellData.getWI(grid[i]);
+            //    }
+            //}
 
-            // production well
-            grid[299].well_type = Global.WellType.Production;
-            grid[299].specified_BHP = 0;
-            grid[299].q_oil[0] = 20000;
+            //// production well
+            //grid[299].well_type = Global.WellType.Production;
+            //grid[299].specified_BHP = 0;
+            //grid[299].q_oil[0] = 20000;
 
-            grid[0].well_type = Global.WellType.Injection;
-            grid[0].specified_flow_rate = -100000000 / Global.a;
+            //grid[0].well_type = Global.WellType.Injection;
+            //grid[0].specified_flow_rate = -100000000 / Global.a;
         }
 
     }

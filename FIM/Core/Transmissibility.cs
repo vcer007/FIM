@@ -6,8 +6,23 @@ using System.Threading.Tasks;
 
 namespace FIM.Core
 {
-    class Transmissibility
+    /// <summary>
+    /// This class is used to calculate the geometrical transmissibility between two blocks.
+    /// </summary>
+    abstract class Transmissibility
     {
+        /// <summary>
+        /// Calculates the geometrical transmissibility between two blocks.
+        /// </summary>
+        /// <remarks>
+        /// This method is based on harmonic averaging.
+        /// The geometrical transmissibility factor calculated from this method is fixed throughout the simulation.
+        /// It's independent of pressures and saturations.
+        /// </remarks>
+        /// <param name="block_1">block_1.</param>
+        /// <param name="block_2">block_2.</param>
+        /// <returns>the Geometrical transmissibility between two blocks.</returns>
+        /// <seealso cref="BaseBlock"/>
         public static double calculate(BaseBlock block_1, BaseBlock block_2)
         {
             // As each block stores a list of side faces areas, we need to find the index of each block relative to the other.

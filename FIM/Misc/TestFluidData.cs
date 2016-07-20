@@ -1,4 +1,4 @@
-﻿using FIM.Fluid;
+﻿using FIM.FluidData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,7 +51,7 @@ namespace FIM.Misc
             Kr_data[3] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
             PVT pvt = new PVT(oil, oil_us, water, water_us, gas, 4014.7);
-            Kr kr = new Kr(Kr_data);
+            SCAL kr = new SCAL(Kr_data);
 
             for (double i = 0; i <= 1; i += 0.01)
             {

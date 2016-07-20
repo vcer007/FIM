@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using FIM.Fluid;
+using FIM.FluidData;
 using FIM.Core;
 using FIM.Solver;
 
@@ -14,8 +14,8 @@ namespace FIM
     {
         static void Main(string[] args)
         {
-            SimulationData data = Initialize.Odeh.initiaize();
-            FullyImplicit.RunSimulation(data);
+            //SimulationData data = Initialize.Odeh.initiaize();
+            //FullyImplicit.RunSimulation(data);
 
             //SimulationData data = Initialize.ThreeBlocksLinear.initiaize();
             //FIM_ThreeBlocksLinear.RunSimulation(data);
@@ -23,8 +23,8 @@ namespace FIM
             //SimulationData data = Initialize.SingleBlockModel.initiaize();
             //FIM_block.RunSimulation(data);
 
-            //SimulationData data = Initialize.SingleLayerModel.initiaize();
-            //FIM_SingleLayer.RunSimulation(data);
+            SimulationData data = Initialize.SingleLayerModel.initiaize();
+            FIM_SingleLayer.RunSimulation(data);
 
             Console.ReadKey();
         }

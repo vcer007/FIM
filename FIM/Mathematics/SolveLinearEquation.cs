@@ -10,6 +10,14 @@ namespace FIM.Mathematics
 {
     class SolveLinearEquation
     {
+        /// <summary>
+        /// A direct solver that calculates delta x.
+        /// </summary>
+        /// <remarks>
+        /// This method is based on gaussian elimination.
+        /// </remarks>
+        /// <param name="X">The Jacobi matrix.</param>
+        /// <param name="Y">The minus_R array.</param>
         public static void direct(double[][] X, double[] Y)
         {
             int I, J, K, K1, N;
