@@ -32,7 +32,7 @@ namespace FIM.Initialize
             simulation_data.phases = new Global.Phase[] { Global.Phase.Oil, Global.Phase.Gas, Global.Phase.Water };
             simulation_data.solubleGasPresent = true;
 
-            simulation_data.original_time_step = 1;
+            simulation_data.original_time_step = 5;
 
             simulation_data.pvt = pvt;
             simulation_data.scal = kr;
@@ -274,7 +274,7 @@ namespace FIM.Initialize
 
             //wells[0] = new WellData(data, well_indices[0], Global.WellType.Injection, Global.WellControl.GasRate, 0.25, 0, 0, 1000000);
 
-            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.OilRate, 0.25, 0, 1000, 1000);
+            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.OilRate, 0.25, 0, 1000, 10000);
 
             data.wells = wells;
 
