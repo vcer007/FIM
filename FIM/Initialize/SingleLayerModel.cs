@@ -108,7 +108,7 @@ namespace FIM.Initialize
 
         private static void initializeGrid(out SimulationData simulation_data, PVT pvt, SCAL kr)
         {
-            int x = 2, y = 1, z = 1;
+            int x = 10, y = 1, z = 1;
 
             double porosity = 0.3;
             double[][] permeability = new double[3][];
