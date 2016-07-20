@@ -17,9 +17,9 @@ namespace FIM.Extensions
             {
                 index = 3 * data.wells[i].index;
 
-                minusR_Matrix[index] -= data.wells[i].q_oil[1];
-                minusR_Matrix[index + 1] -= data.wells[i].q_free_gas[1] + data.wells[i].q_solution_gas[1];
-                minusR_Matrix[index + 2] -= data.wells[i].q_water[1];
+                minusR_Matrix[index] += data.wells[i].q_oil[1];
+                minusR_Matrix[index + 1] += data.wells[i].q_free_gas[1] + data.wells[i].q_solution_gas[1];
+                minusR_Matrix[index + 2] += data.wells[i].q_water[1];
             }
 
             //for (int i = 0; i < data.wells.Length; i++)
