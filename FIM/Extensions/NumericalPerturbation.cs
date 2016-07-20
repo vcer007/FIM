@@ -189,7 +189,7 @@ namespace FIM.Extensions
 
         }
 
-        private static double perturb(this BaseBlock block, SimulationData data, Global.Phase phase, int neighbour_block_index, Global.Variable variable)
+        private static double perturb(this BaseBlock block, SimulationData data, Global.Phase equation_phase, int neighbour_block_index, Global.Variable variable)
         {
             double R_plus = 0;
 
@@ -257,7 +257,7 @@ namespace FIM.Extensions
             #endregion
 
 
-            if (phase == Global.Phase.Oil)
+            if (equation_phase == Global.Phase.Oil)
             {
                 if (this_block)
                 {
@@ -301,7 +301,7 @@ namespace FIM.Extensions
 
                     //block.accumulation_term_oil = accumulation_term;
                     // production term
-                    //production_term = block.q_oil[1];
+                    production_term = 0;
 
                     //block.production_term_oil = production_term;
                 }
@@ -344,11 +344,11 @@ namespace FIM.Extensions
                     // accumulation term
                     accumulation_term = block.accumulation_term_oil;
                     // production term
-                    //production_term = block.production_term_oil;
+                    production_term = block.production_term_oil;
 
                 }
             }
-            else if (phase == Global.Phase.Gas)
+            else if (equation_phase == Global.Phase.Gas)
             {
                 if (this_block)
                 {
@@ -431,7 +431,7 @@ namespace FIM.Extensions
                     //        production_term = block.specified_flow_rate;
                     //    }
                     //}
-
+                    production_term = 0;
 
                     //block.production_term_gas = production_term;
                 }
@@ -495,7 +495,7 @@ namespace FIM.Extensions
                     production_term = block.production_term_gas;
                 }
             }
-            else if (phase == Global.Phase.Water)
+            else if (equation_phase == Global.Phase.Water)
             {
                 if (this_block)
                 {
@@ -539,7 +539,7 @@ namespace FIM.Extensions
 
                     //block.accumulation_term_water = accumulation_term;
                     // production term
-                    //production_term = block.q_water[1];
+                    production_term = 0;
 
                     //block.production_term_water = production_term;
                 }
@@ -587,7 +587,7 @@ namespace FIM.Extensions
             }
 
 
-            R_plus = transmissibility_term - accumulation_term /*- production_term*/;
+            R_plus = transmissibility_term - accumulation_term - production_term;
             return R_plus;
         }
 

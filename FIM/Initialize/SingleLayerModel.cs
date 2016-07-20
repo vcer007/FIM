@@ -32,7 +32,7 @@ namespace FIM.Initialize
             simulation_data.phases = new Global.Phase[] { Global.Phase.Oil, Global.Phase.Gas, Global.Phase.Water };
             simulation_data.solubleGasPresent = true;
 
-            simulation_data.original_time_step = 5;
+            simulation_data.original_time_step = 1;
 
             simulation_data.pvt = pvt;
             simulation_data.scal = kr;
@@ -108,7 +108,7 @@ namespace FIM.Initialize
 
         private static void initializeGrid(out SimulationData simulation_data, PVT pvt, SCAL kr)
         {
-            int x = 10, y = 10, z = 1;
+            int x = 2, y = 1, z = 1;
 
             double porosity = 0.3;
             double[][] permeability = new double[3][];
@@ -267,14 +267,14 @@ namespace FIM.Initialize
             //grid[0].well_type = Global.WellType.Injection;
             //grid[0].specified_flow_rate = 0 / Global.a;
 
-            int[] well_indices = new int[] { 99};
+            int[] well_indices = new int[] { 0};
 
             // well data
             WellData[] wells = new WellData[1];
 
             //wells[0] = new WellData(data, well_indices[0], Global.WellType.Injection, Global.WellControl.GasRate, 0.25, 0, 0, 1000000);
 
-            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.OilRate, 0.25, 0, 1000, 10000);
+            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.OilRate, 0.25, 0, 1000, 1000);
 
             data.wells = wells;
 
