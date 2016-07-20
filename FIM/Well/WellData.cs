@@ -174,7 +174,7 @@ namespace FIM.Well
                     // with respect to Sw
                     dq_oil_dSw = 0;
                     temp = calculatePwf(block, block.P[1], block.Kro[1], block.viscosity_oil[1], block.Bo[1]);
-                    dq_free_gas_dSw = (calculateFlow_Rate(block.P[1], temp, block.Krg[2], block.viscosity_gas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.epsilon;
+                    dq_free_gas_dSw = (calculateFlow_Rate(block.P[1], temp, block.Krg[1], block.viscosity_gas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.epsilon;
                     dq_solution_gas_dSw = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.epsilon;
                     dq_water_dSw = (calculateFlow_Rate(block.P[1], temp, block.Krw[1], block.viscosity_water[1], WI, block.Bw[1]) - q_water[1]) / Global.epsilon;
                 }

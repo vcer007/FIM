@@ -611,7 +611,7 @@ namespace FIM.Extensions
             //To-Do : add well production/injection.
         }
 
-        public static void calculateJacobi_Matrix(SimulationData data, double[] minus_R, double[][] jacobi)
+        public static void calculateJacobi_Matrix(SimulationData data, double[] minus_R, double[][] jacobians)
         {
             //int size = data.grid.Length * data.phases.Length;
             //double[][] jacobians = new double[size][];
@@ -629,64 +629,64 @@ namespace FIM.Extensions
 
                 #region Oil
                 // with respect to P
-                jacobi[counter][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.Pressure) + minus_R[counter]) / Global.epsilon;
+                jacobians[counter][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.Pressure) + minus_R[counter]) / Global.epsilon;
                 // with respect to Sg
-                jacobi[counter][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.Saturation_Gas) + minus_R[counter]) / Global.epsilon;
+                jacobians[counter][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.Saturation_Gas) + minus_R[counter]) / Global.epsilon;
                 // with respect to Sw
-                jacobi[counter][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.Saturation_Water) + minus_R[counter]) / Global.epsilon;
+                jacobians[counter][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.Saturation_Water) + minus_R[counter]) / Global.epsilon;
 
                 for (int j = 0; j < block.neighbour_blocks_indices.Length; j++)
                 {
                     if (block.neighbour_blocks_indices[j] >= 0)
                     {
                         // with respect to P
-                        jacobi[counter][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minus_R[counter]) / Global.epsilon;
+                        jacobians[counter][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minus_R[counter]) / Global.epsilon;
                         // with respect to Sg
-                        jacobi[counter][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.Saturation_Gas) + minus_R[counter]) / Global.epsilon;
+                        jacobians[counter][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.Saturation_Gas) + minus_R[counter]) / Global.epsilon;
                         // with respect to Sw
-                        jacobi[counter][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.Saturation_Water) + minus_R[counter]) / Global.epsilon;
+                        jacobians[counter][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.Saturation_Water) + minus_R[counter]) / Global.epsilon;
                     }
                 }
                 #endregion
                 #region Gas
                 // with respect to P
-                jacobi[counter + 1][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.Pressure) + minus_R[counter + 1]) / Global.epsilon;
+                jacobians[counter + 1][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.Pressure) + minus_R[counter + 1]) / Global.epsilon;
                 // with respect to Sg
-                jacobi[counter + 1][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.Saturation_Gas) + minus_R[counter + 1]) / Global.epsilon;
+                jacobians[counter + 1][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.Saturation_Gas) + minus_R[counter + 1]) / Global.epsilon;
                 // with respect to Sw
-                jacobi[counter + 1][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.Saturation_Water) + minus_R[counter + 1]) / Global.epsilon;
+                jacobians[counter + 1][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.Saturation_Water) + minus_R[counter + 1]) / Global.epsilon;
 
                 for (int j = 0; j < block.neighbour_blocks_indices.Length; j++)
                 {
                     if (block.neighbour_blocks_indices[j] >= 0)
                     {
                         // with respect to P
-                        jacobi[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minus_R[counter + 1]) / Global.epsilon;
                         // with respect to Sg
-                        jacobi[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.Saturation_Gas) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.Saturation_Gas) + minus_R[counter + 1]) / Global.epsilon;
                         // with respect to Sw
-                        jacobi[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.Saturation_Water) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 1][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.Saturation_Water) + minus_R[counter + 1]) / Global.epsilon;
                     }
                 }
                 #endregion
                 #region Water
                 // with respect to P
-                jacobi[counter + 2][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.Pressure) + minus_R[counter + 2]) / Global.epsilon;
+                jacobians[counter + 2][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.Pressure) + minus_R[counter + 2]) / Global.epsilon;
                 // with respect to Sg
-                jacobi[counter + 2][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.Saturation_Gas) + minus_R[counter + 2]) / Global.epsilon;
+                jacobians[counter + 2][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.Saturation_Gas) + minus_R[counter + 2]) / Global.epsilon;
                 // with respect to Sw
-                jacobi[counter + 2][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.Saturation_Water) + minus_R[counter + 2]) / Global.epsilon;
+                jacobians[counter + 2][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.Saturation_Water) + minus_R[counter + 2]) / Global.epsilon;
 
                 for (int j = 0; j < block.neighbour_blocks_indices.Length; j++)
                 {
                     if (block.neighbour_blocks_indices[j] >= 0)
                     {
                         // with respect to P
-                        jacobi[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j]] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minus_R[counter + 1]) / Global.epsilon;
                         // with respect to Sg
-                        jacobi[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Gas) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 1] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Gas) + minus_R[counter + 1]) / Global.epsilon;
                         // with respect to Sw
-                        jacobi[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Water) + minus_R[counter + 1]) / Global.epsilon;
+                        jacobians[counter + 2][data.phases.Length * block.neighbour_blocks_indices[j] + 2] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Saturation_Water) + minus_R[counter + 1]) / Global.epsilon;
                     }
                 }
                 #endregion
@@ -694,6 +694,7 @@ namespace FIM.Extensions
                 counter += data.phases.Length;
             }
 
+            //return jacobians;
             //To-Do : add well production/injection derivatives.
 
         }

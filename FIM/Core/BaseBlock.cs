@@ -231,7 +231,7 @@ namespace FIM.Core
 
             // Kro is only dependent on Sg.
             this.Kro[time_level] = data.scal.getKr(Global.Phase.Oil, Sg);
-            this.Krw[time_level] = data.scal.getKr(Global.Phase.Gas, Sg);
+            this.Krw[time_level] = data.scal.getKr(Global.Phase.Water, Sg);
             this.Krg[time_level] = data.scal.getKr(Global.Phase.Gas, Sg);
 
             // volumetric
