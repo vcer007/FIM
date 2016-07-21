@@ -274,7 +274,7 @@ namespace FIM.Initialize
 
             //wells[0] = new WellData(data, well_indices[0], Global.WellType.Injection, Global.WellControl.GasRate, 0.25, 0, 0, 1000000);
 
-            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.BHP, 0.25, 0, 4500, 1000);
+            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.BHP, 0.25, 0, 4700, 1000);
 
             data.wells = wells;
 

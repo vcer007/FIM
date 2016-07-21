@@ -163,7 +163,7 @@ namespace FIM.Well
                     dq_oil_dP = 0;
                     temp = calculatePwf(block, block.P[2], block.Kro[1], block.viscosity_oil[2], block.Bo[2]);
                     dq_free_gas_dP = (calculateFlow_Rate(block.P[2], temp, block.Krg[1], block.viscosity_gas[2], WI, block.Bg[2]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dP = (block.Rso[2] * q_oil[2] - block.Rso[1] * q_oil[1]) / Global.epsilon;
+                    dq_solution_gas_dP = (block.Rso[2] * calculateFlow_Rate(block.P[2], temp, block.Kro[1], block.viscosity_oil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.epsilon;
                     dq_water_dP = (calculateFlow_Rate(block.P[2], temp, block.Krw[1], block.viscosity_water[2], WI, block.Bw[2]) - q_water[1]) / Global.epsilon;
                     // with respect to Sg
                     dq_oil_dSg = 0;
@@ -247,7 +247,7 @@ namespace FIM.Well
                     // with respect to P
                     dq_oil_dP = (calculateFlow_Rate(block.P[2], temp, block.Kro[1], block.viscosity_oil[2], WI, block.Bo[2]) - q_oil[1]) / Global.epsilon;
                     dq_free_gas_dP = (calculateFlow_Rate(block.P[2], temp, block.Krg[1], block.viscosity_gas[2], WI, block.Bg[2]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dP = (block.Rso[2] * q_oil[2] - block.Rso[1] * q_oil[1]) / Global.epsilon;
+                    dq_solution_gas_dP = (block.Rso[2] * calculateFlow_Rate(block.P[2], temp, block.Kro[1], block.viscosity_oil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.epsilon;
                     dq_water_dP = (calculateFlow_Rate(block.P[2], temp, block.Krw[1], block.viscosity_water[2], WI, block.Bw[2]) - q_water[1]) / Global.epsilon;
                     // with respect to Sg
                     dq_oil_dSg = (calculateFlow_Rate(block.P[1], temp, block.Kro[2], block.viscosity_oil[1], WI, block.Bo[1]) - q_oil[1]) / Global.epsilon;
