@@ -145,9 +145,6 @@ namespace FIM.Core
         // these variables are used to save repeated calculations unnecessarily.
         public double[] transmissibility_terms_oil, transmissibility_terms_water, transmissibility_terms_gas;
         public double accumulation_term_oil, accumulation_term_water, accumulation_term_gas;
-        public double production_term_oil, production_term_water, production_term_gas;
-
-        public double dp, dso, dsw, dsg;
 
         #endregion
 
@@ -171,9 +168,9 @@ namespace FIM.Core
 
             this.viscosity_oil = new double[steps_memory]; this.viscosity_gas = new double[steps_memory]; this.viscosity_water = new double[steps_memory];
 
-            this.Rso = new double[steps_memory + 1];
+            this.Rso = new double[steps_memory];
 
-            this.P = new double[steps_memory + 1];
+            this.P = new double[steps_memory];
 
             // volumetric
             this.Vp = new double[steps_memory];

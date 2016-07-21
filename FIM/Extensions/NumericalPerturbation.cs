@@ -64,7 +64,7 @@ namespace FIM.Extensions
                 block.accumulation_term_oil = accumulation_term;
 
                 production_term = 0;
-                block.production_term_oil = production_term;
+                //block.production_term_oil = production_term;
 
                 R -= (accumulation_term + production_term);
             }
@@ -104,13 +104,15 @@ namespace FIM.Extensions
                 block.accumulation_term_water = accumulation_term;
 
                 production_term = 0;
-                block.production_term_water = production_term;
+                //block.production_term_water = production_term;
 
 
                 R -= (accumulation_term + production_term);
             }
             else
             {
+                //R = 0;
+
                 for (int i = 0; i < block.neighbour_blocks_indices.Length; i++)
                 {
                     if (block.neighbour_blocks_indices[i] < 0)
@@ -139,13 +141,13 @@ namespace FIM.Extensions
 
                     if (data.solubleGasPresent)
                     {
-                        //Kr = upstream_block.Kro[1];
-                        //B = 0.5 * (block.Bo[1] + neighbour_block.Bo[1]);
-                        //viscosity = 0.5 * (block.viscosity_oil[1] + neighbour_block.viscosity_oil[1]);
+                        Kr = upstream_block.Kro[1];
+                        B = 0.5 * (block.Bo[1] + neighbour_block.Bo[1]);
+                        viscosity = 0.5 * (block.viscosity_oil[1] + neighbour_block.viscosity_oil[1]);
                         Rso = 0.5 * (block.Rso[1] + neighbour_block.Rso[1]);
 
-                        //temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
-                        temp += Rso * block.transmissibility_terms_oil[i];
+                        temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
+                        //temp += Rso * block.transmissibility_terms_oil[i];
                     }
 
                     block.transmissibility_terms_gas[i] = temp;
@@ -178,9 +180,12 @@ namespace FIM.Extensions
                 //        production_term = block.specified_flow_rate;
                 //    }
                 //}
-                block.production_term_gas = 0;
-
-
+                //block.production_term_gas = 0;
+                //R = 0;
+                //for (int i = 0; i < block.transmissibility_terms_gas.Length; i++)
+                //{
+                //    R += block.transmissibility_terms_gas[i];
+                //}
                 R -= (accumulation_term + 0);
             }
 
@@ -344,7 +349,7 @@ namespace FIM.Extensions
                     // accumulation term
                     accumulation_term = block.accumulation_term_oil;
                     // production term
-                    production_term = block.production_term_oil;
+                    //production_term = block.production_term_oil;
 
                 }
             }
@@ -492,7 +497,7 @@ namespace FIM.Extensions
                     // accumulation term
                     accumulation_term = block.accumulation_term_gas;
                     // production term
-                    production_term = block.production_term_gas;
+                    //production_term = block.production_term_gas;
                 }
             }
             else if (equation_phase == Global.Phase.Water)
@@ -582,12 +587,12 @@ namespace FIM.Extensions
                     // accumulation term
                     accumulation_term = block.accumulation_term_water;
                     // production term
-                    production_term = block.production_term_water;
+                    //production_term = block.production_term_water;
                 }
             }
 
 
-            R_plus = transmissibility_term - accumulation_term - production_term;
+            R_plus = transmissibility_term - accumulation_term /*- production_term*/;
             return R_plus;
         }
 
@@ -617,13 +622,14 @@ namespace FIM.Extensions
 
         public static void calculateJacobi_Matrix(SimulationData data, double[] minus_R, double[][] jacobians)
         {
-            //for (int i = 0; i < jacobians.Length; i++)
-            //{
-            //    for (int j = 0; j < jacobians[i].Length; j++)
-            //    {
-            //        jacobians[i][j] = 0;
-            //    }
-            //}
+            // this is necessary as the direct solver used modifies the jacobi matrix.
+            for (int i = 0; i < jacobians.Length; i++)
+            {
+                for (int j = 0; j < jacobians[i].Length; j++)
+                {
+                    jacobians[i][j] = 0;
+                }
+            }
             //int size = data.grid.Length * data.phases.Length;
             ///*double[][] */jacobians = new double[size][];
 
