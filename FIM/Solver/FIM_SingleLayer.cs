@@ -300,9 +300,9 @@ namespace FIM.Solver
             double[] minus_R = new double[jacobian.Length];
             double[] delta = new double[jacobian.Length];
 
-            double end_time = 5 * 46;
+            double end_time = 10 * 365;
 
-            for (double current_time = data.time_step; current_time <= end_time; current_time += data.time_step)
+            for (double current_time = data.original_time_step; current_time <= end_time; current_time += data.time_step)
             {
                 double temp = MBE.GIP(data, 0);
 
@@ -316,9 +316,10 @@ namespace FIM.Solver
 
                 //Console.WriteLine("###################################################################");
                 //Console.WriteLine(current_time + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.grid[0].Rso[0]);
-                Console.WriteLine(current_time + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.grid[0].Rso[0] + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
+                Console.WriteLine(current_time + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
+                //Console.WriteLine(data.MBE_Gas);
                 //Console.WriteLine(data.grid[0].P[0] + ", " + data.wells[0].BHP[0]);
-                Console.ReadKey();
+                //Console.ReadKey();
                 //Console.WriteLine("###################################################################");
             }
         }
