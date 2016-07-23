@@ -40,7 +40,7 @@ namespace FIM.Core
         /// <para>The list begins with the index of the top block, then the bottom block then all the other blocks.</para>
         /// <para>A value of -1 is used in cases where the top or bottom blocks are non-present.</para>
         /// </remarks>
-        public int[] neighbour_blocks_indices;
+        public int[] neighbourBlocksIndices;
 
         #endregion
 
@@ -49,13 +49,13 @@ namespace FIM.Core
         /// <summary>
         /// An <see cref="Array"/> of the grid block porosities at different time levels.
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] porosity;
 
         /// <summary>
         /// An <see cref="Array"/> of the grid block permeabilities in the different directions.
         /// </summary>
-        public double[] permeability_list;
+        public double[] permeability;
 
         #endregion
 
@@ -64,97 +64,120 @@ namespace FIM.Core
         /// <summary>
         /// <para>An <see cref="Array"/> of the fluid saturations at different time levels.</para>
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Sw, So, Sg;
 
         /// <summary>
         /// <para>An <see cref="Array"/> of the fluid relative permeabilities at different time levels.</para>
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Krw, Kro, Krg;
 
         /// <summary>
         /// <para>An <see cref="Array"/> of the fluid FVF "Formation Volume Factor" at different time levels.</para>
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Bw, Bo, Bg;
 
         /// <summary>
         /// <para>An <see cref="Array"/> of the fluid viscosities at different time levels.</para>
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
-        public double[] viscosity_water, viscosity_oil, viscosity_gas;
+        /// <seealso cref="Global.STEPS_MEMORY"/>
+        public double[] viscosityWater, viscosityOil, viscosityGas;
 
         /// <summary>
         /// <para>An <see cref="Array"/> of the solution Gas/Oil ratio at different time levels.</para>
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Rso;
 
         /// <summary>
         /// <para>An <see cref="Array"/> of the pressure ratio at different time levels.</para>
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] P;
-
-        // phase specific properties. used when implementing capillary pressure.
-        //public double[] Pw, Po, Pg;
 
         /// <summary>
         /// The pressure of the previous time step "n-1 time level".
         /// </summary>
-        public double P_previous_step;
+        public double P_previousStep;
 
         #endregion
 
         #region Volumetric data
+        /// <summary>
+        /// Volumetric data associated with each "PeBi" grid block.
+        /// </summary>
+        /// <remarks>
+        /// The size of each array is equal to 2 + number of sideways neighboring blocks.
+        /// This is due to the fact that the PeBi grid system implemented depends on flat blocks.
+        /// So, each block will have a top and bottom block except if it is a boundary block.
+        /// </remarks>
+        public double[] areaList, deltaXList, boundaryLengthList;
 
-        public double[] area_list, delta_x_list, boundary_length_list;
+        /// <summary>
+        /// Volumetric data.
+        /// </summary>
+        public double height, bulkVolume;
 
-        public double h, bulk_volume;
-
+        /// <summary>
+        /// Pore volume array.
+        /// </summary>
+        /// <remarks>
+        /// The size of this array depends on the number of steps memory used.
+        /// </remarks>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Vp;
 
         #endregion
 
         #region Well data
+        /// <summary>
+        /// The type of a block.
+        /// </summary>
+        /// <remarks>
+        /// This will indicate if it's a normall block, or if it cintains a well.
+        /// </remarks>
+        /// <seealso cref="Global.BlockType"/>
         public Global.BlockType type;
-        //public Global.WellType well_type;
-
-        //public double r_equivalent, WI;
-
-        //public double specified_flow_rate, specified_BHP;
-
-        //public double[] BHP;
-
-        //public double well_radius, skin;
-
-        //public double[] q_water, q_oil, q_gas;
-
-        public double total_qg, GOR;
 
         #endregion
 
         #region Miscellaneous
 
-        // list of the blocks transmissibilities, brginning with the top then bottom ones.
-
+        /// <summary>
+        /// list of the blocks transmissibilities, beginning with the top and bottom ones.
+        /// </summary>
+        /// <remarks>
+        /// <para>This is the geometric transmissibility factor between two blocks. It does not change with time.</para>
+        /// <para>The size of this array is equal to 2 + number of sideways neighboring blocks.</para>
+        /// </remarks>
+        /// <seealso cref="Transmissibility.calculate(BaseBlock, BaseBlock)"/>
         public double[] transmissibility_list;
 
 
-        // these variables are used to save repeated calculations unnecessarily.
+        /// <summary>
+        /// These variables are used to save repeated calculations unnecessarily.
+        /// </summary>
+        /// <remarks>
+        /// <para>To reduce clutter, these values are calculated once and stored for subsequent reuse.</para>
+        /// <para>Unlike <see cref="transmissibility_list"/>, this is the final pressure and saturation dependent transmissibility.</para>
+        /// </remarks>
         public double[] transmissibility_terms_oil, transmissibility_terms_water, transmissibility_terms_gas;
+
+        /// <summary>
+        /// These variables are used to save repeated calculations unnecessarily.
+        /// </summary>
         public double accumulation_term_oil, accumulation_term_water, accumulation_term_gas;
 
         #endregion
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseBlock"/> class.
         /// </summary>
         public BaseBlock()
         {
-            int steps_memory = Global.steps_memory;
+            int steps_memory = Global.STEPS_MEMORY;
 
             // data.porosity_calculator
             this.porosity = new double[steps_memory];
@@ -166,7 +189,7 @@ namespace FIM.Core
 
             this.Kro = new double[steps_memory]; this.Krg = new double[steps_memory]; this.Krw = new double[steps_memory];
 
-            this.viscosity_oil = new double[steps_memory]; this.viscosity_gas = new double[steps_memory]; this.viscosity_water = new double[steps_memory];
+            this.viscosityOil = new double[steps_memory]; this.viscosityGas = new double[steps_memory]; this.viscosityWater = new double[steps_memory];
 
             this.Rso = new double[steps_memory];
 
@@ -176,119 +199,7 @@ namespace FIM.Core
             this.Vp = new double[steps_memory];
 
             // well
-            this.type = Global.BlockType.Normal_Block;
-
-            //this.well_type = Global.WellType.ShutIn;
-
-            //this.BHP = new double[steps_memory];
-
-            //this.q_oil = new double[steps_memory]; this.q_gas = new double[steps_memory]; this.q_water = new double[steps_memory];
+            this.type = Global.BlockType.NormalBlock;
         }
-
-        /// <summary>
-        /// Updates the properties of the <see cref="BaseBlock"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>Different time levels properties are updated recursively down-up.</para>
-        /// <para>If time level is equal to zero, then n0, n1 and n2, if available, time levels will be updated.</para>
-        /// <para>If time level is equal to 1, then only n1 and n2, if available, time levels will be updated.</para>
-        /// </remarks>
-        /// <param name="data">The <seealso cref="SimulationData"/> object thaat contains all the input data.</param>
-        /// <param name="P">The new pressure value.</param>
-        /// <param name="Sw">The new water saturation value.</param>
-        /// <param name="Sg">The new gas saturation value.</param>
-        /// <param name="time_level"><para>Default value is 0.</para>
-        /// <para>The time_level at which the properties should be updated.</para>
-        /// </param>
-        /// <seealso cref="Global.steps_memory"/>
-        public void updateProperties(SimulationData data, double P, double Sw, double Sg, int time_level = 0)
-        {
-            // pressure
-            this.P_previous_step = this.P[0];
-
-            this.P[time_level] = P;
-
-            // data.porosity_calculator
-            this.porosity[time_level] = data.porosity_calculator.getPorosity(P);
-
-            // fluid
-            this.Bo[time_level] = data.pvt.getFVF(Global.Phase.Oil, P);
-            this.Bw[time_level] = data.pvt.getFVF(Global.Phase.Water, P);
-            this.Bg[time_level] = data.pvt.getFVF(Global.Phase.Gas, P);
-
-            this.viscosity_oil[time_level] = data.pvt.getViscosity(Global.Phase.Oil, P);
-            this.viscosity_water[time_level] = data.pvt.getViscosity(Global.Phase.Water, P);
-            this.viscosity_gas[time_level] = data.pvt.getViscosity(Global.Phase.Gas, P);
-
-            this.Rso[time_level] = data.pvt.getRs(Global.Phase.Oil, P);
-
-            this.So[time_level] = 1 - Sw - Sg;
-            this.Sw[time_level] = Sw;
-            this.Sg[time_level] = Sg;
-
-            // Kro is only dependent on Sg.
-            this.Kro[time_level] = data.scal.getKr(Global.Phase.Oil, Sg);
-            this.Krw[time_level] = data.scal.getKr(Global.Phase.Water, Sg);
-            this.Krg[time_level] = data.scal.getKr(Global.Phase.Gas, Sg);
-
-            // volumetric
-            this.Vp[time_level] = this.bulk_volume * this.porosity[time_level];
-
-            // well blocks
-            //if (this.type == Global.BlockType.Well_Block)
-            //{
-            //    this.BHP[time_level] = Well.WellData.calculatePwf(this, this.P[time_level], this.Kro[time_level], this.viscosity_oil[time_level], this.Bo[time_level]);
-
-            //    this.q_oil[1] = this.q_oil[0];
-
-            //    this.q_gas[time_level] = Well.WellData.calculateFlow_Rate(this.P[time_level], this.BHP[time_level], this.Krg[time_level], this.viscosity_gas[time_level], this.WI, this.Bg[time_level]);
-            //}
-
-            if (type == Global.BlockType.Well_Block)
-            {
-                for (int i = 0; i < data.wells.Length; i++)
-                {
-                    if (data.wells[i].index == index)
-                    {
-                        data.wells[i].update(time_level, this);
-                    }
-                }
-            }
-
-            if (time_level == 0)
-            {
-                //total_qg = this.q_gas[time_level] + this.Rso[time_level] * this.q_oil[time_level];
-                //GOR = total_qg / q_oil[time_level];
-
-                // this way we update n1 time level properties also automatically
-                // after updating n0 time level properties.
-                // note that the initial guess here for n1 is assumed to be the same values as the ones at n0.
-                updateProperties(data, P, Sw, Sg, 1);
-            }
-            else if (time_level == 1)
-            {
-                // check if numerical perturbation method is used.
-                // this is indicated by three time levels storage "where the third one, n2, is used solely for perturbation".
-                if (Global.steps_memory == 3)
-                {
-                    updateProperties(data, P + Global.epsilon, Sw + Global.epsilon, Sg + Global.epsilon, 2);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Resets n1, and n2 time level if available, properties to n0.
-        /// </summary>
-        /// <param name="data">The data.</param>
-        /// <seealso cref="SimulationData"/>
-        /// <seealso cref="SimulationData.time_step_slashing_factor"/>
-        public void reset_n1(SimulationData data)
-        {
-            // to reset the properties of the block, simply call updateProperties_n0_n1 with input parameters from
-            // the n0 time level.
-            updateProperties(data, this.P[0], this.Sw[0], this.Sg[0], 0);
-        }
-
-        
     }
 }

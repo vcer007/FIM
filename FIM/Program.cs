@@ -14,17 +14,8 @@ namespace FIM
     {
         static void Main(string[] args)
         {
-            //SimulationData data = Initialize.Odeh.initiaize();
-            //FullyImplicit.RunSimulation(data);
-
-            //SimulationData data = Initialize.ThreeBlocksLinear.initiaize();
-            //FIM_ThreeBlocksLinear.RunSimulation(data);
-
-            //SimulationData data = Initialize.SingleBlockModel.initiaize();
-            //FIM_block.RunSimulation(data);
-
-            SimulationData data = Initialize.SingleLayerModel.initiaize();
-            FIM_SingleLayer.RunSimulation(data);
+            SimulationData data = Initialization.Model.initiaize();
+            FullyImplicitSolver.RunSimulation(data);
 
             Console.ReadKey();
         }

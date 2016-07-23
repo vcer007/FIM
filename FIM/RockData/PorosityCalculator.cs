@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FIM.RockData
+﻿namespace FIM.RockData
 {
     /// <summary>
     /// This class is used to calculate porosity_calculator porosities at different pressures.

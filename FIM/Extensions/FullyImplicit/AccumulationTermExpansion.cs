@@ -1,6 +1,6 @@
 ﻿using FIM.Core;
 
-namespace FIM.Extensions
+namespace FIM.Extensions.FullyImplicit
 {
     public static class AccumulationTermExpansion
     {
@@ -8,29 +8,29 @@ namespace FIM.Extensions
 
         public static double getCOP(this BaseBlock block, SimulationData data)
         {
-            return 1 / (Global.a * data.time_step) * (block.phi_dash() / block.Bo[0] + block.Vp[1] * block.FVF_dash(Global.Phase.Oil)) * (1 - block.Sg[0]);
+            return 1 / (Global.a * data.timeStep) * (block.phi_dash() / block.Bo[0] + block.Vp[1] * block.FVF_dash(Global.Phase.Oil)) * (1 - block.Sg[0]);
         }
         public static double getCOG(this BaseBlock block, SimulationData data)
         {
-            return -1 / (Global.a * data.time_step) * (block.Vp[1] / block.Bo[1]);
+            return -1 / (Global.a * data.timeStep) * (block.Vp[1] / block.Bo[1]);
         }
         public static double getCGP(this BaseBlock block, SimulationData data)
         {
-            CGP = 1 / (Global.a * data.time_step) * (((block.phi_dash() / block.Bo[0] + block.Vp[1] * block.FVF_dash(Global.Phase.Oil)) * block.Rso[0] + (block.Vp[1] / block.Bo[1]) * block.Rso_dash()) * (1 - block.Sg[0]) + (block.phi_dash() / block.Bg[0] + block.Vp[1] * block.FVF_dash(Global.Phase.Gas)) * block.Sg[0]);
+            CGP = 1 / (Global.a * data.timeStep) * (((block.phi_dash() / block.Bo[0] + block.Vp[1] * block.FVF_dash(Global.Phase.Oil)) * block.Rso[0] + (block.Vp[1] / block.Bo[1]) * block.Rso_dash()) * (1 - block.Sg[0]) + (block.phi_dash() / block.Bg[0] + block.Vp[1] * block.FVF_dash(Global.Phase.Gas)) * block.Sg[0]);
 
             //temp = (block.Rso[2] - block.Rso[1]) / (block.P[2] - block.P[1]) * block.q_oil[1];
 
-            //bhp = Well.WellData.calculatePwf(block, block.P[2], block.Kro[1], block.viscosity_oil[2], block.Bo[2]);
-            //temp += (Well.WellData.calculateFlow_Rate(block.P[2], bhp, block.Krg[1], block.viscosity_gas[2], block.WI, block.Bg[2]) - block.q_gas[1]) / (block.P[2] - block.P[1]);
+            //bhp = Well.WellData.calculatePwf(block, block.P[2], block.Kro[1], block.viscosityOil[2], block.Bo[2]);
+            //temp += (Well.WellData.calculateFlow_Rate(block.P[2], bhp, block.Krg[1], block.viscosityGas[2], block.WI, block.Bg[2]) - block.q_gas[1]) / (block.P[2] - block.P[1]);
 
             return CGP + temp;
         }
         public static double getCGG(this BaseBlock block, SimulationData data)
         {
-            CGG = 1 / (Global.a * data.time_step) * (block.Vp[1] / block.Bg[1] - (block.Vp[1] / block.Bo[1]) * block.Rso[1]);
+            CGG = 1 / (Global.a * data.timeStep) * (block.Vp[1] / block.Bg[1] - (block.Vp[1] / block.Bo[1]) * block.Rso[1]);
 
-            //bhp = Well.WellData.calculatePwf(block, block.P[1], block.Kro[2], block.viscosity_oil[1], block.Bo[1]);
-            //temp = (Well.WellData.calculateFlow_Rate(block.P[1], bhp, block.Krg[2], block.viscosity_gas[1], block.WI, block.Bg[1]) - block.q_gas[1]) / (block.Sg[2] - block.Sg[1]);
+            //bhp = Well.WellData.calculatePwf(block, block.P[1], block.Kro[2], block.viscosityOil[1], block.Bo[1]);
+            //temp = (Well.WellData.calculateFlow_Rate(block.P[1], bhp, block.Krg[2], block.viscosityGas[1], block.WI, block.Bg[1]) - block.q_gas[1]) / (block.Sg[2] - block.Sg[1]);
 
             return CGG + temp;
         }
@@ -46,15 +46,15 @@ namespace FIM.Extensions
 
             if (phase == Global.Phase.Oil)
             {
-                R = -1 / (Global.a * data.time_step) * (block.Vp[1] * (1 - block.Sg[1]) / block.Bo[1] - block.Vp[0] * (1 - block.Sg[0]) / block.Bo[0]) /*- block.q_oil[1]*/;
+                R = -1 / (Global.a * data.timeStep) * (block.Vp[1] * (1 - block.Sg[1]) / block.Bo[1] - block.Vp[0] * (1 - block.Sg[0]) / block.Bo[0]) /*- block.q_oil[1]*/;
             }
             else if (phase == Global.Phase.Gas)
             {
-                R = -1 / (Global.a * data.time_step) * (block.Vp[1] * block.Sg[1] / block.Bg[1] - block.Vp[0] * block.Sg[0] / block.Bg[0]) /*- block.q_gas[1]*/;
+                R = -1 / (Global.a * data.timeStep) * (block.Vp[1] * block.Sg[1] / block.Bg[1] - block.Vp[0] * block.Sg[0] / block.Bg[0]) /*- block.q_gas[1]*/;
 
                 if (data.solubleGasPresent)
                 {
-                    R += -1 / (Global.a * data.time_step) * (block.Rso[1] * block.Vp[1] * (1 - block.Sg[1]) / block.Bo[1] - block.Rso[0] * block.Vp[0] * (1 - block.Sg[0]) / block.Bo[0]) /*- block.Rso[1] * block.q_oil[1]*/;
+                    R += -1 / (Global.a * data.timeStep) * (block.Rso[1] * block.Vp[1] * (1 - block.Sg[1]) / block.Bo[1] - block.Rso[0] * block.Vp[0] * (1 - block.Sg[0]) / block.Bo[0]) /*- block.Rso[1] * block.q_oil[1]*/;
                 }
             }
 

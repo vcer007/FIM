@@ -53,14 +53,13 @@
     <Compile Include="Core\Global.cs" />
     <Compile Include="Core\SimulationData.cs" />
     <Compile Include="Core\Transmissibility.cs" />
-    <Compile Include="Extensions\AccumulationTermExpansion.cs" />
-    <Compile Include="Extensions\NumericalPerturbation.cs" />
-    <Compile Include="Extensions\WellTerms.cs" />
+    <Compile Include="Extensions\FullyImplicit\AccumulationTermExpansion.cs" />
+    <Compile Include="Extensions\FullyImplicit\NumericalPerturbation.cs" />
+    <Compile Include="Extensions\Update.cs" />
+    <Compile Include="Extensions\FullyImplicit\WellTerms.cs" />
     <Compile Include="FluidData\SCAL.cs" />
     <Compile Include="FluidData\PVT.cs" />
-    <Compile Include="Initialize\Odeh.cs" />
-    <Compile Include="Initialize\SingleBlockModel.cs" />
-    <Compile Include="Initialize\SingleLayerModel.cs" />
+    <Compile Include="Initialization\Model.cs" />
     <Compile Include="MaterialBalance\MBE.cs" />
     <Compile Include="Mathematics\SolveLinearEquation.cs" />
     <Compile Include="Misc\Rectangular.cs" />
@@ -68,15 +67,16 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RockData\PorosityCalculator.cs" />
-    <Compile Include="Solver\FIM_SingleLayer.cs" />
-    <Compile Include="Solver\FullyImplicit.cs" />
+    <Compile Include="Solver\FullyImplicitSolver.cs" />
     <Compile Include="Well\WellData.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Extensions\IMPES\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

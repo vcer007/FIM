@@ -1,11 +1,6 @@
 ﻿using FIM.FluidData;
 using FIM.RockData;
 using FIM.Well;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FIM.Core
 {
@@ -14,56 +9,13 @@ namespace FIM.Core
     /// </summary>
     public class SimulationData
     {
-        /// <summary>
-        /// The minimum relaxation factor value.
-        /// </summary>
-        /// <remarks>
-        /// <para>Default value is equal to 0.5.</para>
-        /// <para>If the solution does not converge till this value, the time step is reduced.</para>
-        /// </remarks>
-        /// <seealso cref="SimulationData.time_step_slashing_factor"/>
-        /// <seealso cref="SimulationData.relaxation_factor"/>
-        public double minimum_relaxation = 0.5;
+        // RunSpec
 
         /// <summary>
-        /// The original relaxation factor value.
+        /// The solution procedure used for the model.
         /// </summary>
-        /// <remarks>
-        /// The <see cref="relaxation_factor"/> is set to this value at the beginning of the time step.
-        /// </remarks>
-        /// <seealso cref="SimulationData.minimum_relaxation"/>
-        public double original_relaxation_factor = 1;
-
-        /// <summary>
-        /// The original_time_step
-        /// </summary>
-        public double original_time_step;
-
-        /// <summary>
-        /// The relaxation factor used when the solution oscillates.
-        /// </summary>
-        /// <remarks>
-        /// When oscillations are detected, this value is used to "dampen" the calculated dx.
-        /// </remarks>
-        /// <seealso cref="original_relaxation_factor"/>
-        /// <seealso cref="minimum_relaxation"/>
-        public double relaxation_factor = 1;
-
-        /// <summary>
-        /// The time step used in calculations.
-        /// </summary>
-        public double time_step;
-
-        /// <summary>
-        /// The factor used to reduce the <see cref="SimulationData.time_step"/> when the solver stagnates or oscillates.
-        /// </summary>
-        public double time_step_slashing_factor = 0.5;
-
-        /// <summary>
-        /// The material balance error between fluid originally and currently in-place.
-        /// </summary>
-        /// <seealso cref="tolerance"/>
-        public double MBE_Gas, MBE_Oil;
+        /// <seealso cref="Global.SolutionProcedure"/>
+        public Global.SolutionProcedure solutionProcedure;
 
         /// <summary>
         /// The phases available in the model.
@@ -77,15 +29,15 @@ namespace FIM.Core
         /// <seealso cref="phases"/>
         public bool solubleGasPresent;
 
+        // Grid
+
+        // the grid "a list of the blocks"        
         /// <summary>
-        /// The tolerance used to determine convergence.
+        /// An array of <see cref="BaseBlock"/> that compose the grid.
         /// </summary>
-        /// <remarks>
-        /// currently tolerance is set as an absolute variance between original fluid in place and fluid in place.
-        /// This behavior is used to ensure very high accuracy.
-        /// However, a percentage may be used to yield sufficiently accurate solutions with a lower number of iterations required.
-        /// </remarks>
-        public double tolerance;
+        public BaseBlock[] grid;
+
+        // Props
 
         /// <summary>
         /// An instance of the <see cref="PVT"/> class.
@@ -100,16 +52,108 @@ namespace FIM.Core
         /// <summary>
         /// An instance of the <see cref="PorosityCalculator"/> class.
         /// </summary>
-        public PorosityCalculator porosity_calculator;
+        public PorosityCalculator porosityCalculator;
 
-        // the grid "a list of the blocks"        
+        // Solution
+        // Summary
+
+        // Schedule
+
+        // the grid "a list of the wells".     
         /// <summary>
-        /// An array of <see cref="BaseBlock"/> that compose the grid.
+        /// An array of <see cref="WellData"/> present in the model.
         /// </summary>
-        public BaseBlock[] grid;
-
         public WellData[] wells;
 
+        // Internal Simulator Configurations
+
+        /// <summary>
+        /// The original relaxation factor value.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="relaxationFactor"/> is set to this value at the beginning of the time step.
+        /// </remarks>
+        /// <seealso cref="SimulationData.minimumRelaxation"/>
+        public double originalRelaxationFactor;
+
+        /// <summary>
+        /// The minimum relaxation factor value.
+        /// </summary>
+        /// <remarks>
+        /// <para>Default value is equal to 0.5.</para>
+        /// <para>If the solution does not converge till this value, the time step is reduced.</para>
+        /// </remarks>
+        /// <seealso cref="SimulationData.timeStepSlashingFactor"/>
+        /// <seealso cref="SimulationData.relaxationFactor"/>
+        public double minimumRelaxation;
+
+        /// <summary>
+        /// The relaxation factor used when the solution oscillates.
+        /// </summary>
+        /// <remarks>
+        /// When oscillations are detected, this value is used to "dampen" the calculated dx.
+        /// </remarks>
+        /// <seealso cref="originalRelaxationFactor"/>
+        /// <seealso cref="minimumRelaxation"/>
+        public double relaxationFactor;
+
+        /// <summary>
+        /// This value is used to increment the relaxation factor if oscillation is detected.
+        /// </summary>
+        public double relaxationFactorIncrement;
+
+        /// <summary>
+        /// the maximum value of the ratio of material balance errors between two subseuent non-linear iterations.
+        /// </summary>
+        public double maximumConvergenceErrorRatio;
+
+        /// <summary>
+        /// The original_time_step
+        /// </summary>
+        public double originalTimeStep;
+
+        /// <summary>
+        /// The time step used in calculations.
+        /// </summary>
+        public double timeStep;
+
+        /// <summary>
+        /// The factor used to reduce the <see cref="SimulationData.timeStep"/> when the solver stagnates or oscillates.
+        /// </summary>
+        public double timeStepSlashingFactor;
+
+        /// <summary>
+        /// The total time of the simulation.
+        /// </summary>
+        public double endingTime;
+
+        /// <summary>
+        /// The maximum number of non-linear iterations used.
+        /// </summary>
+        /// <remarks>
+        /// The maximum number of iterations used in Newton-Raphson non-linear iterations befor the solver slashes the time step.
+        /// </remarks>
+        /// <seealso cref="timeStep"/>
+        /// <seealso cref="timeStepSlashingFactor"/>
+        public double maximumNonLinearIterations;
+
+        /// <summary>
+        /// The material balance error between fluid originally and currently in-place.
+        /// </summary>
+        /// <seealso cref="MBE_Tolerance"/>
+        public double MBE_Oil, MBE_Gas, MBE_Water;
+
+        /// <summary>
+        /// The tolerance used to determine convergence.
+        /// </summary>
+        /// <remarks>
+        /// currently tolerance is set as an absolute variance between original fluid in place and fluid in place.
+        /// This behavior is used to ensure very high accuracy.
+        /// However, a percentage may be used to yield sufficiently accurate solutions with a lower number of iterations required.
+        /// </remarks>
+        public double MBE_Tolerance;
+
+        // The class constructor.
         /// <summary>
         /// Initializes a new instance of the <see cref="SimulationData"/> class.
         /// </summary>

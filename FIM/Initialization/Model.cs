@@ -3,15 +3,16 @@ using FIM.FluidData;
 using FIM.Misc;
 using FIM.RockData;
 using FIM.Well;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FIM.Extensions;
 
-namespace FIM.Initialize
+using System.Collections.Generic;
+
+/// <summary>
+/// This name space contains the classes and methods used for intializing models..
+/// </summary>
+namespace FIM.Initialization
 {
-    class SingleBlockModel
+    static class Model
     {
         public static SimulationData initiaize()
         {
@@ -26,23 +27,38 @@ namespace FIM.Initialize
             initializeGrid(out simulation_data, pvt, kr);
 
             initializeTransmissibilities(simulation_data);
-            initializeWells(simulation_data.grid);
 
-            simulation_data.phases = new Global.Phase[] { Global.Phase.Oil, Global.Phase.Gas};
+            simulation_data.phases = new Global.Phase[] { Global.Phase.Oil, Global.Phase.Gas, Global.Phase.Water };
             simulation_data.solubleGasPresent = true;
+            simulation_data.solutionProcedure = Global.SolutionProcedure.FullyImplicit;
 
-            simulation_data.original_time_step = 1;
+            simulation_data.originalTimeStep = 1;
+            simulation_data.timeStepSlashingFactor = 0.5;
+            simulation_data.endingTime = 10 * 365;
+
+            simulation_data.originalRelaxationFactor = 1;
+            simulation_data.minimumRelaxation = 0.5;
+            simulation_data.relaxationFactorIncrement = -0.1;
+            simulation_data.relaxationFactor = simulation_data.originalRelaxationFactor;
+
+            simulation_data.maximumNonLinearIterations = 25;
+
+            simulation_data.maximumConvergenceErrorRatio = 0.5;
 
             simulation_data.pvt = pvt;
             simulation_data.scal = kr;
-            simulation_data.porosity_calculator = porosity;
+            simulation_data.porosityCalculator = porosity;
+
+            initializeWells(simulation_data);
+
 
             for (int i = 0; i < simulation_data.grid.Length; i++)
             {
-                simulation_data.grid[i].updateProperties(simulation_data, 4800, 0, 0, 0);
+                simulation_data.grid[i].UpdateProperties(simulation_data, 4800, 0.12, 0, 0);
             }
 
-            simulation_data.tolerance = 1;
+            simulation_data.MBE_Tolerance = 1;
+
 
             return simulation_data;
         }
@@ -103,21 +119,16 @@ namespace FIM.Initialize
 
         private static void initializeGrid(out SimulationData simulation_data, PVT pvt, SCAL kr)
         {
-            int x = 1, y = 1, z = 1;
+            int x = 10, y = 10, z = 1;
 
             double porosity = 0.3;
-            double[][] permeability = new double[1][];
+            double[][] permeability = new double[3][];
             permeability[0] = new double[] { 50, 50, 500 };
-
-            double So = 1, Sg = 0, Sw = 1 - So - Sg;
-            double pressure = 4800;
+            permeability[1] = new double[] { 50, 25, 50 };
+            permeability[2] = new double[] { 25, 25, 200 };
 
             double delta_x = 1000, delta_y = 1000;
-            double[] h = new double[] { 20 };
-
-            int[] well_indices = new int[] { 0 };
-            double well_radius = 0.25;
-            double skin = 0;
+            double[] h = new double[] { 20, 30, 50};
 
             int size = x * y * z;
 
@@ -147,15 +158,15 @@ namespace FIM.Initialize
                         if (j > 0) { temp.Add(Rectangular.xyzToNatural(x, y, z, i, j - 1, k)); } else { temp.Add(-1); };
 
                         grid[counter] = new BaseBlock();
-                        grid[counter].neighbour_blocks_indices = temp.ToArray();
+                        grid[counter].neighbourBlocksIndices = temp.ToArray();
                         grid[counter].index = Rectangular.xyzToNatural(x, y, z, i, j, k);
                         grid[counter].layer = k;
 
-                        grid[counter].boundary_length_list = new double[temp.Count];
+                        grid[counter].boundaryLengthList = new double[temp.Count];
                         for (int a = 0; a < temp.Count; a++)
                         {
                             // for the Odeh problem, delta_x = delta_y = 1000 for all blocks.
-                            grid[counter].boundary_length_list[a] = delta_x;
+                            grid[counter].boundaryLengthList[a] = delta_x;
                         }
 
                         //
@@ -173,17 +184,17 @@ namespace FIM.Initialize
             // initialize porosity_calculator properties
             for (int i = 0; i < grid.Length; i++)
             {
-                size = grid[i].neighbour_blocks_indices.Length;
+                size = grid[i].neighbourBlocksIndices.Length;
 
                 grid[i].porosity[0] = porosity;
-                grid[i].permeability_list = new double[size];
+                grid[i].permeability = new double[size];
 
-                grid[i].permeability_list[0] = permeability[grid[i].layer][0];
-                grid[i].permeability_list[1] = permeability[grid[i].layer][1];
+                grid[i].permeability[0] = permeability[grid[i].layer][0];
+                grid[i].permeability[1] = permeability[grid[i].layer][1];
 
                 for (int a = 2; a < size; a++)
                 {
-                    grid[i].permeability_list[a] = permeability[grid[i].layer][2];
+                    grid[i].permeability[a] = permeability[grid[i].layer][2];
                 }
             }
 
@@ -191,49 +202,31 @@ namespace FIM.Initialize
             for (int i = 0; i < grid.Length; i++)
             {
                 double height = h[grid[i].layer];
-                grid[i].h = height;
-                grid[i].delta_x_list = new double[6];
+                grid[i].height = height;
+                grid[i].deltaXList = new double[6];
 
-                grid[i].delta_x_list[0] = height;
-                grid[i].delta_x_list[1] = height;
+                grid[i].deltaXList[0] = height;
+                grid[i].deltaXList[1] = height;
 
-                for (int a = 2; a < grid[i].delta_x_list.Length; a++)
+                for (int a = 2; a < grid[i].deltaXList.Length; a++)
                 {
-                    grid[i].delta_x_list[a] = delta_x;
+                    grid[i].deltaXList[a] = delta_x;
                 }
 
                 // areas
-                grid[i].area_list = new double[6];
+                grid[i].areaList = new double[6];
 
-                grid[i].area_list[0] = delta_x * delta_y;
-                grid[i].area_list[1] = delta_x * delta_y;
+                grid[i].areaList[0] = delta_x * delta_y;
+                grid[i].areaList[1] = delta_x * delta_y;
 
-                for (int a = 2; a < grid[i].area_list.Length; a++)
+                for (int a = 2; a < grid[i].areaList.Length; a++)
                 {
-                    grid[i].area_list[a] = grid[i].h * delta_x;
+                    grid[i].areaList[a] = grid[i].height * delta_x;
                 }
 
-                grid[i].bulk_volume = grid[i].h * delta_x * delta_x;
+                grid[i].bulkVolume = grid[i].height * delta_x * delta_x;
 
-                grid[i].Vp[0] = grid[i].bulk_volume * porosity;
-            }
-
-            // well data
-            for (int i = 0; i < well_indices.Length; i++)
-            {
-                //grid[well_indices[i]].type = Global.BlockType.Well_Block;
-                //grid[well_indices[i]].well_radius = well_radius;
-                //grid[well_indices[i]].skin = skin;
-            }
-
-            for (int i = 0; i < grid.Length; i++)
-            {
-
-                grid[i].P[0] = pressure;
-                grid[i].So[0] = So;
-                grid[i].Sw[0] = Sw;
-                grid[i].Sg[0] = Sg;
-
+                grid[i].Vp[0] = grid[i].bulkVolume * porosity;
             }
 
             simulation_data = new SimulationData(grid);
@@ -243,13 +236,13 @@ namespace FIM.Initialize
         {
             for (int i = 0; i < simulation_data.grid.Length; i++)
             {
-                simulation_data.grid[i].transmissibility_list = new double[simulation_data.grid[i].neighbour_blocks_indices.Length];
+                simulation_data.grid[i].transmissibility_list = new double[simulation_data.grid[i].neighbourBlocksIndices.Length];
 
-                for (int a = 0; a < simulation_data.grid[i].neighbour_blocks_indices.Length; a++)
+                for (int a = 0; a < simulation_data.grid[i].neighbourBlocksIndices.Length; a++)
                 {
-                    if (simulation_data.grid[i].neighbour_blocks_indices[a] != -1)
+                    if (simulation_data.grid[i].neighbourBlocksIndices[a] != -1)
                     {
-                        simulation_data.grid[i].transmissibility_list[a] = Transmissibility.calculate(simulation_data.grid[i], simulation_data.grid[simulation_data.grid[i].neighbour_blocks_indices[a]]);
+                        simulation_data.grid[i].transmissibility_list[a] = Transmissibility.calculate(simulation_data.grid[i], simulation_data.grid[simulation_data.grid[i].neighbourBlocksIndices[a]]);
                     }
                     else
                     {
@@ -259,24 +252,18 @@ namespace FIM.Initialize
             }
         }
 
-        private static void initializeWells(BaseBlock[] grid)
+        private static void initializeWells(SimulationData data)
         {
-            //for (int i = 0; i < grid.Length; i++)
-            //{
-            //    if (grid[i].type == Global.BlockType.Well_Block)
-            //    {
-            //        WellData.getR_equivalent(grid[i], grid);
-            //        WellData.getWI(grid[i]);
-            //    }
-            //}
+            int[] well_indices = new int[] { 0};
 
-            //// production well
-            //grid[0].well_type = Global.WellType.Production;
-            //grid[0].specified_BHP = 3500;
-            //grid[0].q_oil[0] = 500;
+            // well data
+            WellData[] wells = new WellData[1];
 
-            //grid[0].well_type = Global.WellType.Injection;
-            //grid[0].specified_flow_rate = 10000;
+            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.OilRate, 0.25, 0, 500, 6000);
+
+            data.wells = wells;
+
         }
+
     }
 }

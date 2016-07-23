@@ -1,10 +1,10 @@
 ﻿using FIM.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+using System;
+
+/// <summary>
+/// This namespace contains the well related classes.
+/// </summary>
 namespace FIM.Well
 {
     /// <summary>
@@ -12,73 +12,155 @@ namespace FIM.Well
     /// </summary>
     public class WellData
     {
+        /// <summary>
+        /// The index of the block in which the well is located.
+        /// </summary>
         public int index;
+
+        /// <summary>
+        /// The radius of the well.
+        /// </summary>
         public double radius;
+
+        /// <summary>
+        /// The skin factor.
+        /// </summary>
         public double skin;
 
+        /// <summary>
+        /// The type of the well.
+        /// </summary>
+        /// <seealso cref="Global.WellType"/>
         public Global.WellType type;
+
+        /// <summary>
+        /// The well control method.
+        /// </summary>
+        /// <seealso cref="Global.WellControl"/>
         public Global.WellControl control;
-        public double specified_minimum_BHP;
-        public double specified_flow_rate;
+
+        /// <summary>
+        /// The specified minimum BHP
+        /// </summary>
+        public double specifiedMinimumBHP;
+
+        /// <summary>
+        /// The specified flow rate
+        /// </summary>
+        public double specifiedFlowRate;
+
+        /// <summary>
+        /// The equivalent well radius used for calculating flow rates in peaceman's well model.
+        /// </summary>
         public double R_equivalent;
+
+        /// <summary>
+        /// The well productivity index.
+        /// </summary>
         public double WI;
+
+        /// <summary>
+        /// The bottom hole pressure of the well.
+        /// </summary>
         public double[] BHP;
+
+        /// <summary>
+        /// The well flow rates.
+        /// </summary>
         public double[] q_oil, q_free_gas, q_solution_gas, q_water;
 
         // derivatives
+
+        /// <summary>
+        /// The oil flow rates derivatives.
+        /// </summary>
         public double dq_oil_dP, dq_oil_dSg, dq_oil_dSw;
+
+        /// <summary>
+        /// The free gas flow rates derivatives.
+        /// </summary>
         public double dq_free_gas_dP, dq_free_gas_dSg, dq_free_gas_dSw;
+
+        /// <summary>
+        /// The solution gas flow rates derivatives.
+        /// </summary>
         public double dq_solution_gas_dP, dq_solution_gas_dSg, dq_solution_gas_dSw;
+
+        /// <summary>
+        /// The water flow rates derivatives.
+        /// </summary>
         public double dq_water_dP, dq_water_dSg, dq_water_dSw;
 
-        public WellData(SimulationData data, int index, Global.WellType type, Global.WellControl control, double radius, double skin, double specified_minimum_BHP = 0, double specified_flow_rate = 0)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WellData"/> class.
+        /// </summary>
+        /// <param name="data">The <see cref="SimulationData"/>.</param>
+        /// <param name="index">The index of the block the well is located into.</param>
+        /// <param name="type">The well type<see cref="Global.WellType"/>.</param>
+        /// <param name="control">The well control method <see cref="Global.WellControl"/>.</param>
+        /// <param name="radius">The well radius.</param>
+        /// <param name="skin">The skin factor.</param>
+        /// <param name="specifiedMinimumBHP">The specified_minimum BHP.</param>
+        /// <param name="specifiedFlowRate">The specified flow rate.</param>
+        public WellData(SimulationData data, int index, Global.WellType type, Global.WellControl control, double radius, double skin, double specifiedMinimumBHP = 0, double specifiedFlowRate = 0)
         {
             this.index = index;
-            data.grid[index].type = Global.BlockType.Well_Block;
+            data.grid[index].type = Global.BlockType.WellBlock;
             this.radius = radius;
             this.skin = skin;
-            this.R_equivalent = getR_equivalent(data.grid[index], data.grid);
-            this.WI = getWI(data.grid[index]);
-            this.specified_minimum_BHP = specified_minimum_BHP;
+            this.R_equivalent = GetR_Equivalent(data.grid[index], data.grid);
+            this.WI = GetWI(data.grid[index]);
+            this.specifiedMinimumBHP = specifiedMinimumBHP;
             
-            this.specified_flow_rate = specified_flow_rate;
+            this.specifiedFlowRate = specifiedFlowRate;
             if (type == Global.WellType.Injection)
             {
-                this.specified_flow_rate = -1 * specified_flow_rate;
+                this.specifiedFlowRate = -1 * specifiedFlowRate;
             }
 
-            this.BHP = new double[Global.steps_memory];
-            this.q_oil = new double[Global.steps_memory];
-            this.q_free_gas = new double[Global.steps_memory];
-            this.q_solution_gas = new double[Global.steps_memory];
-            this.q_water = new double[Global.steps_memory];
+            this.BHP = new double[Global.STEPS_MEMORY];
+            this.q_oil = new double[Global.STEPS_MEMORY];
+            this.q_free_gas = new double[Global.STEPS_MEMORY];
+            this.q_solution_gas = new double[Global.STEPS_MEMORY];
+            this.q_water = new double[Global.STEPS_MEMORY];
 
             this.type = type;
             this.control = control;
         }
 
-        public void update(int time_level, BaseBlock block)
+        /// <summary>
+        /// Updates the well properties at the specified time level.
+        /// </summary>
+        /// <param name="timeLevel">The time_level.</param>
+        /// <param name="block">The block.</param>
+        /// <param name="derivatives">if set to <c>true</c> [derivatives].</param>
+        public void Update(int timeLevel, BaseBlock block, bool derivatives = true)
         {
-            updateFlowRates(time_level, block);
-            if (checkWellControlChanged(time_level))
+            UpdateFlowRates(timeLevel, block);
+            if (CheckWellControlChanged(timeLevel))
             {
-                updateFlowRates(time_level, block);
+                UpdateFlowRates(timeLevel, block);
             }
-            //checkWellControlChanged();
-            updateDerivatives(block);
+            
+            //only for fully implicit simulation do we need to calculate well rates derivatives.
+            if (derivatives)
+            {
+                UpdateDerivatives(block);
+            }
         }
 
-        private void updateFlowRates(int time_level, BaseBlock block)
+        // updates well flow rates at a certain time level.
+        private void UpdateFlowRates(int timeLevel, BaseBlock block)
         {
             if (control == Global.WellControl.OilRate)
             {
                 if (type == Global.WellType.Production)
                 {
-                    q_oil[time_level] = specified_flow_rate;
-                    BHP[time_level] = calculatePwf(block, block.P[time_level], block.Kro[time_level], block.viscosity_oil[time_level], block.Bo[time_level]);
-                    q_free_gas[time_level] = calculateFlow_Rate(block.P[time_level], BHP[time_level], block.Krg[time_level], block.viscosity_gas[time_level], WI, block.Bg[time_level]);
-                    q_solution_gas[time_level] = block.Rso[time_level] * q_oil[time_level];
-                    q_water[time_level] = calculateFlow_Rate(block.P[time_level], BHP[time_level], block.Krw[time_level], block.viscosity_water[time_level], WI, block.Bw[time_level]);
+                    q_oil[timeLevel] = specifiedFlowRate;
+                    BHP[timeLevel] = CalculatePwf(block, block.P[timeLevel], block.Kro[timeLevel], block.viscosityOil[timeLevel], block.Bo[timeLevel]);
+                    q_free_gas[timeLevel] = CalculateFlowRate(block.P[timeLevel], BHP[timeLevel], block.Krg[timeLevel], block.viscosityGas[timeLevel], WI, block.Bg[timeLevel]);
+                    q_solution_gas[timeLevel] = block.Rso[timeLevel] * q_oil[timeLevel];
+                    q_water[timeLevel] = CalculateFlowRate(block.P[timeLevel], BHP[timeLevel], block.Krw[timeLevel], block.viscosityWater[timeLevel], WI, block.Bw[timeLevel]);
                 }
                 else if (type == Global.WellType.Injection)
                 {
@@ -87,10 +169,10 @@ namespace FIM.Well
                 else
                 {
                     // shut-in well
-                    q_oil[time_level] = 0;
-                    q_free_gas[time_level] = 0;
-                    q_solution_gas[time_level] = 0;
-                    q_water[time_level] = 0;
+                    q_oil[timeLevel] = 0;
+                    q_free_gas[timeLevel] = 0;
+                    q_solution_gas[timeLevel] = 0;
+                    q_water[timeLevel] = 0;
                 }
                 
             }
@@ -102,13 +184,13 @@ namespace FIM.Well
                 }
                 else if (type == Global.WellType.Injection)
                 {
-                    q_free_gas[time_level] = specified_flow_rate;
+                    q_free_gas[timeLevel] = specifiedFlowRate;
                 }
                 else
                 {
                     // shut-in well
                     //q_oil[time_level] = 0;
-                    q_free_gas[time_level] = 0;
+                    q_free_gas[timeLevel] = 0;
                     //q_solution_gas[time_level] = 0;
                     //q_water[time_level] = 0;
                 }
@@ -117,11 +199,11 @@ namespace FIM.Well
             {
                 if (type == Global.WellType.Production)
                 {
-                    BHP[time_level] = specified_minimum_BHP;
-                    q_oil[time_level] = calculateFlow_Rate(block.P[time_level], BHP[time_level], block.Kro[time_level], block.viscosity_oil[time_level], WI, block.Bo[time_level]);
-                    q_free_gas[time_level] = calculateFlow_Rate(block.P[time_level], BHP[time_level], block.Krg[time_level], block.viscosity_gas[time_level], WI, block.Bg[time_level]);
-                    q_solution_gas[time_level] = block.Rso[time_level] * q_oil[time_level];
-                    q_water[time_level] = calculateFlow_Rate(block.P[time_level], BHP[time_level], block.Krw[time_level], block.viscosity_water[time_level], WI, block.Bw[time_level]);
+                    BHP[timeLevel] = specifiedMinimumBHP;
+                    q_oil[timeLevel] = CalculateFlowRate(block.P[timeLevel], BHP[timeLevel], block.Kro[timeLevel], block.viscosityOil[timeLevel], WI, block.Bo[timeLevel]);
+                    q_free_gas[timeLevel] = CalculateFlowRate(block.P[timeLevel], BHP[timeLevel], block.Krg[timeLevel], block.viscosityGas[timeLevel], WI, block.Bg[timeLevel]);
+                    q_solution_gas[timeLevel] = block.Rso[timeLevel] * q_oil[timeLevel];
+                    q_water[timeLevel] = CalculateFlowRate(block.P[timeLevel], BHP[timeLevel], block.Krw[timeLevel], block.viscosityWater[timeLevel], WI, block.Bw[timeLevel]);
                 }
                 else if (type == Global.WellType.Injection)
                 {
@@ -130,19 +212,21 @@ namespace FIM.Well
                 else
                 {
                     // shut-in well
-                    q_oil[time_level] = 0;
-                    q_free_gas[time_level] = 0;
-                    q_solution_gas[time_level] = 0;
-                    q_water[time_level] = 0;
+                    q_oil[timeLevel] = 0;
+                    q_free_gas[timeLevel] = 0;
+                    q_solution_gas[timeLevel] = 0;
+                    q_water[timeLevel] = 0;
                 }
             }
         }
 
-        private bool checkWellControlChanged(int time_level)
+        // checks "for a flow rate controlled well" if the calculated BHP falls below the input minimum value.
+        // if so, the well control method changes from rate controlled to specific BHP controlled.
+        private bool CheckWellControlChanged(int timeLevel)
         {
             if (control == Global.WellControl.OilRate)
             {
-                if (BHP[time_level] < specified_minimum_BHP)
+                if (BHP[timeLevel] < specifiedMinimumBHP)
                 {
                     control = Global.WellControl.BHP;
                     return true;
@@ -151,7 +235,8 @@ namespace FIM.Well
             return false;
         }
 
-        private void updateDerivatives(BaseBlock block)
+        // updates the well rates derivatives.
+        private void UpdateDerivatives(BaseBlock block)
         {
             double temp;
 
@@ -161,22 +246,22 @@ namespace FIM.Well
                 {
                     // with respect to P
                     dq_oil_dP = 0;
-                    temp = calculatePwf(block, block.P[2], block.Kro[1], block.viscosity_oil[2], block.Bo[2]);
-                    dq_free_gas_dP = (calculateFlow_Rate(block.P[2], temp, block.Krg[1], block.viscosity_gas[2], WI, block.Bg[2]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dP = (block.Rso[2] * calculateFlow_Rate(block.P[2], temp, block.Kro[1], block.viscosity_oil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.epsilon;
-                    dq_water_dP = (calculateFlow_Rate(block.P[2], temp, block.Krw[1], block.viscosity_water[2], WI, block.Bw[2]) - q_water[1]) / Global.epsilon;
+                    temp = CalculatePwf(block, block.P[2], block.Kro[1], block.viscosityOil[2], block.Bo[2]);
+                    dq_free_gas_dP = (CalculateFlowRate(block.P[2], temp, block.Krg[1], block.viscosityGas[2], WI, block.Bg[2]) - q_free_gas[1]) / Global.EPSILON;
+                    dq_solution_gas_dP = (block.Rso[2] * CalculateFlowRate(block.P[2], temp, block.Kro[1], block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON;
+                    dq_water_dP = (CalculateFlowRate(block.P[2], temp, block.Krw[1], block.viscosityWater[2], WI, block.Bw[2]) - q_water[1]) / Global.EPSILON;
                     // with respect to Sg
                     dq_oil_dSg = 0;
-                    temp = calculatePwf(block, block.P[1], block.Kro[2], block.viscosity_oil[1], block.Bo[1]);
-                    dq_free_gas_dSg = (calculateFlow_Rate(block.P[1], temp, block.Krg[2], block.viscosity_gas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dSg = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.epsilon;
-                    dq_water_dSg = (calculateFlow_Rate(block.P[1], temp, block.Krw[1], block.viscosity_water[1], WI, block.Bw[1]) - q_water[1]) / Global.epsilon;
+                    temp = CalculatePwf(block, block.P[1], block.Kro[2], block.viscosityOil[1], block.Bo[1]);
+                    dq_free_gas_dSg = (CalculateFlowRate(block.P[1], temp, block.Krg[2], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON;
+                    dq_solution_gas_dSg = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILON;
+                    dq_water_dSg = (CalculateFlowRate(block.P[1], temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON;
                     // with respect to Sw
                     dq_oil_dSw = 0;
-                    temp = calculatePwf(block, block.P[1], block.Kro[1], block.viscosity_oil[1], block.Bo[1]);
-                    dq_free_gas_dSw = (calculateFlow_Rate(block.P[1], temp, block.Krg[1], block.viscosity_gas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dSw = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.epsilon;
-                    dq_water_dSw = (calculateFlow_Rate(block.P[1], temp, block.Krw[1], block.viscosity_water[1], WI, block.Bw[1]) - q_water[1]) / Global.epsilon;
+                    temp = CalculatePwf(block, block.P[1], block.Kro[1], block.viscosityOil[1], block.Bo[1]);
+                    dq_free_gas_dSw = (CalculateFlowRate(block.P[1], temp, block.Krg[1], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON;
+                    dq_solution_gas_dSw = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILON;
+                    dq_water_dSw = (CalculateFlowRate(block.P[1], temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON;
                 }
                 else if (type == Global.WellType.Injection)
                 {
@@ -245,20 +330,20 @@ namespace FIM.Well
                 {
                     temp = BHP[1];
                     // with respect to P
-                    dq_oil_dP = (calculateFlow_Rate(block.P[2], temp, block.Kro[1], block.viscosity_oil[2], WI, block.Bo[2]) - q_oil[1]) / Global.epsilon;
-                    dq_free_gas_dP = (calculateFlow_Rate(block.P[2], temp, block.Krg[1], block.viscosity_gas[2], WI, block.Bg[2]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dP = (block.Rso[2] * calculateFlow_Rate(block.P[2], temp, block.Kro[1], block.viscosity_oil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.epsilon;
-                    dq_water_dP = (calculateFlow_Rate(block.P[2], temp, block.Krw[1], block.viscosity_water[2], WI, block.Bw[2]) - q_water[1]) / Global.epsilon;
+                    dq_oil_dP = (CalculateFlowRate(block.P[2], temp, block.Kro[1], block.viscosityOil[2], WI, block.Bo[2]) - q_oil[1]) / Global.EPSILON;
+                    dq_free_gas_dP = (CalculateFlowRate(block.P[2], temp, block.Krg[1], block.viscosityGas[2], WI, block.Bg[2]) - q_free_gas[1]) / Global.EPSILON;
+                    dq_solution_gas_dP = (block.Rso[2] * CalculateFlowRate(block.P[2], temp, block.Kro[1], block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON;
+                    dq_water_dP = (CalculateFlowRate(block.P[2], temp, block.Krw[1], block.viscosityWater[2], WI, block.Bw[2]) - q_water[1]) / Global.EPSILON;
                     // with respect to Sg
-                    dq_oil_dSg = (calculateFlow_Rate(block.P[1], temp, block.Kro[2], block.viscosity_oil[1], WI, block.Bo[1]) - q_oil[1]) / Global.epsilon;
-                    dq_free_gas_dSg = (calculateFlow_Rate(block.P[1], temp, block.Krg[2], block.viscosity_gas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dSg = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.epsilon;
-                    dq_water_dSg = (calculateFlow_Rate(block.P[1], temp, block.Krw[1], block.viscosity_water[1], WI, block.Bw[1]) - q_water[1]) / Global.epsilon;
+                    dq_oil_dSg = (CalculateFlowRate(block.P[1], temp, block.Kro[2], block.viscosityOil[1], WI, block.Bo[1]) - q_oil[1]) / Global.EPSILON;
+                    dq_free_gas_dSg = (CalculateFlowRate(block.P[1], temp, block.Krg[2], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON;
+                    dq_solution_gas_dSg = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILON;
+                    dq_water_dSg = (CalculateFlowRate(block.P[1], temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON;
                     // with respect to Sw
-                    dq_oil_dSw = (calculateFlow_Rate(block.P[1], temp, block.Kro[1], block.viscosity_oil[1], WI, block.Bo[1]) - q_oil[1]) / Global.epsilon;
-                    dq_free_gas_dSw = (calculateFlow_Rate(block.P[1], temp, block.Krg[2], block.viscosity_gas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.epsilon;
-                    dq_solution_gas_dSw = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.epsilon;
-                    dq_water_dSw = (calculateFlow_Rate(block.P[1], temp, block.Krw[1], block.viscosity_water[1], WI, block.Bw[1]) - q_water[1]) / Global.epsilon;
+                    dq_oil_dSw = (CalculateFlowRate(block.P[1], temp, block.Kro[1], block.viscosityOil[1], WI, block.Bo[1]) - q_oil[1]) / Global.EPSILON;
+                    dq_free_gas_dSw = (CalculateFlowRate(block.P[1], temp, block.Krg[2], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON;
+                    dq_solution_gas_dSw = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILON;
+                    dq_water_dSw = (CalculateFlowRate(block.P[1], temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON;
                 }
                 else if (type == Global.WellType.Injection)
                 {
@@ -294,7 +379,7 @@ namespace FIM.Well
         /// <param name="block">The block.</param>
         /// <param name="grid">The grid.</param>
         /// <returns>The value of the equivalent well radius</returns>
-        public static double getR_equivalent(BaseBlock block, BaseBlock[] grid)
+        public static double GetR_Equivalent(BaseBlock block, BaseBlock[] grid)
         {
             double r_equivalnt = 0;
 
@@ -305,16 +390,16 @@ namespace FIM.Well
             // neighbour block internal index of "block".
             int index;
 
-            for (int i = 2; i < block.neighbour_blocks_indices.Length; i++)
+            for (int i = 2; i < block.neighbourBlocksIndices.Length; i++)
             {
-                if (block.neighbour_blocks_indices[i] >= 0)
+                if (block.neighbourBlocksIndices[i] >= 0)
                 {
-                    neighbour = grid[block.neighbour_blocks_indices[i]];
-                    index = Array.IndexOf(neighbour.neighbour_blocks_indices, block.index);
+                    neighbour = grid[block.neighbourBlocksIndices[i]];
+                    index = Array.IndexOf(neighbour.neighbourBlocksIndices, block.index);
 
-                    distance = (block.delta_x_list[i] + neighbour.delta_x_list[index]) / 2;
-                    numerator += block.boundary_length_list[i] / distance * Math.Log(distance) - 0.5 * Math.PI;
-                    denominator += (block.boundary_length_list[i]) / distance;
+                    distance = (block.deltaXList[i] + neighbour.deltaXList[index]) / 2;
+                    numerator += block.boundaryLengthList[i] / distance * Math.Log(distance) - 0.5 * Math.PI;
+                    denominator += (block.boundaryLengthList[i]) / distance;
                 }
             }
 
@@ -322,7 +407,7 @@ namespace FIM.Well
 
             if (grid.Length == 1)
             {
-                r_equivalnt = 0.2 * block.delta_x_list[3];
+                r_equivalnt = 0.2 * block.deltaXList[3];
             }
 
             return r_equivalnt;
@@ -333,16 +418,16 @@ namespace FIM.Well
         /// </summary>
         /// <param name="block">The block.</param>
         /// <returns></returns>
-        private double getWI(BaseBlock block)
+        private double GetWI(BaseBlock block)
         {
             double K = 0;
             // starting from index = 2, to avoid top and bottom directions permeabilities.
             int counter = 0;
-            for (int i = 2; i < block.permeability_list.Length; i++)
+            for (int i = 2; i < block.permeability.Length; i++)
             {
-                if (block.permeability_list[i] > 0)
+                if (block.permeability[i] > 0)
                 {
-                    K += block.permeability_list[i];
+                    K += block.permeability[i];
                     counter += 1;
                 }
                 else
@@ -353,7 +438,7 @@ namespace FIM.Well
 
             K = K / counter;
 
-            return 2 * Global.Bc * Math.PI * K * block.h / (Math.Log(R_equivalent / radius) + skin);
+            return 2 * Global.Bc * Math.PI * K * block.height / (Math.Log(R_equivalent / radius) + skin);
         }
 
         /// <summary>
@@ -365,7 +450,7 @@ namespace FIM.Well
         /// <param name="viscosity">The viscosity.</param>
         /// <param name="FVF">The FVF.</param>
         /// <returns>The value of PWF.</returns>
-        private double calculatePwf(BaseBlock block, double pressure, double Kr, double viscosity, double FVF)
+        private double CalculatePwf(BaseBlock block, double pressure, double Kr, double viscosity, double FVF)
         {
             double mobility = Kr / (viscosity * FVF);
             return pressure - ( q_oil[0] / (mobility * WI) );
@@ -381,7 +466,7 @@ namespace FIM.Well
         /// <param name="WI">The wi.</param>
         /// <param name="FVF">The FVF.</param>
         /// <returns>The calculated flow rate</returns>
-        public static double calculateFlow_Rate(double P, double Pwf, double Kr, double viscosity, double WI, double FVF)
+        public static double CalculateFlowRate(double P, double Pwf, double Kr, double viscosity, double WI, double FVF)
         {
             return (P - Pwf) * (Kr / (viscosity * FVF)) * WI;
             //return 0;

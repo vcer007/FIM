@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-/// <summary>
+﻿/// <summary>
 /// This namespace contains helpful miscellaneous methods that are not re;ated to an essential ctegory.
 /// </summary>
 namespace FIM.Misc
@@ -14,7 +8,7 @@ namespace FIM.Misc
     /// </summary>
     /// <remarks>
     /// As FIM deals with PeBi grids, it is customary to convert any type of grids to a linear array of blocks.
-    /// This is possible by assigning <see cref="FIM.Core.BaseBlock.neighbour_blocks_indices"/> to each <see cref="FIM.Core.BaseBlock"/>.
+    /// This is possible by assigning <see cref="FIM.Core.BaseBlock.neighbourBlocksIndices"/> to each <see cref="FIM.Core.BaseBlock"/>.
     /// </remarks>
     abstract class Rectangular
     {

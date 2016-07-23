@@ -14,7 +14,7 @@ namespace FIM.FluidData
     public class SCAL
     {
         // this array is used to store the input relative permeability data.
-        private double[][] Kr_data;
+        private double[][] kr_Data;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SCAL"/> class.
@@ -22,13 +22,13 @@ namespace FIM.FluidData
         /// <remarks>
         /// This is used only once to get the Kr data stored within the Kr class instance.
         /// </remarks>
-        /// <param name="kr_data">
+        /// <param name="kr_Data">
         /// takes a matrix (double[][] array) as an input 
         /// where the first column is S then Krg, Kro then Krw.
         /// </param>
-        public SCAL(double[][] kr_data)
+        public SCAL(double[][] kr_Data)
         {
-            this.Kr_data = kr_data;
+            this.kr_Data = kr_Data;
         }
 
         /// <summary>
@@ -38,16 +38,16 @@ namespace FIM.FluidData
         /// <param name="saturation">The saturation.</param>
         /// <returns>The value of the relative permeability</returns>
         /// <seealso cref="Global.Phase"/>
-        public double getKr(Global.Phase phase, double saturation)
+        public double GetKr(Global.Phase phase, double saturation)
         {
             switch (phase)
             {
                 case Global.Phase.Water:
-                    return getKrw(saturation);
+                    return GetKrw(saturation);
                 case Global.Phase.Oil:
-                    return getKro(saturation);
+                    return GetKro(saturation);
                 case Global.Phase.Gas:
-                    return getKrg(saturation);
+                    return GetKrg(saturation);
                 default:
                     return 1;
             }
@@ -59,7 +59,7 @@ namespace FIM.FluidData
         //Objectives: this is a private (internal method for the internal use of this class only) method that makes table lookup interpolation
         //Inputs: two variables representing the X and Y arrays "The two columns of the table" and the Y value
         //Outputs: a variable that represents the X value corresponding to the particular Y value
-        private double lookUp(double[] data_y, double[] data_x, double y)
+        private double LookUp(double[] data_y, double[] data_x, double y)
         {
             double y1, y2, x1, x2, x = -1;
             for (int i = 0; i < data_y.Length; i++)
@@ -89,28 +89,28 @@ namespace FIM.FluidData
         //Inputs: a variable representing the value of the saturation
         //Outputs: the corresponding Kr value
 
-        private double getKro(double saturation)
+        private double GetKro(double saturation)
         {
             double[] Y, X;
-            Y = Kr_data[0]; X = Kr_data[2];
+            Y = kr_Data[0]; X = kr_Data[2];
 
-            return lookUp(Y, X, saturation);
+            return LookUp(Y, X, saturation);
         }
 
-        private double getKrg(double saturation)
+        private double GetKrg(double saturation)
         {
             double[] Y, X;
-            Y = Kr_data[0]; X = Kr_data[1];
+            Y = kr_Data[0]; X = kr_Data[1];
 
-            return lookUp(Y, X, saturation);
+            return LookUp(Y, X, saturation);
         }
 
-        private double getKrw(double saturation)
+        private double GetKrw(double saturation)
         {
             double[] Y, X;
-            Y = Kr_data[0]; X = Kr_data[3];
+            Y = kr_Data[0]; X = kr_Data[3];
 
-            return lookUp(Y, X, saturation);
+            return LookUp(Y, X, saturation);
         }
     }
 }

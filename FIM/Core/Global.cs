@@ -1,26 +1,29 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FIM.Core
 {
     /// <summary>
     /// This class contains all constants and enumerations declarations.
     /// </summary>
-    public class Global
+    public static class Global
     {
         // Constants.
 
+        /// <summary>
+        /// Conversion factor used in the darcy transmissibility equation to get flow rates in unit bbl. per day.
+        /// </summary>
         public const double Bc = 0.001127;
+
+        /// <summary>
+        /// Conversion factor from bbl. to cubic foot.
+        /// </summary>
         public const double a = 5.614583;
 
         /// <summary>
         /// The epsilon used for caluclating derivatives numerically.
         /// </summary>
-        /// <seealso cref="Global.steps_memory"/>
-        public const double epsilon = 1E-5;
+        /// <seealso cref="Global.STEPS_MEMORY"/>
+        public const double EPSILON = 1E-5;
 
         /// <summary>
         /// The size of the properties <see cref="Array"/>.
@@ -30,13 +33,13 @@ namespace FIM.Core
         /// to store different values for each time step.</para>
         /// <para>Typically, the time steps are n0, n+1 and n+1.</para>
         /// <para>The n+2 time level is used for perturbation.</para>
-        /// <para>Independent variables "e.g; pressure, saturation, ..." will have their n+2 values set to n+1 + <see cref="Global.epsilon"/></para>
+        /// <para>Independent variables "e.g; pressure, saturation, ..." will have their n+2 values set to n+1 + <see cref="Global.EPSILON"/></para>
         /// <para>Dependent variables "e.g; Bo, Bg, Kr, ..." will have their n+2 values set to
         /// corresponding values to their corresponding independent variable at the n+2 time level.</para>
         /// <para>This way adds more flexibility in using values at different time levels whenever needed.</para>
         /// <para>So, the typical array size will be 3.</para>
         /// </remarks>
-        public const int steps_memory = 3;
+        public const int STEPS_MEMORY = 3;
 
         // Enumerations.
 
@@ -58,14 +61,17 @@ namespace FIM.Core
         /// <summary>
         /// Indicates whether the block contains a well or not.
         /// </summary>
-        public enum BlockType { Well_Block, Normal_Block, Inactive_Block }
+        public enum BlockType { WellBlock, NormalBlock, InactiveBlock }
 
-        public enum DataFileSection { RunSpec }
+        /// <summary>
+        /// Sections in eclipse input data file.
+        /// </summary>
+        public enum DataFileSection { RunSpec, Grid, Props, Solution, Summary, Schedule }
 
         /// <summary>
         /// The solution methods available.
         /// </summary>
-        public enum SolutionProcedure { IMPES, Fully_Implicit }
+        public enum SolutionProcedure { FullyImplicit, IMPES }
 
         /// <summary>
         /// Units used for the data supplied in input data files.
@@ -80,13 +86,6 @@ namespace FIM.Core
         /// <summary>
         /// The independent variables accounted for in numerical perturbation.
         /// </summary>
-        public enum Variable {Pressure, Saturation_Oil, Saturation_Gas, Saturation_Water}
-
-
-        //// Delegates "functions with a defined form and (return and input) types but with no specific form"
-
-        //// The general form of the interpolation equation used to calculate PVT and porosity_calculator properties from pressure "or saturation".
-        //// "input" is pressure "for FVF, viscosity and Vp" and saturation "for Kr".
-        //public delegate double getProperty(double input);
+        public enum Variable {Pressure, SaturationOil, SaturationGas, SaturationWater}
     }
 }
