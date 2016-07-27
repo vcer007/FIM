@@ -59,6 +59,15 @@ namespace FIM.Core
         public enum WellControl { OilRate, GasRate, BHP}
 
         /// <summary>
+        /// The method used in calculating well flow rates.
+        /// </summary>
+        /// <remarks>
+        /// Implicit means that the time level of the block pressure used for calculating the drawdown is n1.
+        /// Explicit means using n0 time level of the block pressure for calculating the well drawdown.
+        /// </remarks>
+        public enum WellRateCalculation { Explicit, Implicit}
+
+        /// <summary>
         /// Indicates whether the block contains a well or not.
         /// </summary>
         public enum BlockType { WellBlock, NormalBlock, InactiveBlock }

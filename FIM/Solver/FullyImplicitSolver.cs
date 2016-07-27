@@ -35,24 +35,30 @@ namespace FIM.Solver
             }
 
             // initalize the empty minus R matrix.
-            double[] minusR = new double[jacobian.Length];
+            double[] minusR = new double[size];
 
             // intialize the empty delta_x matrix. this matrix will store the solution of the Ax=B equation "where A is the Jacobi and B is minus R".
-            double[] delta = new double[jacobian.Length];
+            double[] delta = new double[size];
 
             // the total simulated time.
             double end_time = data.endingTime;
 
             // the simulation loop.
-            for (double current_time = data.originalTimeStep; current_time <= end_time; current_time += data.timeStep)
+
+            double current_time = 0;
+
+            for (; current_time <= end_time;)
             {
                 IterativeSolver(data, jacobian, minusR, delta);
+                // this way of updating the loop iterator "current_time" is used to correctly display current time
+                // after the iterations. This is because the time step length may change during the iteration.
+                current_time += data.timeStep;
 
                 //Console.WriteLine(current_time + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.grid[0].Rso[0]);
                 Console.WriteLine(current_time + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
                 //Console.WriteLine(data.MBE_Gas);
                 //Console.WriteLine(data.grid[0].P[0] + ", " + data.wells[0].BHP[0]);
-                //Console.ReadKey();
+                Console.ReadKey();
             }
         }
 
@@ -75,16 +81,16 @@ namespace FIM.Solver
             do
             {
                 // formulation.
-                NumericalPerturbation.calculateMinusR_Matrix(data, minusR);
-                NumericalPerturbation.calculateJacobi_Matrix(data, minusR, Jacobi);
+                NumericalPerturbation.CalculateMinusR_Matrix(data, minusR);
+                NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, Jacobi);
                 WellTerms.add(data, Jacobi, minusR);
 
                 // solving the equations.
                 delta = SolveForDelta(Jacobi, minusR);
 
-                counter = Stabilizer(data, convergenceError, delta, counter);
+                counter = Update(data, convergenceError, delta, counter);
 
-            } while (convergenceError[1] > data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
+            } while (convergenceError[1] >= data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
 
             data.MBE_Oil = MBE.CheckOil(data);
             data.MBE_Gas = MBE.CheckGas(data);
@@ -94,12 +100,12 @@ namespace FIM.Solver
         }
 
         // contains the algorithms of convergence checking, relaxation of deltas and time cut off.
-        private static int Stabilizer(SimulationData data, double[] convergenceError,double[] delta, int counter)
+        private static int Update(SimulationData data, double[] convergenceError,double[] delta, int counter)
         {
             // check convergence errors.
             bool repeat = CheckConvergence(data, convergenceError);
 
-            if (!repeat)
+            if (!repeat && (data.maximumNonLinearIterations - counter) != 1)
             {
                 StabilizeNewton(data, delta, convergenceError);
 
@@ -110,6 +116,11 @@ namespace FIM.Solver
             }
             else
             {
+                data.timeStep *= data.timeStepSlashingFactor;
+
+                // reset relaxation factor.
+                data.relaxationFactor = data.originalRelaxationFactor;
+
                 for (int i = 0; i < data.grid.Length; i++)
                 {
                     data.grid[i].Reset(data);
@@ -117,11 +128,11 @@ namespace FIM.Solver
 
                 // reset the convergenceError array so that it violates the convergence criteria
                 convergenceError[0] = 0;
-                //convergenceError[1] = data.MBE_Tolerance + 1;
-                convergenceError[1] = 0;
+                convergenceError[1] = data.MBE_Tolerance;
+                //convergenceError[1] = 0;
 
                 // reset the counter.
-                // this way we begin repeat the same time step with
+                // this way we begin repeating the same time step with all the number of non linear iterations.
                 counter = 0;
             }
 
@@ -159,7 +170,7 @@ namespace FIM.Solver
 
                 So = 1 - Sw - Sg;
 
-                data.grid[i].UpdateProperties(data, P, Sw, Sg, 1);
+                data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 1);
 
                 counter += data.phases.Length;
             }
@@ -178,7 +189,7 @@ namespace FIM.Solver
                 Sw = data.grid[i].Sw[1];
                 So = 1 - Sw - Sg;
 
-                data.grid[i].UpdateProperties(data, P, Sw, Sg, 0);
+                data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 0);
             }
         }
 
@@ -187,11 +198,12 @@ namespace FIM.Solver
         // returns the absolute value of the gas material balance error of the whole model.
         private static bool CheckConvergence(SimulationData data, double[] convergenceError)
         {
+            bool firstIteration = convergenceError[0] == 0;
+
             convergenceError[0] = convergenceError[1];
 
             convergenceError[1] = Math.Abs(MBE.CheckGas(data));
 
-            bool firstIteration = convergenceError[0] == 0;
             bool MBE_Increasing = (convergenceError[1] > convergenceError[0]);
             bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumConvergenceErrorRatio;
 
@@ -204,11 +216,6 @@ namespace FIM.Solver
 
                 if (data.relaxationFactor < data.minimumRelaxation)
                 {
-                    data.timeStep *= data.timeStepSlashingFactor;
-
-                    // reset relaxation factor.
-                    data.relaxationFactor = data.originalRelaxationFactor;
-
                     return true;
                 }
 

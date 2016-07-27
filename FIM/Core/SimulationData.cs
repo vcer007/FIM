@@ -4,6 +4,7 @@ using FIM.Well;
 
 namespace FIM.Core
 {
+
     /// <summary>
     /// This class contains all the general data of the simulation run "Run Specifications".
     /// </summary>
@@ -61,9 +62,9 @@ namespace FIM.Core
 
         // the grid "a list of the wells".     
         /// <summary>
-        /// An array of <see cref="WellData"/> present in the model.
+        /// An array of <see cref="FullyImplicitWell"/> present in the model.
         /// </summary>
-        public WellData[] wells;
+        public BaseWell[] wells;
 
         // Internal Simulator Configurations
 

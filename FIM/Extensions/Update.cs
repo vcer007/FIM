@@ -26,12 +26,13 @@ namespace FIM.Extensions
         /// <param name="P">The new pressure value.</param>
         /// <param name="Sw">The new water saturation value.</param>
         /// <param name="Sg">The new gas saturation value.</param>
+        /// <param name="So">The new oil saturation value.</param>
         /// <param name="time_level"><para>Default value is 0.</para>
         /// <para>The time_level at which the properties should be updated.</para>
         /// </param>
         /// <seealso cref="Global.STEPS_MEMORY"/>
         /// <seealso cref="Reset(BaseBlock, SimulationData)"/>
-        public static void UpdateProperties(this BaseBlock block, SimulationData data, double P, double Sw, double Sg, int time_level = 0)
+        public static void UpdateProperties(this BaseBlock block, SimulationData data, double P, double Sw, double Sg, double So, int time_level = 0)
         {
             // pressure
             block.P_previousStep = block.P[0];
@@ -52,7 +53,7 @@ namespace FIM.Extensions
 
             block.Rso[time_level] = data.pvt.GetRs(Global.Phase.Oil, P);
 
-            block.So[time_level] = 1 - Sw - Sg;
+            block.So[time_level] = So;
             block.Sw[time_level] = Sw;
             block.Sg[time_level] = Sg;
 
@@ -81,7 +82,7 @@ namespace FIM.Extensions
                 // block way we update n1 time level properties also automatically
                 // after updating n0 time level properties.
                 // note that the initial guess here for n1 is assumed to be the same values as the ones at n0.
-                block.UpdateProperties(data, P, Sw, Sg, 1);
+                block.UpdateProperties(data, P + Global.EPSILON, Sw, Sg, So, 1);
             }
             else if (time_level == 1)
             {
@@ -89,7 +90,7 @@ namespace FIM.Extensions
                 // So we can update three time levels storage "where the third one, n2, is used solely for perturbation".
                 if (data.solutionProcedure == Global.SolutionProcedure.FullyImplicit)
                 {
-                    block.UpdateProperties(data, P + Global.EPSILON, Sw + Global.EPSILON, Sg + Global.EPSILON, 2);
+                    block.UpdateProperties(data, P + Global.EPSILON, Sw + Global.EPSILON, Sg + Global.EPSILON, So, 2);
                 }
             }
         }
@@ -108,7 +109,7 @@ namespace FIM.Extensions
         {
             // to reset the properties of the block, simply call updateProperties_n0_n1 with input parameters from
             // the n0 time level.
-            block.UpdateProperties(data, block.P[0], block.Sw[0], block.Sg[0], 0);
+            block.UpdateProperties(data, block.P[0], block.Sw[0], block.Sg[0], block.So[0], 0);
         }
     }
 }

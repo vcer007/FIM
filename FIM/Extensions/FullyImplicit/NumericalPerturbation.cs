@@ -11,11 +11,11 @@ namespace FIM.Extensions.FullyImplicit
     public static class NumericalPerturbation
     {
         // calculate the value of the residual equation for any phase.
-        private static double calculateR(this BaseBlock block, SimulationData data, Global.Phase phase)
+        private static double CalculateR(this BaseBlock block, SimulationData data, Global.Phase phase)
         {
             // Note : Kro, Krw, Krg are all calculated based on Sg.
 
-            BaseBlock upstream_block, downstream_block, neighbour_block;
+            BaseBlock upstream_block, downstream_block, neighbor_block;
             double transmissibility;
 
             double Kr, B, viscosity, Rso;
@@ -32,25 +32,25 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         continue;
                     }
-                    neighbour_block = data.grid[block.neighbourBlocksIndices[i]];
+                    neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
                     transmissibility = block.transmissibility_list[i];
 
-                    if (block.P[1] >= neighbour_block.P[1])
+                    if (block.P[1] >= neighbor_block.P[1])
                     {
                         upstream_block = block;
-                        downstream_block = neighbour_block;
+                        downstream_block = neighbor_block;
                     }
                     else
                     {
-                        upstream_block = neighbour_block;
+                        upstream_block = neighbor_block;
                         downstream_block = block;
                     }
 
                     Kr = upstream_block.Kro[1];
-                    B = 0.5 * (block.Bo[1] + neighbour_block.Bo[1]);
-                    viscosity = 0.5 * (block.viscosityOil[1] + neighbour_block.viscosityOil[1]);
+                    B = 0.5 * (block.Bo[1] + neighbor_block.Bo[1]);
+                    viscosity = 0.5 * (block.viscosityOil[1] + neighbor_block.viscosityOil[1]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1]);
                     block.transmissibility_terms_oil[i] = temp;
 
                     R += temp;
@@ -70,25 +70,25 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         continue;
                     }
-                    neighbour_block = data.grid[block.neighbourBlocksIndices[i]];
+                    neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
                     transmissibility = block.transmissibility_list[i];
 
-                    if (block.P[1] >= neighbour_block.P[1])
+                    if (block.P[1] >= neighbor_block.P[1])
                     {
                         upstream_block = block;
-                        downstream_block = neighbour_block;
+                        downstream_block = neighbor_block;
                     }
                     else
                     {
-                        upstream_block = neighbour_block;
+                        upstream_block = neighbor_block;
                         downstream_block = block;
                     }
 
                     Kr = upstream_block.Krw[1];
-                    B = 0.5 * (block.Bw[1] + neighbour_block.Bw[1]);
-                    viscosity = 0.5 * (block.viscosityWater[1] + neighbour_block.viscosityWater[1]);
+                    B = 0.5 * (block.Bw[1] + neighbor_block.Bw[1]);
+                    viscosity = 0.5 * (block.viscosityWater[1] + neighbor_block.viscosityWater[1]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1]);
                     block.transmissibility_terms_water[i] = temp;
 
                     R += temp;
@@ -107,34 +107,34 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         continue;
                     }
-                    neighbour_block = data.grid[block.neighbourBlocksIndices[i]];
+                    neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
                     transmissibility = block.transmissibility_list[i];
 
-                    if (block.P[1] >= neighbour_block.P[1])
+                    if (block.P[1] >= neighbor_block.P[1])
                     {
                         upstream_block = block;
-                        downstream_block = neighbour_block;
+                        downstream_block = neighbor_block;
                     }
                     else
                     {
-                        upstream_block = neighbour_block;
+                        upstream_block = neighbor_block;
                         downstream_block = block;
                     }
 
                     Kr = upstream_block.Krg[1];
-                    B = 0.5 * (block.Bg[1] + neighbour_block.Bg[1]);
-                    viscosity = 0.5 * (block.viscosityGas[1] + neighbour_block.viscosityGas[1]);
+                    B = 0.5 * (block.Bg[1] + neighbor_block.Bg[1]);
+                    viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1]);
 
                     if (data.solubleGasPresent)
                     {
                         Kr = upstream_block.Kro[1];
-                        B = 0.5 * (block.Bo[1] + neighbour_block.Bo[1]);
-                        viscosity = 0.5 * (block.viscosityOil[1] + neighbour_block.viscosityOil[1]);
-                        Rso = 0.5 * (block.Rso[1] + neighbour_block.Rso[1]);
+                        B = 0.5 * (block.Bo[1] + neighbor_block.Bo[1]);
+                        viscosity = 0.5 * (block.viscosityOil[1] + neighbor_block.viscosityOil[1]);
+                        Rso = 0.5 * (block.Rso[1] + neighbor_block.Rso[1]);
 
-                        temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbour_block.P[1] - block.P[1]);
+                        temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1]);
                         //temp += Rso * block.transmissibility_terms_oil[i];
                     }
 
@@ -159,7 +159,7 @@ namespace FIM.Extensions.FullyImplicit
 
         // perturb the residual equation "calculate at independent variable + epsilon".
         // the perturbed value will then be subtracted from the original R value and divided by epsilon to get the derivative numerically.
-        private static double perturb(this BaseBlock block, SimulationData data, Global.Phase equation_phase, int neighbour_block_index, Global.Variable variable)
+        private static double Perturb(this BaseBlock block, SimulationData data, Global.Phase equation_phase, int neighbour_block_index, Global.Variable variable)
         {
             double R_plus = 0;
 
@@ -169,7 +169,7 @@ namespace FIM.Extensions.FullyImplicit
             double accumulation_term = 0;
 
             double kr, viscosity, B, Rso;
-            BaseBlock upstream_block, downstream_block, neighbour_block;
+            BaseBlock upstream_block, downstream_block, neighbor_block;
 
             double transmissiblity;
 
@@ -238,28 +238,28 @@ namespace FIM.Extensions.FullyImplicit
                             continue;
                         }
 
-                        neighbour_block = data.grid[block.neighbourBlocksIndices[i]];
+                        neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
 
-                        if (block.P[1] >= neighbour_block.P[1])
+                        if (block.P[1] >= neighbor_block.P[1])
                         {
                             upstream_block = block;
-                            downstream_block = neighbour_block;
+                            downstream_block = neighbor_block;
 
                             kr = upstream_block.Kro[sgd];
                         }
                         else
                         {
-                            upstream_block = neighbour_block;
+                            upstream_block = neighbor_block;
                             downstream_block = block;
 
                             kr = upstream_block.Kro[nsgd];
                         }
 
-                        B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
-                        viscosity = 0.5 * (block.viscosityOil[pd] + neighbour_block.viscosityOil[npd]);
+                        B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
+                        viscosity = 0.5 * (block.viscosityOil[pd] + neighbor_block.viscosityOil[npd]);
                         transmissiblity = block.transmissibility_list[i];
 
-                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                         transmissibility_term += transmissibility_temp;
                     }
@@ -269,28 +269,28 @@ namespace FIM.Extensions.FullyImplicit
                 else
                 {
                     // transmissibility term
-                    neighbour_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
+                    neighbor_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
 
-                    if (block.P[1] >= neighbour_block.P[1])
+                    if (block.P[1] >= neighbor_block.P[1])
                     {
                         upstream_block = block;
-                        downstream_block = neighbour_block;
+                        downstream_block = neighbor_block;
 
                         kr = upstream_block.Kro[sgd];
                     }
                     else
                     {
-                        upstream_block = neighbour_block;
+                        upstream_block = neighbor_block;
                         downstream_block = block;
 
                         kr = upstream_block.Kro[nsgd];
                     }
 
-                    B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
-                    viscosity = 0.5 * (block.viscosityOil[pd] + neighbour_block.viscosityOil[npd]);
+                    B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
+                    viscosity = 0.5 * (block.viscosityOil[pd] + neighbor_block.viscosityOil[npd]);
                     transmissiblity = block.transmissibility_list[neighbour_block_index];
 
-                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                     transmissibility_term = transmissibility_temp;
                     for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
@@ -319,28 +319,28 @@ namespace FIM.Extensions.FullyImplicit
                             continue;
                         }
 
-                        neighbour_block = data.grid[block.neighbourBlocksIndices[i]];
+                        neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
 
-                        if (block.P[1] >= neighbour_block.P[1])
+                        if (block.P[1] >= neighbor_block.P[1])
                         {
                             upstream_block = block;
-                            downstream_block = neighbour_block;
+                            downstream_block = neighbor_block;
 
                             kr = upstream_block.Krg[sgd];
                         }
                         else
                         {
-                            upstream_block = neighbour_block;
+                            upstream_block = neighbor_block;
                             downstream_block = block;
 
                             kr = upstream_block.Krg[nsgd];
                         }
 
-                        B = 0.5 * (block.Bg[pd] + neighbour_block.Bg[npd]);
-                        viscosity = 0.5 * (block.viscosityGas[pd] + neighbour_block.viscosityGas[npd]);
+                        B = 0.5 * (block.Bg[pd] + neighbor_block.Bg[npd]);
+                        viscosity = 0.5 * (block.viscosityGas[pd] + neighbor_block.viscosityGas[npd]);
                         transmissiblity = block.transmissibility_list[i];
 
-                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                         if (data.solubleGasPresent)
                         {
@@ -353,11 +353,11 @@ namespace FIM.Extensions.FullyImplicit
                                 kr = upstream_block.Kro[nsgd];
                             }
 
-                            Rso = 0.5 * (block.Rso[pd] + neighbour_block.Rso[npd]);
-                            B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
-                            viscosity = 0.5 * (block.viscosityOil[pd] + neighbour_block.viscosityOil[npd]);
+                            Rso = 0.5 * (block.Rso[pd] + neighbor_block.Rso[npd]);
+                            B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
+                            viscosity = 0.5 * (block.viscosityOil[pd] + neighbor_block.viscosityOil[npd]);
 
-                            transmissibility_temp += Rso * transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                            transmissibility_temp += Rso * transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
                         }
 
 
@@ -375,28 +375,28 @@ namespace FIM.Extensions.FullyImplicit
                 else
                 {
                     // transmissibility term
-                    neighbour_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
+                    neighbor_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
 
-                    if (block.P[1] >= neighbour_block.P[1])
+                    if (block.P[1] >= neighbor_block.P[1])
                     {
                         upstream_block = block;
-                        downstream_block = neighbour_block;
+                        downstream_block = neighbor_block;
 
                         kr = upstream_block.Krg[sgd];
                     }
                     else
                     {
-                        upstream_block = neighbour_block;
+                        upstream_block = neighbor_block;
                         downstream_block = block;
 
                         kr = upstream_block.Krg[nsgd];
                     }
 
-                    B = 0.5 * (block.Bg[pd] + neighbour_block.Bg[npd]);
-                    viscosity = 0.5 * (block.viscosityGas[pd] + neighbour_block.viscosityGas[npd]);
+                    B = 0.5 * (block.Bg[pd] + neighbor_block.Bg[npd]);
+                    viscosity = 0.5 * (block.viscosityGas[pd] + neighbor_block.viscosityGas[npd]);
                     transmissiblity = block.transmissibility_list[neighbour_block_index];
 
-                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                     if (data.solubleGasPresent)
                     {
@@ -409,11 +409,11 @@ namespace FIM.Extensions.FullyImplicit
                             kr = upstream_block.Kro[nsgd];
                         }
 
-                        Rso = 0.5 * (block.Rso[pd] + neighbour_block.Rso[npd]);
-                        B = 0.5 * (block.Bo[pd] + neighbour_block.Bo[npd]);
-                        viscosity = 0.5 * (block.viscosityOil[pd] + neighbour_block.viscosityOil[npd]);
+                        Rso = 0.5 * (block.Rso[pd] + neighbor_block.Rso[npd]);
+                        B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
+                        viscosity = 0.5 * (block.viscosityOil[pd] + neighbor_block.viscosityOil[npd]);
 
-                        transmissibility_temp += Rso * transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                        transmissibility_temp += Rso * transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
                     }
 
                     transmissibility_term = transmissibility_temp;
@@ -442,28 +442,28 @@ namespace FIM.Extensions.FullyImplicit
                             continue;
                         }
 
-                        neighbour_block = data.grid[block.neighbourBlocksIndices[i]];
+                        neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
 
-                        if (block.P[1] >= neighbour_block.P[1])
+                        if (block.P[1] >= neighbor_block.P[1])
                         {
                             upstream_block = block;
-                            downstream_block = neighbour_block;
+                            downstream_block = neighbor_block;
 
                             kr = upstream_block.Krw[swd];
                         }
                         else
                         {
-                            upstream_block = neighbour_block;
+                            upstream_block = neighbor_block;
                             downstream_block = block;
 
                             kr = upstream_block.Krw[nswd];
                         }
 
-                        B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
-                        viscosity = 0.5 * (block.viscosityWater[pd] + neighbour_block.viscosityWater[npd]);
+                        B = 0.5 * (block.Bw[pd] + neighbor_block.Bw[npd]);
+                        viscosity = 0.5 * (block.viscosityWater[pd] + neighbor_block.viscosityWater[npd]);
                         transmissiblity = block.transmissibility_list[i];
 
-                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                         transmissibility_term += transmissibility_temp;
                     }
@@ -474,28 +474,28 @@ namespace FIM.Extensions.FullyImplicit
                 else
                 {
                     // transmissibility term
-                    neighbour_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
+                    neighbor_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
 
-                    if (block.P[1] >= neighbour_block.P[1])
+                    if (block.P[1] >= neighbor_block.P[1])
                     {
                         upstream_block = block;
-                        downstream_block = neighbour_block;
+                        downstream_block = neighbor_block;
 
                         kr = upstream_block.Krw[swd];
                     }
                     else
                     {
-                        upstream_block = neighbour_block;
+                        upstream_block = neighbor_block;
                         downstream_block = block;
 
                         kr = upstream_block.Krw[nswd];
                     }
 
-                    B = 0.5 * (block.Bw[pd] + neighbour_block.Bw[npd]);
-                    viscosity = 0.5 * (block.viscosityWater[pd] + neighbour_block.viscosityWater[npd]);
+                    B = 0.5 * (block.Bw[pd] + neighbor_block.Bw[npd]);
+                    viscosity = 0.5 * (block.viscosityWater[pd] + neighbor_block.viscosityWater[npd]);
                     transmissiblity = block.transmissibility_list[neighbour_block_index];
 
-                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbour_block.P[npd] - block.P[pd]);
+                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                     transmissibility_term = transmissibility_temp;
                     for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
@@ -524,7 +524,7 @@ namespace FIM.Extensions.FullyImplicit
         /// <param name="minusR"></param>
         /// <seealso cref="Solver.FullyImplicitSolver"/>
         /// <seealso cref="WellTerms"/>
-        public static void calculateMinusR_Matrix(SimulationData data, double[] minusR)
+        public static void CalculateMinusR_Matrix(SimulationData data, double[] minusR)
         {
 
             BaseBlock block;
@@ -533,9 +533,9 @@ namespace FIM.Extensions.FullyImplicit
             {
                 block = data.grid[i];
 
-                minusR[counter] = -1 * block.calculateR(data, Global.Phase.Oil);
-                minusR[counter + 1] = -1 * block.calculateR(data, Global.Phase.Gas);
-                minusR[counter + 2] = -1 * block.calculateR(data, Global.Phase.Water);
+                minusR[counter] = -1 * block.CalculateR(data, Global.Phase.Oil);
+                minusR[counter + 1] = -1 * block.CalculateR(data, Global.Phase.Gas);
+                minusR[counter + 2] = -1 * block.CalculateR(data, Global.Phase.Water);
 
                 counter += data.phases.Length;
             }
@@ -549,7 +549,7 @@ namespace FIM.Extensions.FullyImplicit
         /// <param name="Jacobi"></param>
         /// <seealso cref="Solver.FullyImplicitSolver"/>
         /// <seealso cref="WellTerms"/>
-        public static void calculateJacobi_Matrix(SimulationData data, double[] minusR, double[][] Jacobi)
+        public static void CalculateJacobi_Matrix(SimulationData data, double[] minusR, double[][] Jacobi)
         {
             // this is necessary as the direct solver used modifies the jacobi matrix.
             for (int i = 0; i < Jacobi.Length; i++)
@@ -569,64 +569,64 @@ namespace FIM.Extensions.FullyImplicit
 
                 #region Oil
                 // with respect to P
-                Jacobi[counter][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
+                Jacobi[counter][data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
                 // with respect to Sg
-                Jacobi[counter][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
+                Jacobi[counter][data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
                 // with respect to Sw
-                Jacobi[counter][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
+                Jacobi[counter][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
 
                 for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
                 {
                     if (block.neighbourBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
+                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
                         // with respect to Sg
-                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
+                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
                         // with respect to Sw
-                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
+                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
                     }
                 }
                 #endregion
                 #region Gas
                 // with respect to P
-                Jacobi[counter + 1][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
+                Jacobi[counter + 1][data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
                 // with respect to Sg
-                Jacobi[counter + 1][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
+                Jacobi[counter + 1][data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
                 // with respect to Sw
-                Jacobi[counter + 1][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
+                Jacobi[counter + 1][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
 
                 for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
                 {
                     if (block.neighbourBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
+                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
                         // with respect to Sg
-                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
+                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
                         // with respect to Sw
-                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
+                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
                     }
                 }
                 #endregion
                 #region Water
                 // with respect to P
-                Jacobi[counter + 2][data.phases.Length * block.index] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
+                Jacobi[counter + 2][data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
                 // with respect to Sg
-                Jacobi[counter + 2][data.phases.Length * block.index + 1] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
+                Jacobi[counter + 2][data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
                 // with respect to Sw
-                Jacobi[counter + 2][data.phases.Length * block.index + 2] = (block.perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
+                Jacobi[counter + 2][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
 
                 for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
                 {
                     if (block.neighbourBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
+                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
                         // with respect to Sg
-                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
+                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
                         // with respect to Sw
-                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
+                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
                     }
                 }
                 #endregion

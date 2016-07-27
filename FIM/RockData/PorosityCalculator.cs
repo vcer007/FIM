@@ -11,8 +11,10 @@
     /// <seealso cref="FluidData.SCAL"/>
     public class PorosityCalculator
     {
-        //Rock compressibility factor
-        double Cf;
+        /// <summary>
+        /// Rock compressibility factor
+        /// </summary>
+        public double Cf;
 
         //Value of the porosity at the reference pressure.
         double porosity_ref;

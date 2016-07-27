@@ -1,17 +1,18 @@
 ﻿using FIM.Core;
-
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-/// <summary>
-/// This namespace contains the well related classes.
-/// </summary>
 namespace FIM.Well
 {
     /// <summary>
-    /// This class contains helper methods for handling well calculations.
+    /// 
     /// </summary>
-    public class WellData
+    public class BaseWell
     {
+
         /// <summary>
         /// The index of the block in which the well is located.
         /// </summary>
@@ -38,6 +39,12 @@ namespace FIM.Well
         /// </summary>
         /// <seealso cref="Global.WellControl"/>
         public Global.WellControl control;
+
+        /// <summary>
+        /// The method used for calculating well rates.
+        /// </summary>
+        /// <seealso cref="Global.WellRateCalculation"/>
+        public Global.WellRateCalculation method;
 
         /// <summary>
         /// The specified minimum BHP
@@ -98,20 +105,24 @@ namespace FIM.Well
         /// <param name="index">The index of the block the well is located into.</param>
         /// <param name="type">The well type<see cref="Global.WellType"/>.</param>
         /// <param name="control">The well control method <see cref="Global.WellControl"/>.</param>
+        /// <param name="method">The well rate method used <see cref="Global.WellRateCalculation"/>.</param>
         /// <param name="radius">The well radius.</param>
         /// <param name="skin">The skin factor.</param>
         /// <param name="specifiedMinimumBHP">The specified_minimum BHP.</param>
         /// <param name="specifiedFlowRate">The specified flow rate.</param>
-        public WellData(SimulationData data, int index, Global.WellType type, Global.WellControl control, double radius, double skin, double specifiedMinimumBHP = 0, double specifiedFlowRate = 0)
+        public BaseWell(SimulationData data, int index, Global.WellType type, Global.WellControl control, Global.WellRateCalculation method, double radius, double skin, double specifiedMinimumBHP = 0, double specifiedFlowRate = 0)
         {
             this.index = index;
+            this.type = type;
+            this.control = control;
+            this.method = method;
             data.grid[index].type = Global.BlockType.WellBlock;
             this.radius = radius;
             this.skin = skin;
             this.R_equivalent = GetR_Equivalent(data.grid[index], data.grid);
             this.WI = GetWI(data.grid[index]);
             this.specifiedMinimumBHP = specifiedMinimumBHP;
-            
+
             this.specifiedFlowRate = specifiedFlowRate;
             if (type == Global.WellType.Injection)
             {
@@ -123,9 +134,6 @@ namespace FIM.Well
             this.q_free_gas = new double[Global.STEPS_MEMORY];
             this.q_solution_gas = new double[Global.STEPS_MEMORY];
             this.q_water = new double[Global.STEPS_MEMORY];
-
-            this.type = type;
-            this.control = control;
         }
 
         /// <summary>
@@ -141,7 +149,7 @@ namespace FIM.Well
             {
                 UpdateFlowRates(timeLevel, block);
             }
-            
+
             //only for fully implicit simulation do we need to calculate well rates derivatives.
             if (derivatives)
             {
@@ -157,7 +165,7 @@ namespace FIM.Well
                 if (type == Global.WellType.Production)
                 {
                     q_oil[timeLevel] = specifiedFlowRate;
-                    BHP[timeLevel] = CalculatePwf(block, block.P[timeLevel], block.Kro[timeLevel], block.viscosityOil[timeLevel], block.Bo[timeLevel]);
+                    BHP[timeLevel] = CalculatePwf(block.P[timeLevel], block.Kro[timeLevel], block.viscosityOil[timeLevel], block.Bo[timeLevel]);
                     q_free_gas[timeLevel] = CalculateFlowRate(block.P[timeLevel], BHP[timeLevel], block.Krg[timeLevel], block.viscosityGas[timeLevel], WI, block.Bg[timeLevel]);
                     q_solution_gas[timeLevel] = block.Rso[timeLevel] * q_oil[timeLevel];
                     q_water[timeLevel] = CalculateFlowRate(block.P[timeLevel], BHP[timeLevel], block.Krw[timeLevel], block.viscosityWater[timeLevel], WI, block.Bw[timeLevel]);
@@ -174,7 +182,7 @@ namespace FIM.Well
                     q_solution_gas[timeLevel] = 0;
                     q_water[timeLevel] = 0;
                 }
-                
+
             }
             else if (control == Global.WellControl.GasRate)
             {
@@ -246,19 +254,19 @@ namespace FIM.Well
                 {
                     // with respect to P
                     dq_oil_dP = 0;
-                    temp = CalculatePwf(block, block.P[2], block.Kro[1], block.viscosityOil[2], block.Bo[2]);
+                    temp = CalculatePwf(block.P[2], block.Kro[1], block.viscosityOil[2], block.Bo[2]);
                     dq_free_gas_dP = (CalculateFlowRate(block.P[2], temp, block.Krg[1], block.viscosityGas[2], WI, block.Bg[2]) - q_free_gas[1]) / Global.EPSILON;
                     dq_solution_gas_dP = (block.Rso[2] * CalculateFlowRate(block.P[2], temp, block.Kro[1], block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON;
                     dq_water_dP = (CalculateFlowRate(block.P[2], temp, block.Krw[1], block.viscosityWater[2], WI, block.Bw[2]) - q_water[1]) / Global.EPSILON;
                     // with respect to Sg
                     dq_oil_dSg = 0;
-                    temp = CalculatePwf(block, block.P[1], block.Kro[2], block.viscosityOil[1], block.Bo[1]);
+                    temp = CalculatePwf(block.P[1], block.Kro[2], block.viscosityOil[1], block.Bo[1]);
                     dq_free_gas_dSg = (CalculateFlowRate(block.P[1], temp, block.Krg[2], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON;
                     dq_solution_gas_dSg = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILON;
                     dq_water_dSg = (CalculateFlowRate(block.P[1], temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON;
                     // with respect to Sw
                     dq_oil_dSw = 0;
-                    temp = CalculatePwf(block, block.P[1], block.Kro[1], block.viscosityOil[1], block.Bo[1]);
+                    temp = CalculatePwf(block.P[1], block.Kro[1], block.viscosityOil[1], block.Bo[1]);
                     dq_free_gas_dSw = (CalculateFlowRate(block.P[1], temp, block.Krg[1], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON;
                     dq_solution_gas_dSw = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILON;
                     dq_water_dSw = (CalculateFlowRate(block.P[1], temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON;
@@ -432,7 +440,7 @@ namespace FIM.Well
                 }
                 else
                 {
-                    
+
                 }
             }
 
@@ -444,16 +452,16 @@ namespace FIM.Well
         /// <summary>
         /// Calculates the bottom hole flowing pressure.
         /// </summary>
-        /// <param name="block">The block.</param>
         /// <param name="pressure">The pressure.</param>
         /// <param name="Kr">The kr.</param>
         /// <param name="viscosity">The viscosity.</param>
         /// <param name="FVF">The FVF.</param>
+        /// 
         /// <returns>The value of PWF.</returns>
-        private double CalculatePwf(BaseBlock block, double pressure, double Kr, double viscosity, double FVF)
+        public double CalculatePwf(double pressure, double Kr, double viscosity, double FVF)
         {
             double mobility = Kr / (viscosity * FVF);
-            return pressure - ( q_oil[0] / (mobility * WI) );
+            return pressure - (q_oil[0] / (mobility * WI));
         }
 
         /// <summary>
@@ -471,5 +479,29 @@ namespace FIM.Well
             return (P - Pwf) * (Kr / (viscosity * FVF)) * WI;
             //return 0;
         }
+
+        public double GetWellMobility(SimulationData data, Global.Phase phase, int timeLevel)
+        {
+            BaseBlock block = data.grid[this.index];
+
+            if (phase == Global.Phase.Oil)
+            {
+                return block.Kro[timeLevel] / (block.viscosityOil[timeLevel] * block.Bo[timeLevel]);
+            }
+            else if (phase == Global.Phase.Gas)
+            {
+                return block.Krg[timeLevel] / (block.viscosityGas[timeLevel] * block.Bg[timeLevel]);
+            }
+            else
+            {
+                return block.Krw[timeLevel] / (block.viscosityWater[timeLevel] * block.Bw[timeLevel]);
+            }
+        }
+
+        public static double GetWellMobility(double Kr, double viscosity, double FVF)
+        {
+            return Kr / (viscosity * FVF);
+        }
+
     }
 }

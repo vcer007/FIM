@@ -15,7 +15,7 @@ namespace FIM
         static void Main(string[] args)
         {
             SimulationData data = Initialization.Model.initiaize();
-            FullyImplicitSolver.RunSimulation(data);
+            IMPES_Solver.RunSimulation(data);
 
             Console.ReadKey();
         }

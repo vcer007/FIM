@@ -22,7 +22,7 @@ namespace FIM.Initialization
             PorosityCalculator porosity;
 
             initializeFluidData(out pvt, out kr);
-            intializePorosity(out porosity);
+            intializePorosityCalculator(out porosity);
 
             initializeGrid(out simulation_data, pvt, kr);
 
@@ -54,7 +54,7 @@ namespace FIM.Initialization
 
             for (int i = 0; i < simulation_data.grid.Length; i++)
             {
-                simulation_data.grid[i].UpdateProperties(simulation_data, 4800, 0.12, 0, 0);
+                simulation_data.grid[i].UpdateProperties(simulation_data, 4800, 0.12, 0, 0.88, 0);
             }
 
             simulation_data.MBE_Tolerance = 1;
@@ -108,7 +108,7 @@ namespace FIM.Initialization
             kr = new SCAL(Kr_data);
         }
 
-        private static void intializePorosity(out PorosityCalculator porosity)
+        private static void intializePorosityCalculator(out PorosityCalculator porosity)
         {
             double Cf = 0.000003;
             double porosity_ref = 0.3;
@@ -119,7 +119,7 @@ namespace FIM.Initialization
 
         private static void initializeGrid(out SimulationData simulation_data, PVT pvt, SCAL kr)
         {
-            int x = 10, y = 10, z = 1;
+            int x = 2, y = 1, z = 1;
 
             double porosity = 0.3;
             double[][] permeability = new double[3][];
@@ -257,9 +257,9 @@ namespace FIM.Initialization
             int[] well_indices = new int[] { 0};
 
             // well data
-            WellData[] wells = new WellData[1];
+            BaseWell[] wells = new BaseWell[1];
 
-            wells[0] = new WellData(data, well_indices[0], Global.WellType.Production, Global.WellControl.OilRate, 0.25, 0, 500, 6000);
+            wells[0] = new BaseWell(data, well_indices[0], Global.WellType.Production, Global.WellControl.OilRate, Global.WellRateCalculation.Explicit, 0.25, 0, 500, 1000);
 
             data.wells = wells;
 
