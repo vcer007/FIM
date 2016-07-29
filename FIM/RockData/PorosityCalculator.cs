@@ -17,10 +17,14 @@
         public double Cf;
 
         //Value of the porosity at the reference pressure.
-        double porosity_ref;
+        public double porosity_ref;
 
         //The reference pressure at which the porosity was measured.
-        double pressure_ref;
+        public double pressure_ref;
+
+        public PorosityCalculator()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PorosityCalculator"/> class.
