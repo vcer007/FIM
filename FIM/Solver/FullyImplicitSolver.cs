@@ -18,6 +18,9 @@ namespace FIM.Solver
     {
         // the entry point
 
+        // this variable is used to store the current time of the simulation run.
+        static double currentTime;
+
         /// <summary>
         /// The entry point of the fully implicit simulation cycle.
         /// </summary>
@@ -45,17 +48,17 @@ namespace FIM.Solver
 
             // the simulation loop.
 
-            double current_time = 0;
+            currentTime = 0;
 
-            for (; current_time <= end_time;)
+            for (; currentTime <= end_time;)
             {
                 IterativeSolver(data, jacobian, minusR, delta);
-                // this way of updating the loop iterator "current_time" is used to correctly display current time
+                // this way of updating the loop iterator "currentTime" is used to correctly display current time
                 // after the iterations. This is because the time step length may change during the iteration.
-                current_time += data.timeStep;
+                currentTime += data.timeStep;
 
-                //Console.WriteLine(current_time + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.grid[0].Rso[0]);
-                Console.WriteLine(current_time + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
+                //Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.grid[0].Rso[0]);
+                Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
                 //Console.WriteLine(data.MBE_Gas);
                 //Console.WriteLine(data.grid[0].P[0] + ", " + data.wells[0].BHP[0]);
                 Console.ReadKey();
@@ -260,7 +263,9 @@ namespace FIM.Solver
         // this code may be modified to make gradual return from the cut off time step to the original value.
         private static void ResetTimeStep(SimulationData data)
         {
-            data.timeStep = data.originalTimeStep;
+            // this will make sure the time step is reset to the original value
+            // it also adjusts the time step sothat the last step will end at the specified ending time.
+            data.timeStep = currentTime + data.originalTimeStep > data.endingTime ? data.endingTime - currentTime : data.originalTimeStep;
         }
 
     }
