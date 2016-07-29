@@ -61,12 +61,14 @@
     <Compile Include="Extensions\FullyImplicit\WellTerms.cs" />
     <Compile Include="FluidData\SCAL.cs" />
     <Compile Include="FluidData\PVT.cs" />
+    <Compile Include="Initialization\CartesianGrid.cs" />
     <Compile Include="Initialization\Model.cs" />
     <Compile Include="MaterialBalance\MBE.cs" />
     <Compile Include="Mathematics\SolveLinearEquation.cs" />
     <Compile Include="Misc\Rectangular.cs" />
     <Compile Include="Misc\TestFluidData.cs" />
     <Compile Include="Parser\Eclipse.cs" />
+    <Compile Include="Parser\KeyWordMatcher.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RockData\PorosityCalculator.cs" />
