@@ -35,9 +35,78 @@ namespace FIM.Parser
 
         static double So, Sw, Sg, P;
 
+        public static SimulationData ReadInputData(string dataFilePath, string initializationFilePath)
+        {
+            List<string> lines;
 
 
-        public static SimulationData ReadFile(string filePath)
+            #region Data File
+
+            lines = ReadFile(dataFilePath);
+
+            // add the sections
+            AddSection("RUNSPEC", RUNSPEC_section, lines, dataFileSections);
+            AddSection("GRID", GRID_section, lines, dataFileSections);
+            AddSection("PROPS", PROPS_section, lines, dataFileSections);
+            AddSection("SOLUTION", SOLUTION_section, lines, dataFileSections);
+            AddSection("SUMMARY", SUMMARY_section, lines, dataFileSections);
+            AddSection("SCHEDULE", SCHEDULE_section, lines, dataFileSections);
+
+            InitializeRUNSPEC(data, RUNSPEC_section);
+            InitializeGRID(data, GRID_section, porosityCalculator);
+            InitializePROPS(PROPS_section, pvt, scal, porosityCalculator);
+            InitializeSOLUTION(SOLUTION_section);
+            InitializeSUMMARY(SUMMARY_section);
+            InitializeSCHEDULE(data, SCHEDULE_section);
+
+            data.porosityCalculator = porosityCalculator;
+            data.pvt = pvt;
+            data.scal = scal;
+
+
+            // update block properties
+            for (int i = 0; i < data.grid.Length; i++)
+            {
+                data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 0);
+            }
+
+            #endregion
+
+            #region Initialization File
+
+            lines = ReadFile(initializationFilePath);
+
+            InitializationFile(lines);
+
+            //data.timeStepSlashingFactor = 0.5;
+            //data.originalRelaxationFactor = 1;
+            //data.minimumRelaxation = 0.5;
+            //data.relaxationFactorIncrement = -0.1;
+            //data.maximumNonLinearIterations = 25;
+            //data.maximumConvergenceErrorRatio = 0.5;
+            //data.MBE_Tolerance = 1;
+
+            //data.relaxationFactor = data.originalRelaxationFactor;
+            //data.endingTime = 10 * 365;
+            //data.originalTimeStep = 1;
+
+            #endregion
+
+            return data;            
+        }
+
+        private static void InitializationFile(List<string> lines)
+        {
+            data.timeStepSlashingFactor = getData("TSTEPFACTOR", lines, 1)[0];
+            data.originalRelaxationFactor = getData("RELAXFACTOR", lines, 1)[0];
+            data.minimumRelaxation = getData("MINRELAX", lines, 1)[0];
+            data.relaxationFactorDecrement = getData("RELAXDEC", lines, 1)[0];
+            data.maximumNonLinearIterations = getData("MAXNONLINIT", lines, 1)[0];
+            data.maximumConvergenceErrorRatio = getData("MAXCONV", lines, 1)[0];
+            data.MBE_Tolerance = getData("MAXMBE", lines, 1)[0];
+        }
+
+        private static List<string> ReadFile(string filePath)
         {
             List<string> lines = new List<string>();
 
@@ -70,47 +139,7 @@ namespace FIM.Parser
             // remove extra spaces at the beginning of the line
             // remove extra characters after the main data file sections
 
-            // add the sections
-            AddSection("RUNSPEC", RUNSPEC_section, lines, dataFileSections);
-            AddSection("GRID", GRID_section, lines, dataFileSections);
-            AddSection("PROPS", PROPS_section, lines, dataFileSections);
-            AddSection("SOLUTION", SOLUTION_section, lines, dataFileSections);
-            AddSection("SUMMARY", SUMMARY_section, lines, dataFileSections);
-            AddSection("SCHEDULE", SCHEDULE_section, lines, dataFileSections);
-
-            InitializeRUNSPEC(data, RUNSPEC_section);
-            InitializeGRID(data, GRID_section, porosityCalculator);
-            InitializePROPS(PROPS_section, pvt, scal, porosityCalculator);
-            InitializeSOLUTION(SOLUTION_section);
-            InitializeSUMMARY(SUMMARY_section);
-            InitializeSCHEDULE(data, SCHEDULE_section);
-
-            data.porosityCalculator = porosityCalculator;
-            data.pvt = pvt;
-            data.scal = scal;
-
-
-            // update block properties
-            for (int i = 0; i < data.grid.Length; i++)
-            {
-                data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 0);
-            }
-
-
-
-            data.originalTimeStep = 1;
-            data.timeStepSlashingFactor = 0.5;
-            data.endingTime = 10 * 365;
-            data.originalRelaxationFactor = 1;
-            data.minimumRelaxation = 0.5;
-            data.relaxationFactorIncrement = -0.1;
-            data.relaxationFactor = data.originalRelaxationFactor;
-            data.maximumNonLinearIterations = 25;
-            data.maximumConvergenceErrorRatio = 0.5;
-            data.MBE_Tolerance = 1;
-
-
-            return data;            
+            return lines;
         }
 
         private static void InitializeRUNSPEC(SimulationData data, List<string> section)
