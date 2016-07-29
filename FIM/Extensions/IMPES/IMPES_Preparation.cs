@@ -55,13 +55,13 @@ namespace FIM.Extensions.IMPES
                 // neighboring blocks
 
                 // oil phase
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    if (block.neighbourBlocksIndices[j] < 0)
+                    if (block.neighborBlocksIndices[j] < 0)
                     {
                         continue;
                     }
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[j]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[j]];
                     transmissibility = block.transmissibility_list[j];
 
                     if (block.P[1] >= neighbor_block.P[1])
@@ -85,13 +85,13 @@ namespace FIM.Extensions.IMPES
                 }
 
                 // free gas
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    if (block.neighbourBlocksIndices[j] < 0)
+                    if (block.neighborBlocksIndices[j] < 0)
                     {
                         continue;
                     }
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[j]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[j]];
                     transmissibility = block.transmissibility_list[j];
 
                     if (block.P[1] >= neighbor_block.P[1])
@@ -115,13 +115,13 @@ namespace FIM.Extensions.IMPES
                 }
 
                 // solution gas
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    if (block.neighbourBlocksIndices[j] < 0)
+                    if (block.neighborBlocksIndices[j] < 0)
                     {
                         continue;
                     }
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[j]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[j]];
                     transmissibility = block.transmissibility_list[j];
 
                     if (block.P[1] >= neighbor_block.P[1])
@@ -150,13 +150,13 @@ namespace FIM.Extensions.IMPES
                 }
 
                 // water phase
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    if (block.neighbourBlocksIndices[j] < 0)
+                    if (block.neighborBlocksIndices[j] < 0)
                     {
                         continue;
                     }
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[j]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[j]];
                     transmissibility = block.transmissibility_list[j];
 
                     if (block.P[1] >= neighbor_block.P[1])
