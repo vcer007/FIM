@@ -13,6 +13,11 @@ namespace FIM.Core
         // RunSpec
 
         /// <summary>
+        /// The title of the simulation run.
+        /// </summary>
+        public string title;
+
+        /// <summary>
         /// The solution procedure used for the model.
         /// </summary>
         /// <seealso cref="Global.SolutionProcedure"/>
@@ -29,6 +34,11 @@ namespace FIM.Core
         /// </summary>
         /// <seealso cref="phases"/>
         public bool solubleGasPresent;
+
+        /// <summary>
+        /// Model grid dimensions.
+        /// </summary>
+        public int x, y, z;
 
         // Grid
 
@@ -162,6 +172,16 @@ namespace FIM.Core
         public SimulationData(BaseBlock[] grid)
         {
             this.grid = grid;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SimulationData"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This is an empty constructor used in the parser.
+        /// </remarks>
+        public SimulationData()
+        {
         }
     }
 }
