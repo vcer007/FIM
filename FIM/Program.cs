@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using FIM.FluidData;
 using FIM.Core;
 using FIM.Solver;
+using FIM.Initialization;
 
 namespace FIM
 {
@@ -14,8 +15,18 @@ namespace FIM
     {
         static void Main(string[] args)
         {
-            SimulationData data = Initialization.Model.initiaize();
-            IMPES_Solver.RunSimulation(data);
+            //SimulationData data = Initialization.Model.initiaize();
+
+            SimulationData data = Parser.Eclipse.ReadFile("Odeh.Data");
+
+            if (data.solutionProcedure == Global.SolutionProcedure.FullyImplicit)
+            {
+                FullyImplicitSolver.RunSimulation(data);
+            }
+            else
+            {
+                IMPES_Solver.RunSimulation(data);
+            }
 
             Console.ReadKey();
         }
