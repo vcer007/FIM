@@ -41,7 +41,7 @@ namespace FIM.Initialization
 
             simulation_data.originalRelaxationFactor = 1;
             simulation_data.minimumRelaxation = 0.5;
-            simulation_data.relaxationFactorIncrement = -0.1;
+            simulation_data.relaxationFactorDecrement = -0.1;
             simulation_data.relaxationFactor = simulation_data.originalRelaxationFactor;
 
             simulation_data.maximumNonLinearIterations = 25;

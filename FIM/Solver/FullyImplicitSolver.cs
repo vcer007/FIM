@@ -213,7 +213,7 @@ namespace FIM.Solver
             // 2- the rate of convergence is slow.
             if (!firstIteration && (MBE_Increasing || slowConvergence))
             {
-                data.relaxationFactor += data.relaxationFactorIncrement;
+                data.relaxationFactor -= data.relaxationFactorDecrement;
 
                 if (data.relaxationFactor < data.minimumRelaxation)
                 {
