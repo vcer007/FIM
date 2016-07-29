@@ -17,28 +17,26 @@ namespace FIM
         {
             //SimulationData data = Initialization.Model.initiaize();
 
-            Console.WriteLine(".................FIM Black-Oil Simulator..................");
-            Console.WriteLine("Make Sure the files are located within the same directory as the simulator .exe");
-            Console.WriteLine("Spell the file names correctly with their respective extensions, .INIT and .DATA.");
-            Console.WriteLine("Names are case insensitive.");
-            Console.WriteLine();
+            // display a instructive intro.
+            WriteIntro();
 
+            // get the initialization file name as an input.
             Console.WriteLine("Enter the initialization file name : ");
             string initialization_file_name = Console.ReadLine();
 
+            // get the input data file name as an input.
             Console.WriteLine("Enter the input data file name : ");
             string data_file_name = Console.ReadLine();
 
             Console.WriteLine();
 
+            // read the initialization file and the input data file.
             SimulationData data = Parser.Eclipse.ReadInputData(data_file_name, initialization_file_name);
 
-
-
+            // display some info read from the input data file.
             WriteInfo(data);
 
-
-
+            // determine which solver is to be used.
             if (data.solutionProcedure == Global.SolutionProcedure.FullyImplicit)
             {
                 FullyImplicitSolver.RunSimulation(data);
@@ -48,7 +46,19 @@ namespace FIM
                 IMPES_Solver.RunSimulation(data);
             }
 
+
+            // this prevents the console window from automatically closing after 
             Console.ReadKey();
+        }
+
+        private static void WriteIntro()
+        {
+            Console.WriteLine(".................FIM Black-Oil Simulator..................");
+            Console.WriteLine();
+            Console.WriteLine("1- Make Sure the files are located within the same directory as the simulator.");
+            Console.WriteLine("2- Spell the file names correctly with their respective extensions, '.INIT' and '.DATA'.");
+            Console.WriteLine("3- Names are case insensitive.");
+            Console.WriteLine();
         }
 
         private static void WriteInfo(SimulationData data)
@@ -90,6 +100,8 @@ namespace FIM
 
             Console.WriteLine("Press any key to begin the simulation ...");
             Console.ReadKey();
+
+            Console.WriteLine();
         }
     }
 }
