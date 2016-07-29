@@ -88,9 +88,6 @@ namespace FIM.Solver
 
             } while (convergenceError[1] >= data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
 
-            data.MBE_Oil = MBE.CheckOil(data);
-            data.MBE_Gas = MBE.CheckGas(data);
-            data.MBE_Water = MBE.CheckWater(data);
 
             UpdateProperties(data);
         }
@@ -149,13 +146,11 @@ namespace FIM.Solver
 
             convergenceError[0] = convergenceError[1];
 
-            double tempMBE_Oil = Math.Abs(MBE.CheckOil(data));
-            double tempMBE_Gas = Math.Abs(MBE.CheckGas(data));
-            double tempMBE_Water = Math.Abs(MBE.CheckWater(data));
+            data.MBE_Oil = Math.Abs(MBE.CheckOil(data));
+            data.MBE_Gas = Math.Abs(MBE.CheckGas(data));
+            data.MBE_Water = Math.Abs(MBE.CheckWater(data));
 
-            //Math.Max(tempMBE_Gas, Math.Max(tempMBE_Oil, tempMBE_Water));
-
-            convergenceError[1] = Math.Abs(MBE.CheckGas(data));
+            convergenceError[1] = Math.Max(data.MBE_Gas, Math.Max(data.MBE_Oil, data.MBE_Water));
 
             bool MBE_Increasing = (convergenceError[1] > convergenceError[0]);
             //bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumConvergenceErrorRatio;
@@ -200,9 +195,10 @@ namespace FIM.Solver
 
                 if (block.type == Global.BlockType.WellBlock)
                 {
-                    q_oil = data.wells[i].q_oil[0];
-                    q_free_gas = data.wells[i].q_free_gas[1];
-                    q_water = data.wells[i].q_water[0];
+                    BaseWell well = data.wells.Where(x => x.index == i).ToArray()[0];
+                    q_oil = well.q_oil[0];
+                    q_free_gas = well.q_free_gas[1];
+                    q_water = well.q_water[0];
                 }
                 else
                 {
@@ -213,9 +209,9 @@ namespace FIM.Solver
 
                 // oil phase
                 temp = 0;
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    neighbor_block_index = block.neighbourBlocksIndices[j];
+                    neighbor_block_index = block.neighborBlocksIndices[j];
                     if (neighbor_block_index < 0)
                     {
                         continue;
@@ -246,9 +242,9 @@ namespace FIM.Solver
 
                 // water phase
                 temp = 0;
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    neighbor_block_index = block.neighbourBlocksIndices[j];
+                    neighbor_block_index = block.neighborBlocksIndices[j];
                     if (neighbor_block_index < 0)
                     {
                         continue;
@@ -279,9 +275,9 @@ namespace FIM.Solver
 
                 temp = 0;
                 // free gas
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    neighbor_block_index = block.neighbourBlocksIndices[j];
+                    neighbor_block_index = block.neighborBlocksIndices[j];
                     if (neighbor_block_index < 0)
                     {
                         continue;
@@ -308,9 +304,9 @@ namespace FIM.Solver
                 }
 
                 // solution gas
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    neighbor_block_index = block.neighbourBlocksIndices[j];
+                    neighbor_block_index = block.neighborBlocksIndices[j];
                     if (neighbor_block_index < 0)
                     {
                         continue;

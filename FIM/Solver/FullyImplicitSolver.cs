@@ -92,9 +92,6 @@ namespace FIM.Solver
 
             } while (convergenceError[1] >= data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
 
-            data.MBE_Oil = MBE.CheckOil(data);
-            data.MBE_Gas = MBE.CheckGas(data);
-            data.MBE_Water = MBE.CheckWater(data);
 
             UpdateProperties(data);
         }
@@ -202,7 +199,11 @@ namespace FIM.Solver
 
             convergenceError[0] = convergenceError[1];
 
-            convergenceError[1] = Math.Abs(MBE.CheckGas(data));
+            data.MBE_Oil = Math.Abs(MBE.CheckOil(data));
+            data.MBE_Gas = Math.Abs(MBE.CheckGas(data));
+            data.MBE_Water = Math.Abs(MBE.CheckWater(data));
+
+            convergenceError[1] = Math.Max(data.MBE_Gas, Math.Max(data.MBE_Oil, data.MBE_Water));
 
             bool MBE_Increasing = (convergenceError[1] > convergenceError[0]);
             bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumConvergenceErrorRatio;
