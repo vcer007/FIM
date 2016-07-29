@@ -46,7 +46,7 @@ namespace FIM.Core
         /// <summary>
         /// The different phases available for a black-oil system.
         /// </summary>
-        public enum Phase {Water, Oil, Gas, SolubleGas}
+        public enum Phase {Water, Oil, Gas/*, DissolvedGas*/}
 
         /// <summary>
         /// The different types of a well according to production, or injection, status.
