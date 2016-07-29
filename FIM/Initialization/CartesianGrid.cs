@@ -203,7 +203,7 @@ namespace FIM.Initialization
                 {
                     if (grid[i].neighborBlocksIndices[a] != -1)
                     {
-                        grid[i].transmissibility_list[a] = Transmissibility.calculate(grid[i], grid[grid[i].neighborBlocksIndices[a]]);
+                        grid[i].transmissibility_list[a] = Transmissibility.Calculate(grid[i], grid[grid[i].neighborBlocksIndices[a]]);
                     }
                     else
                     {
