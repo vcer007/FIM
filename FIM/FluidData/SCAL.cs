@@ -31,6 +31,16 @@ namespace FIM.FluidData
             this.kr_Data = kr_Data;
         }
 
+        public SCAL()
+        {
+
+        }
+
+        public void Initialize(double[][] kr_Data)
+        {
+            this.kr_Data = kr_Data;
+        }
+
         /// <summary>
         /// Gets the relative permeability for a certain phase.
         /// </summary>
