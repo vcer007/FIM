@@ -26,13 +26,13 @@ namespace FIM.Extensions.FullyImplicit
 
             if (phase == Global.Phase.Oil)
             {
-                for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                 {
-                    if (block.neighbourBlocksIndices[i] < 0)
+                    if (block.neighborBlocksIndices[i] < 0)
                     {
                         continue;
                     }
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[i]];
                     transmissibility = block.transmissibility_list[i];
 
                     if (block.P[1] >= neighbor_block.P[1])
@@ -64,13 +64,13 @@ namespace FIM.Extensions.FullyImplicit
             }
             else if (phase == Global.Phase.Water)
             {
-                for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                 {
-                    if (block.neighbourBlocksIndices[i] < 0)
+                    if (block.neighborBlocksIndices[i] < 0)
                     {
                         continue;
                     }
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[i]];
                     transmissibility = block.transmissibility_list[i];
 
                     if (block.P[1] >= neighbor_block.P[1])
@@ -101,13 +101,13 @@ namespace FIM.Extensions.FullyImplicit
             }
             else
             {
-                for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                 {
-                    if (block.neighbourBlocksIndices[i] < 0)
+                    if (block.neighborBlocksIndices[i] < 0)
                     {
                         continue;
                     }
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[i]];
                     transmissibility = block.transmissibility_list[i];
 
                     if (block.P[1] >= neighbor_block.P[1])
@@ -231,14 +231,14 @@ namespace FIM.Extensions.FullyImplicit
                 if (this_block)
                 {
                     // transmissibility term
-                    for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                    for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                     {
-                        if (block.neighbourBlocksIndices[i] == -1)
+                        if (block.neighborBlocksIndices[i] == -1)
                         {
                             continue;
                         }
 
-                        neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
+                        neighbor_block = data.grid[block.neighborBlocksIndices[i]];
 
                         if (block.P[1] >= neighbor_block.P[1])
                         {
@@ -269,7 +269,7 @@ namespace FIM.Extensions.FullyImplicit
                 else
                 {
                     // transmissibility term
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[neighbour_block_index]];
 
                     if (block.P[1] >= neighbor_block.P[1])
                     {
@@ -293,7 +293,7 @@ namespace FIM.Extensions.FullyImplicit
                     transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                     transmissibility_term = transmissibility_temp;
-                    for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                    for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                     {
                         if (i == neighbour_block_index)
                         {
@@ -312,14 +312,14 @@ namespace FIM.Extensions.FullyImplicit
                 if (this_block)
                 {
                     // transmissibility term
-                    for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                    for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                     {
-                        if (block.neighbourBlocksIndices[i] == -1)
+                        if (block.neighborBlocksIndices[i] == -1)
                         {
                             continue;
                         }
 
-                        neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
+                        neighbor_block = data.grid[block.neighborBlocksIndices[i]];
 
                         if (block.P[1] >= neighbor_block.P[1])
                         {
@@ -375,7 +375,7 @@ namespace FIM.Extensions.FullyImplicit
                 else
                 {
                     // transmissibility term
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[neighbour_block_index]];
 
                     if (block.P[1] >= neighbor_block.P[1])
                     {
@@ -417,7 +417,7 @@ namespace FIM.Extensions.FullyImplicit
                     }
 
                     transmissibility_term = transmissibility_temp;
-                    for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                    for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                     {
                         if (i == neighbour_block_index)
                         {
@@ -435,14 +435,14 @@ namespace FIM.Extensions.FullyImplicit
                 if (this_block)
                 {
                     // transmissibility term
-                    for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                    for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                     {
-                        if (block.neighbourBlocksIndices[i] == -1)
+                        if (block.neighborBlocksIndices[i] == -1)
                         {
                             continue;
                         }
 
-                        neighbor_block = data.grid[block.neighbourBlocksIndices[i]];
+                        neighbor_block = data.grid[block.neighborBlocksIndices[i]];
 
                         if (block.P[1] >= neighbor_block.P[1])
                         {
@@ -474,7 +474,7 @@ namespace FIM.Extensions.FullyImplicit
                 else
                 {
                     // transmissibility term
-                    neighbor_block = data.grid[block.neighbourBlocksIndices[neighbour_block_index]];
+                    neighbor_block = data.grid[block.neighborBlocksIndices[neighbour_block_index]];
 
                     if (block.P[1] >= neighbor_block.P[1])
                     {
@@ -498,7 +498,7 @@ namespace FIM.Extensions.FullyImplicit
                     transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd]);
 
                     transmissibility_term = transmissibility_temp;
-                    for (int i = 0; i < block.neighbourBlocksIndices.Length; i++)
+                    for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                     {
                         if (i == neighbour_block_index)
                         {
@@ -575,16 +575,16 @@ namespace FIM.Extensions.FullyImplicit
                 // with respect to Sw
                 Jacobi[counter][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
 
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    if (block.neighbourBlocksIndices[j] >= 0)
+                    if (block.neighborBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
+                        Jacobi[counter][data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
                         // with respect to Sg
-                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
+                        Jacobi[counter][data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
                         // with respect to Sw
-                        Jacobi[counter][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
+                        Jacobi[counter][data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
                     }
                 }
                 #endregion
@@ -596,16 +596,16 @@ namespace FIM.Extensions.FullyImplicit
                 // with respect to Sw
                 Jacobi[counter + 1][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
 
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    if (block.neighbourBlocksIndices[j] >= 0)
+                    if (block.neighborBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
+                        Jacobi[counter + 1][data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
                         // with respect to Sg
-                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
+                        Jacobi[counter + 1][data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
                         // with respect to Sw
-                        Jacobi[counter + 1][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
+                        Jacobi[counter + 1][data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
                     }
                 }
                 #endregion
@@ -617,16 +617,16 @@ namespace FIM.Extensions.FullyImplicit
                 // with respect to Sw
                 Jacobi[counter + 2][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
 
-                for (int j = 0; j < block.neighbourBlocksIndices.Length; j++)
+                for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
-                    if (block.neighbourBlocksIndices[j] >= 0)
+                    if (block.neighborBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
+                        Jacobi[counter + 2][data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
                         // with respect to Sg
-                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
+                        Jacobi[counter + 2][data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
                         // with respect to Sw
-                        Jacobi[counter + 2][data.phases.Length * block.neighbourBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
+                        Jacobi[counter + 2][data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
                     }
                 }
                 #endregion
