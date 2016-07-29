@@ -48,7 +48,18 @@ namespace FIM.FluidData
             this.bubblePointPressure = bubblePointPressure;
         }
 
+        public void Initialize(double[][] oilData = null, double[][] oilUnderSaturatedData = null, double[][] waterData = null, double[][] waterUnderSaturatedData = null, double[][] gasData = null, double bubblePointPressure = 14.7)
+        {
+            this.oilData = oilData;
+            this.oilUnderSaturatedData = oilUnderSaturatedData;
 
+            this.waterData = waterData;
+            this.waterUnderSaturatedData = waterUnderSaturatedData;
+
+            this.gasData = gasData;
+
+            this.bubblePointPressure = bubblePointPressure;
+        }
 
         // The publicly accessible methods.
 
