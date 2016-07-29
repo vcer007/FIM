@@ -20,7 +20,7 @@ namespace FIM.Core
         /// <param name="multiplier">a multiplier used for altering inter-layers transmissibilities.</param>
         /// <returns>the Geometrical transmissibility between two blocks.</returns>
         /// <seealso cref="BaseBlock"/>
-        public static double calculate(BaseBlock block_1, BaseBlock block_2, double multiplier = 1)
+        public static double Calculate(BaseBlock block_1, BaseBlock block_2, double multiplier = 1)
         {
             // As each block stores a list of side faces areas, we need to find the index of each block relative to the other.
             int index_1, index_2;
