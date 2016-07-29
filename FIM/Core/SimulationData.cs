@@ -109,9 +109,9 @@ namespace FIM.Core
         public double relaxationFactor;
 
         /// <summary>
-        /// This value is used to increment the relaxation factor if oscillation is detected.
+        /// This value is used to decrement the relaxation factor if oscillation is detected.
         /// </summary>
-        public double relaxationFactorIncrement;
+        public double relaxationFactorDecrement;
 
         /// <summary>
         /// the maximum value of the ratio of material balance errors between two subseuent non-linear iterations.
