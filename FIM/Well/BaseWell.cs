@@ -12,6 +12,10 @@ namespace FIM.Well
     /// </summary>
     public class BaseWell
     {
+        /// <summary>
+        /// The name of the well.
+        /// </summary>
+        public string name;
 
         /// <summary>
         /// The index of the block in which the well is located.
@@ -105,12 +109,12 @@ namespace FIM.Well
         /// <param name="index">The index of the block the well is located into.</param>
         /// <param name="type">The well type<see cref="Global.WellType"/>.</param>
         /// <param name="control">The well control method <see cref="Global.WellControl"/>.</param>
-        /// <param name="method">The well rate method used <see cref="Global.WellRateCalculation"/>.</param>
         /// <param name="radius">The well radius.</param>
         /// <param name="skin">The skin factor.</param>
         /// <param name="specifiedMinimumBHP">The specified_minimum BHP.</param>
         /// <param name="specifiedFlowRate">The specified flow rate.</param>
-        public BaseWell(SimulationData data, int index, Global.WellType type, Global.WellControl control, Global.WellRateCalculation method, double radius, double skin, double specifiedMinimumBHP = 0, double specifiedFlowRate = 0)
+        /// <param name="method">The well rate method used <see cref="Global.WellRateCalculation"/>.</param>
+        public BaseWell(SimulationData data, int index, Global.WellType type, Global.WellControl control, double radius, double skin, double specifiedMinimumBHP = 0, double specifiedFlowRate = 0, Global.WellRateCalculation method = Global.WellRateCalculation.Explicit)
         {
             this.index = index;
             this.type = type;
@@ -398,16 +402,17 @@ namespace FIM.Well
             // neighbour block internal index of "block".
             int index;
 
-            for (int i = 2; i < block.neighbourBlocksIndices.Length; i++)
+            for (int i = 2; i < block.neighborBlocksIndices.Length; i++)
             {
-                if (block.neighbourBlocksIndices[i] >= 0)
+                if (block.neighborBlocksIndices[i] >= 0)
                 {
-                    neighbour = grid[block.neighbourBlocksIndices[i]];
-                    index = Array.IndexOf(neighbour.neighbourBlocksIndices, block.index);
+                    neighbour = grid[block.neighborBlocksIndices[i]];
+                    index = Array.IndexOf(neighbour.neighborBlocksIndices, block.index);
 
-                    distance = (block.deltaXList[i] + neighbour.deltaXList[index]) / 2;
-                    numerator += block.boundaryLengthList[i] / distance * Math.Log(distance) - 0.5 * Math.PI;
-                    denominator += (block.boundaryLengthList[i]) / distance;
+                    distance = block.deltaXList[i] + neighbour.deltaXList[index];
+                    double angle = Math.Atan(0.5 * block.boundaryLengthList[i - 2] / block.deltaXList[i]) * 2;
+                    numerator += block.boundaryLengthList[i - 2] / distance * Math.Log(distance) - angle;
+                    denominator += (block.boundaryLengthList[i - 2]) / distance;
                 }
             }
 
@@ -415,7 +420,7 @@ namespace FIM.Well
 
             if (grid.Length == 1)
             {
-                r_equivalnt = 0.2 * block.deltaXList[3];
+                r_equivalnt = 0.2 * block.deltaXList[3] * 2;
             }
 
             return r_equivalnt;
