@@ -27,6 +27,7 @@ namespace FIM.Core
         /// </summary>
         public int index;
 
+
         /// <summary>
         /// For a structured grid, this property is used to store the layer of the block.
         /// </summary>
@@ -40,7 +41,7 @@ namespace FIM.Core
         /// <para>The list begins with the index of the top block, then the bottom block then all the other blocks.</para>
         /// <para>A value of -1 is used in cases where the top or bottom blocks are non-present.</para>
         /// </remarks>
-        public int[] neighbourBlocksIndices;
+        public int[] neighborBlocksIndices;
 
         #endregion
 
