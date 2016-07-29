@@ -209,24 +209,26 @@ namespace FIM.Extensions.IMPES
                     }
                     else
                     {
-                        // oil
-                        temp = BaseWell.GetWellMobility(block.Kro[0], block.viscosityOil[0], block.Bo[0]);
-                        pressureCoefficients[index][index] -= block.Bo[1] * temp;
-                        constants[index] -= block.Bo[1] * temp * well.BHP[1];
+                        // To-Do :
 
-                        // solution gas
-                        //LHS_Matrix[index][index] -= block.Bg[1] * block.Rso[1] * temp * block.P[1];
-                        //RHS_Matrix[index] -= block.Bg[1] * block.Rso[1] * temp * well.specifiedMinimumBHP;
+                        //// oil
+                        //temp = BaseWell.GetWellMobility(block.Kro[0], block.viscosityOil[0], block.Bo[0]);
+                        //pressureCoefficients[index][index] -= block.Bo[1] * temp;
+                        //constants[index] -= block.Bo[1] * temp * well.BHP[1];
 
-                        // water
-                        temp = BaseWell.GetWellMobility(block.Krw[0], block.viscosityWater[0], block.Bw[0]);
-                        pressureCoefficients[index][index] -= block.Bw[1] * temp;
-                        constants[index] -= block.Bw[1] * temp * well.BHP[1];
+                        //// solution gas
+                        ////LHS_Matrix[index][index] -= block.Bg[1] * block.Rso[1] * temp * block.P[1];
+                        ////RHS_Matrix[index] -= block.Bg[1] * block.Rso[1] * temp * well.specifiedMinimumBHP;
 
-                        // gas
-                        temp = BaseWell.GetWellMobility(block.Krg[0], block.viscosityGas[0], block.Bg[0]);
-                        pressureCoefficients[index][index] -= block.Bg[1] * temp;
-                        constants[index] -= block.Bg[1] * temp * well.BHP[1];
+                        //// water
+                        //temp = BaseWell.GetWellMobility(block.Krw[0], block.viscosityWater[0], block.Bw[0]);
+                        //pressureCoefficients[index][index] -= block.Bw[1] * temp;
+                        //constants[index] -= block.Bw[1] * temp * well.BHP[1];
+
+                        //// gas
+                        //temp = BaseWell.GetWellMobility(block.Krg[0], block.viscosityGas[0], block.Bg[0]);
+                        //pressureCoefficients[index][index] -= block.Bg[1] * temp;
+                        //constants[index] -= block.Bg[1] * temp * well.BHP[1];
                     }
                     
                 }
