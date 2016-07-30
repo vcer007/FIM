@@ -2,12 +2,13 @@
 using FIM.Misc;
 
 using System.Collections.Generic;
-using System;
 using System.Linq;
 
 namespace FIM.Initialization
 {
     // this class is solely used for a grid structure that is similar to the SPE1 comparative problem model.
+    // that is a cartesian grid.
+    // although the simulator is perfectly capable to handle PeBi grids, cartesian grids are considered as a special case of a general PeBi grid.
     class CartesianGrid
     {
         // the grid x, y and z dimensions.
@@ -32,7 +33,24 @@ namespace FIM.Initialization
         // the size of this array is equal to the number of blocks at the y direction "y".
         double[] y_dimensionLengths;
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CartesianGrid"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is used when the blocks width and length "x and y dimension length" are different for each block along their respective direction.
+        /// They are defines as arrays of length equal to the blocks number along each direction.
+        /// </remarks>
+        /// <param name="x">The x grid dimension.</param>
+        /// <param name="y">The y grid dimension.</param>
+        /// <param name="z">The z grid dimension.</param>
+        /// <param name="layersPermeabilities">
+        /// The layers permeabilities.
+        /// Each layer is assumed to be isotropic; it has the same permeability regardless of direction.
+        /// Multipliers <see cref="transmissibilityMultipliers"/> are used for modifying inter-layers transmissibilities.
+        /// </param>
+        /// <param name="x_dimensionLengths">The x_dimension lengths.</param>
+        /// <param name="y_dimensionLengths">The y_dimension lengths.</param>
+        /// <param name="layersHeights">The layers heights.</param>
         public CartesianGrid(int x, int y, int z, double[] layersPermeabilities, double[] x_dimensionLengths, double[] y_dimensionLengths, double[] layersHeights)
         {
             this.x = x;
@@ -46,6 +64,19 @@ namespace FIM.Initialization
 
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CartesianGrid"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This constructor is used when the blocks width and length "x and y dimension length" are each a fixed single value.
+        /// </remarks>
+        /// <param name="x">The x grid dimension.</param>
+        /// <param name="y">The y grid dimension.</param>
+        /// <param name="z">The z grid dimension.</param>
+        /// <param name="layersPermeabilities">The layers permeabilities.</param>
+        /// <param name="x_dimensionLengths">The x_dimension length.</param>
+        /// <param name="y_dimensionLengths">The y_dimension length.</param>
+        /// <param name="layersHeights">The layers heights.</param>
         public CartesianGrid(int x, int y, int z, double[] layersPermeabilities, double x_dimensionLengths, double y_dimensionLengths, double[] layersHeights)
         {
             this.x = x;
@@ -59,15 +90,18 @@ namespace FIM.Initialization
 
         }
 
+
+        /// <summary>
+        /// Constructs the <see cref="BaseBlock"/> array and assign volumetric properties to the blocks.
+        /// </summary>
+        /// <returns> The <see cref="BaseBlock"/> array used as the grid in the <see cref="SimulationData"/></returns>
+        /// <seealso cref="SimulationData.grid"/>
         public BaseBlock[] Initialize()
         {
             // initialize the grid.
             // assign neighbor blocks indices and blocks arrays sizes.
-            BaseBlock[] grid = InitializeGrid();
+            BaseBlock[] grid = InitializeNeighbors();
 
-            // assign permeabilities
-            // note that porosities "at different time levels" are calculated when updating blocks properties automaticaly.
-            // this is due to the fact that porosity is pressure dependent. So it's calculated by knowing the rock's compressibility.
             InitializeGridPermeabilities(grid);
 
             InitializeVolumetrics(grid);
@@ -77,37 +111,8 @@ namespace FIM.Initialization
             return grid;
         }
 
-        private void InitializeVolumetrics(BaseBlock[] grid)
-        {
-            for (int i = 0; i < grid.Length; i++)
-            {
-                // areas
-
-                // top
-                grid[i].areaList[0] = 4 * grid[i].deltaXList[2] * grid[i].deltaXList[4];
-
-                // bottom
-                grid[i].areaList[1] = grid[i].areaList[0];
-
-                for (int a = 0; a < grid[i].boundaryLengthList.Length; a++)
-                {
-                    grid[i].areaList[a + 2] = grid[i].height * grid[i].boundaryLengthList[a];
-                }
-
-                grid[i].bulkVolume = grid[i].height * grid[i].areaList[0];
-            }
-        }
-
-        private void InitializeGridPermeabilities(BaseBlock[] grid)
-        {
-            for (int i = 0; i < grid.Length; i++)
-            {
-                // assign each grid block's permeabilities.
-                grid[i].permeability = Enumerable.Repeat(layersPermeabilities[grid[i].layer], grid[i].neighborBlocksIndices.Length).ToArray();
-            }
-        }
-
-        public BaseBlock[] InitializeGrid()
+        // an internal method to initialize blocks neghboring relationshps.
+        private BaseBlock[] InitializeNeighbors()
         {
             int size = x * y * z;
 
@@ -140,7 +145,7 @@ namespace FIM.Initialization
                         grid[counter].index = Rectangular.xyzToNatural(x, y, z, i, j, k);
                         grid[counter].layer = k;
 
-                        InitializeBlockArrays(grid[counter], temp.Count);
+                        AllocateBlockArrays(grid[counter], temp.Count);
 
                         InitializeBlockDimensions(i, j, k, grid[counter]);
 
@@ -153,7 +158,9 @@ namespace FIM.Initialization
             return grid;
         }
 
-        private void InitializeBlockArrays(BaseBlock block, int arraySize)
+        // allocates memory for each array in the block according to the number of neighbor blocks.
+        // arraySize = the number of neighbor blocks.
+        private void AllocateBlockArrays(BaseBlock block, int arraySize)
         {
             // boundary length list is only used for well equivalent radius calculations.
             // only sideways boundaries are considered.
@@ -165,9 +172,11 @@ namespace FIM.Initialization
             block.areaList = new double[arraySize];
         }
 
-        private void InitializeBlockDimensions(int x, int y, int z, BaseBlock block)
+        // initializes the blocks delta Xs.
+        // i, j and k are the block's x, y and z location in the cartesian grid.
+        private void InitializeBlockDimensions(int i, int j, int k, BaseBlock block)
         {
-            block.height = layersHeights[z];
+            block.height = layersHeights[k];
 
             // up
             block.deltaXList[0] = 0.5 * block.height;
@@ -176,16 +185,16 @@ namespace FIM.Initialization
             block.deltaXList[1] = block.deltaXList[0];
 
             // right
-            block.deltaXList[2] = 0.5 * x_dimensionLengths[x];
-            block.boundaryLengthList[0] = y_dimensionLengths[y];
+            block.deltaXList[2] = 0.5 * x_dimensionLengths[i];
+            block.boundaryLengthList[0] = y_dimensionLengths[j];
 
             // left
             block.deltaXList[3] = block.deltaXList[2];
             block.boundaryLengthList[1] = block.boundaryLengthList[0];
 
             // north
-            block.deltaXList[4] = 0.5 * y_dimensionLengths[y];
-            block.boundaryLengthList[2] = x_dimensionLengths[x];
+            block.deltaXList[4] = 0.5 * y_dimensionLengths[j];
+            block.boundaryLengthList[2] = x_dimensionLengths[i];
 
             // south
             block.deltaXList[5] = block.deltaXList[4];
@@ -193,6 +202,42 @@ namespace FIM.Initialization
 
         }
 
+
+        // assign permeabilities
+        // note that porosities "at different time levels" are calculated when updating blocks properties automaticaly.
+        // this is due to the fact that porosity is pressure dependent. So it's calculated by knowing the rock's compressibility.
+        private void InitializeGridPermeabilities(BaseBlock[] grid)
+        {
+            for (int i = 0; i < grid.Length; i++)
+            {
+                // assign each grid block's permeabilities.
+                grid[i].permeability = Enumerable.Repeat(layersPermeabilities[grid[i].layer], grid[i].neighborBlocksIndices.Length).ToArray();
+            }
+        }
+
+        // assign boundary lengths, delta Xs, areas and block volumes.
+        private void InitializeVolumetrics(BaseBlock[] grid)
+        {
+            for (int i = 0; i < grid.Length; i++)
+            {
+                // areas
+
+                // top
+                grid[i].areaList[0] = 4 * grid[i].deltaXList[2] * grid[i].deltaXList[4];
+
+                // bottom
+                grid[i].areaList[1] = grid[i].areaList[0];
+
+                for (int a = 0; a < grid[i].boundaryLengthList.Length; a++)
+                {
+                    grid[i].areaList[a + 2] = grid[i].height * grid[i].boundaryLengthList[a];
+                }
+
+                grid[i].bulkVolume = grid[i].height * grid[i].areaList[0];
+            }
+        }
+
+        // intializes the blocks geometrical transmissibility factors.
         private void InitializeTransmissibilities(BaseBlock[] grid)
         {
             for (int i = 0; i < grid.Length; i++)

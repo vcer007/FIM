@@ -174,7 +174,7 @@ namespace FIM.Extensions.FullyImplicit
             double transmissiblity;
 
             #region Variable Dependencies
-            int pd = 1, npd = 1, sod = 1, nsod = 1, swd = 1, nswd = 1, sgd = 1, nsgd = 1, swgd = 1, nswgd = 1;
+            int pd = 1, npd = 1, swd = 1, nswd = 1, sgd = 1, nsgd = 1;
             bool this_block = true;
 
             if (neighbour_block_index == -1)
@@ -202,12 +202,10 @@ namespace FIM.Extensions.FullyImplicit
                 if (this_block)
                 {
                     sgd = 2;
-                    swgd = 2;
                 }
                 else
                 {
                     nsgd = 2;
-                    nswgd = 2;
                 }
             }
             else if (variable == Global.Variable.SaturationWater)
@@ -215,12 +213,10 @@ namespace FIM.Extensions.FullyImplicit
                 if (this_block)
                 {
                     swd = 2;
-                    swgd = 2;
                 }
                 else
                 {
                     nswd = 2;
-                    nswgd = 2;
                 }
             }
             #endregion

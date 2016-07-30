@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.LinearAlgebra.Double;
-using FIM.Core;
+﻿using FIM.Core;
 using FIM.MaterialBalance;
 using FIM.Extensions.FullyImplicit;
 using FIM.Extensions;
@@ -49,28 +48,24 @@ namespace FIM.Solver
             // the simulation loop.
 
             currentTime = 0;
-
-            for (; currentTime <= end_time;)
+            for (; currentTime < end_time;)
             {
                 IterativeSolver(data, jacobian, minusR, delta);
                 // this way of updating the loop iterator "currentTime" is used to correctly display current time
                 // after the iterations. This is because the time step length may change during the iteration.
                 currentTime += data.timeStep;
 
-                //Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.grid[0].Rso[0]);
                 Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
-                //Console.WriteLine(data.MBE_Gas);
-                //Console.WriteLine(data.grid[0].P[0] + ", " + data.wells[0].BHP[0]);
-                Console.ReadKey();
+
+                //Console.ReadKey();
             }
         }
 
         // the iteration cycle
-
         private static void IterativeSolver(SimulationData data, double[][] Jacobi, double[] minusR, double[] delta)
         {
             // an array containing previous "index 0" and current "index 1" material balance errors.
-            double[] convergenceError = new double[2];
+            double[] MBE = new double[2];
 
             // resets time step to its original value at the beginning of each new time step.
             ResetTimeStep(data);
@@ -86,36 +81,41 @@ namespace FIM.Solver
                 // formulation.
                 NumericalPerturbation.CalculateMinusR_Matrix(data, minusR);
                 NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, Jacobi);
-                WellTerms.add(data, Jacobi, minusR);
+                WellTerms.Add(data, Jacobi, minusR);
 
                 // solving the equations.
                 delta = SolveForDelta(Jacobi, minusR);
 
-                counter = Update(data, convergenceError, delta, counter);
+                // update properties with better approximations.
+                counter = Update(data, MBE, delta, counter);
 
-            } while (convergenceError[1] >= data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
+                // repeat the cycle if the material balance error is larger than the tolerance specified.
+                // as long as the repetitions are smaller than the maximum number of non-linear iterations specified.
+            } while (MBE[1] >= data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
 
-
+            // update properties of the new time step after successful convergence.
             UpdateProperties(data);
         }
 
-        // contains the algorithms of convergence checking, relaxation of deltas and time cut off.
-        private static int Update(SimulationData data, double[] convergenceError,double[] delta, int counter)
+        // contains the algorithms of updating properties, convergence checking, relaxation of deltas and time cut off.
+        private static int Update(SimulationData data, double[] MBE,double[] deltas, int counter)
         {
             // check convergence errors.
-            bool repeat = CheckConvergence(data, convergenceError);
+            bool repeat = CheckConvergence(data, MBE);
 
+            // will not repeat the time step. No stagnation or oscillations and the MBE is decreasing.
             if (!repeat && (data.maximumNonLinearIterations - counter) != 1)
             {
-                StabilizeNewton(data, delta, convergenceError);
+                StabilizeNewton(data, deltas, MBE);
 
-                UpdatePropertiesFromDelta(data, delta);
+                UpdatePropertiesFromDeltas(data, deltas);
 
                 // increment the counter.
                 counter += 1;
             }
             else
             {
+                // slash the time step.
                 data.timeStep *= data.timeStepSlashingFactor;
 
                 // reset relaxation factor.
@@ -127,8 +127,8 @@ namespace FIM.Solver
                 }
 
                 // reset the convergenceError array so that it violates the convergence criteria
-                convergenceError[0] = 0;
-                convergenceError[1] = data.MBE_Tolerance;
+                MBE[0] = 0;
+                MBE[1] = data.MBE_Tolerance;
                 //convergenceError[1] = 0;
 
                 // reset the counter.
@@ -149,7 +149,7 @@ namespace FIM.Solver
         }
 
         // updates the n1 time level properties with better approximation after solving the Ax=B equation.
-        private static void UpdatePropertiesFromDelta(SimulationData data, double[] delta)
+        private static void UpdatePropertiesFromDeltas(SimulationData data, double[] delta)
         {
             double P, So, Sg, Sw;
 
@@ -209,7 +209,7 @@ namespace FIM.Solver
             convergenceError[1] = Math.Max(data.MBE_Gas, Math.Max(data.MBE_Oil, data.MBE_Water));
 
             bool MBE_Increasing = (convergenceError[1] > convergenceError[0]);
-            bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumConvergenceErrorRatio;
+            bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumMaterialBalanceErrorRatio;
 
             // if this is not the first iteration and either one of the following conditions is true:
             // 1- material balance error is increasing not decreasing.

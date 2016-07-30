@@ -107,19 +107,44 @@ namespace FIM.Core
 
         #region Volumetric data
         /// <summary>
-        /// Volumetric data associated with each "PeBi" grid block.
+        /// An <see cref="Array"/> of the top, bottom and side faces areas of the block "in this order".
         /// </summary>
         /// <remarks>
-        /// The size of each array is equal to 2 + number of sideways neighboring blocks.
+        /// The size the array is equal to 2 + number of sideways neighboring blocks.
         /// This is due to the fact that the PeBi grid system implemented depends on flat blocks.
-        /// So, each block will have a top and bottom block except if it is a boundary block.
+        /// So, each block will have a single top and a single bottom block except if it is a top/bottom boundary block.
         /// </remarks>
-        public double[] areaList, deltaXList, boundaryLengthList;
+        public double[] areaList;
 
         /// <summary>
-        /// Volumetric data.
+        /// An <see cref="Array"/> of the distances from the center of the block to the top, bottom and side faces areas of the block "in this order".
         /// </summary>
-        public double height, bulkVolume;
+        /// <remarks>
+        /// The size the array is equal to 2 + number of sideways neighboring blocks.
+        /// This is due to the fact that the PeBi grid system implemented depends on flat blocks.
+        /// So, each block will have a single top and a single bottom block except if it is a top/bottom boundary block.
+        /// </remarks>
+        public double[] deltaXList;
+
+        /// <summary>
+        /// An <see cref="Array"/> of the sides boundary lengths of the block.
+        /// </summary>
+        /// <remarks>
+        /// The size the array is equal to 2 + number of sideways neighboring blocks.
+        /// This is due to the fact that the PeBi grid system implemented depends on flat blocks.
+        /// So, each block will have a single top and a single bottom block except if it is a top/bottom boundary block.
+        /// </remarks>
+        public double[] boundaryLengthList;
+
+        /// <summary>
+        /// The height of the block.
+        /// </summary>
+        public double height;
+
+        /// <summary>
+        /// The bulk volume of the block.
+        /// </summary>
+        public double bulkVolume;
 
         /// <summary>
         /// Pore volume array.
@@ -153,7 +178,7 @@ namespace FIM.Core
         /// <para>This is the geometric transmissibility factor between two blocks. It does not change with time.</para>
         /// <para>The size of this array is equal to 2 + number of sideways neighboring blocks.</para>
         /// </remarks>
-        /// <seealso cref="Transmissibility.calculate(BaseBlock, BaseBlock)"/>
+        /// <seealso cref="Transmissibility.Calculate(BaseBlock, BaseBlock, double)"/>
         public double[] transmissibility_list;
 
 

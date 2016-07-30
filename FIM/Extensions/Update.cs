@@ -6,7 +6,8 @@ namespace FIM.Extensions
     /// An extension class that contains extension methods to <see cref="BaseBlock"/> for updating the properties.
     /// </summary>
     /// <remarks>
-    /// The extension methods in this class are used for updating the <see cref="BaseBlock"/> member variables array in accordance to <see cref="Global.STEPS_MEMORY"/>.
+    /// <para>The extension methods in this class are used for updating the <see cref="BaseBlock"/> member variables array in accordance to <see cref="Global.STEPS_MEMORY"/>.</para>
+    /// <para>The update methods have been implemented as extensions rather than internal member methods in the <see cref="BaseBlock"/> class to reduce clutter and to allow for flexibility in adding new methods in a similar way.</para>
     /// </remarks>
     public static class Update
     {

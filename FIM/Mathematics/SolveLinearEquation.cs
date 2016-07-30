@@ -1,6 +1,12 @@
-﻿namespace FIM.Mathematics
+﻿/// <summary>
+/// This namespace contains classes used for mathematical calculations.
+/// </summary>
+namespace FIM.Mathematics
 {
-    class SolveLinearEquation
+    /// <summary>
+    /// This class contains method used for solving a set of linear equations.
+    /// </summary>
+    public class SolveLinearEquation
     {
         /// <summary>
         /// A direct solver that calculates delta x.

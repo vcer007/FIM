@@ -1,10 +1,5 @@
 ﻿using FIM.Core;
-using FIM.Well;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace FIM.Extensions.IMPES
 {
@@ -14,9 +9,17 @@ namespace FIM.Extensions.IMPES
     /// <remarks>
     /// Based on equation 35, page 11, chapter 4, Wattenberger PETE 603 notes.
     /// </remarks>
-    class IMPES_Preparation
+    public class IMPES_Preparation
     {
-
+        /// <summary>
+        /// Calculates the constants matrix.
+        /// </summary>
+        /// <remarks>
+        /// The constants matrix contains terms that are dependent only on old "known" time level.
+        /// This is the Right Hand Side equation.
+        /// </remarks>
+        /// <param name="data">The <see cref="SimulationData"/> data.</param>
+        /// <param name="constants">The constants matrix to be initialized.</param>
         public static void CalculateConstantsMatrix(SimulationData data, double[] constants)
         {
             BaseBlock block;
@@ -29,6 +32,15 @@ namespace FIM.Extensions.IMPES
             }
         }
 
+        /// <summary>
+        /// Calculates the pressure coefficients matrix.
+        /// </summary>
+        /// <remarks>
+        /// Gets the coefficients of pressures at the next time level.
+        /// This is the Left Hand Side equation.
+        /// </remarks>
+        /// <param name="data">The data.</param>
+        /// <param name="pressureCoefficients">The pressure coefficients.</param>
         public static void CalculatePressureCoefficientsMatrix(SimulationData data, double[][] pressureCoefficients)
         {
             // set the matrix elements to zero.
@@ -79,9 +91,9 @@ namespace FIM.Extensions.IMPES
                     B = 0.5 * (block.Bo[0] + neighbor_block.Bo[0]);
                     viscosity = 0.5 * (block.viscosityOil[0] + neighbor_block.viscosityOil[0]);
 
-                    pressureCoefficients[i][block.index] += -1 * block.Bo[1] * transmissibility * kr / (viscosity * B) /** block.P[1]*/;
+                    pressureCoefficients[i][block.index] += -1 * block.Bo[1] * transmissibility * kr / (viscosity * B) /* block.P[1]*/;
 
-                    pressureCoefficients[i][neighbor_block.index] += block.Bo[1] * transmissibility * kr / (viscosity * B) /** neighbor_block.P[1]*/;
+                    pressureCoefficients[i][neighbor_block.index] += block.Bo[1] * transmissibility * kr / (viscosity * B) /* neighbor_block.P[1]*/;
                 }
 
                 // free gas
@@ -109,9 +121,9 @@ namespace FIM.Extensions.IMPES
                     B = 0.5 * (block.Bg[0] + neighbor_block.Bg[0]);
                     viscosity = 0.5 * (block.viscosityGas[0] + neighbor_block.viscosityGas[0]);
 
-                    pressureCoefficients[i][block.index] += -1 * block.Bg[1] * transmissibility * kr / (viscosity * B) /** block.P[1]*/;
+                    pressureCoefficients[i][block.index] += -1 * block.Bg[1] * transmissibility * kr / (viscosity * B) /* block.P[1]*/;
 
-                    pressureCoefficients[i][neighbor_block.index] += block.Bg[1] * transmissibility * kr / (viscosity * B) /** neighbor_block.P[1]*/;
+                    pressureCoefficients[i][neighbor_block.index] += block.Bg[1] * transmissibility * kr / (viscosity * B) /* neighbor_block.P[1]*/;
                 }
 
                 // solution gas
@@ -140,13 +152,13 @@ namespace FIM.Extensions.IMPES
                     viscosity = 0.5 * (block.viscosityOil[0] + neighbor_block.viscosityOil[0]);
                     RsO = 0.5 * (block.Rso[0] + neighbor_block.Rso[0]);
 
-                    pressureCoefficients[i][block.index] += -1 * block.Bg[1] * RsO * transmissibility * kr / (viscosity * B) /** block.P[1]*/;
+                    pressureCoefficients[i][block.index] += -1 * block.Bg[1] * RsO * transmissibility * kr / (viscosity * B) /* block.P[1]*/;
 
-                    pressureCoefficients[i][neighbor_block.index] += block.Bg[1] * RsO * transmissibility * kr / (viscosity * B) /** neighbor_block.P[1]*/;
+                    pressureCoefficients[i][neighbor_block.index] += block.Bg[1] * RsO * transmissibility * kr / (viscosity * B) /* neighbor_block.P[1]*/;
 
-                    pressureCoefficients[i][block.index] += block.Rso[1] * block.Bg[1] * transmissibility * kr / (viscosity * B) /** block.P[1]*/;
+                    pressureCoefficients[i][block.index] += block.Rso[1] * block.Bg[1] * transmissibility * kr / (viscosity * B) /* block.P[1]*/;
 
-                    pressureCoefficients[i][neighbor_block.index] += -1 * block.Rso[1] * block.Bg[1] * transmissibility * kr / (viscosity * B) /** neighbor_block.P[1]*/;
+                    pressureCoefficients[i][neighbor_block.index] += -1 * block.Rso[1] * block.Bg[1] * transmissibility * kr / (viscosity * B) /* neighbor_block.P[1]*/;
                 }
 
                 // water phase
@@ -174,13 +186,23 @@ namespace FIM.Extensions.IMPES
                     B = 0.5 * (block.Bw[0] + neighbor_block.Bw[0]);
                     viscosity = 0.5 * (block.viscosityWater[0] + neighbor_block.viscosityWater[0]);
 
-                    pressureCoefficients[i][block.index] += -1 * block.Bw[1] * transmissibility * kr / (viscosity * B) /** block.P[1]*/;
+                    pressureCoefficients[i][block.index] += -1 * block.Bw[1] * transmissibility * kr / (viscosity * B) /* block.P[1]*/;
 
-                    pressureCoefficients[i][neighbor_block.index] += block.Bw[1] * transmissibility * kr / (viscosity * B) /** neighbor_block.P[1]*/;
+                    pressureCoefficients[i][neighbor_block.index] += block.Bw[1] * transmissibility * kr / (viscosity * B) /* neighbor_block.P[1]*/;
                 }
             }
         }
 
+        /// <summary>
+        /// Adds the well terms.
+        /// </summary>
+        /// <remarks>
+        /// The well terms are separated from the IMPES formulation to reduce clutter.
+        /// This way, we can experiment with the well terms calculation methods away from the other parts of the formulation.
+        /// </remarks>
+        /// <param name="data">The data.</param>
+        /// <param name="pressureCoefficients">The pressure coefficients.</param>
+        /// <param name="constants">The constants.</param>
         public static void AddWellTerms(SimulationData data, double[][] pressureCoefficients, double[] constants)
         {
             int index;

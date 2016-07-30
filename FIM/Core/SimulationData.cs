@@ -72,7 +72,7 @@ namespace FIM.Core
 
         // the grid "a list of the wells".     
         /// <summary>
-        /// An array of <see cref="FullyImplicitWell"/> present in the model.
+        /// An array of <see cref="BaseWell"/> present in the model.
         /// </summary>
         public BaseWell[] wells;
 
@@ -116,7 +116,7 @@ namespace FIM.Core
         /// <summary>
         /// the maximum value of the ratio of material balance errors between two subseuent non-linear iterations.
         /// </summary>
-        public double maximumConvergenceErrorRatio;
+        public double maximumMaterialBalanceErrorRatio;
 
         /// <summary>
         /// The original_time_step

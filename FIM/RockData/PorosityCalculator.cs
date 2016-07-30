@@ -16,15 +16,15 @@
         /// </summary>
         public double Cf;
 
-        //Value of the porosity at the reference pressure.
+        /// <summary>
+        /// Value of the porosity at the reference pressure.
+        /// </summary>
         public double porosity_ref;
 
-        //The reference pressure at which the porosity was measured.
+        /// <summary>
+        /// The reference pressure at which the porosity was measured.
+        /// </summary>
         public double pressure_ref;
-
-        public PorosityCalculator()
-        {
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PorosityCalculator"/> class.
@@ -37,6 +37,18 @@
             this.Cf = Cf;
             this.porosity_ref = porosity_ref;
             this.pressure_ref = pressure_ref;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PorosityCalculator"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This is an empty constructor.
+        /// This method is used when creating an instance of the <see cref="PorosityCalculator"/> class without specifying the data.
+        /// Member variables should be assigned separately.
+        /// </remarks>
+        public PorosityCalculator()
+        {
         }
 
         /// <summary>

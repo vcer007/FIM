@@ -8,16 +8,26 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
+/// <summary>
+/// This namespace contains classes for handling text files parsing.
+/// </summary>
 namespace FIM.Parser
 {
-    class Eclipse
+    /// <summary>
+    /// This class contains methods for reading input data files.
+    /// </summary>
+    /// <remarks>
+    /// Keywords are kept in accordance with eclipse as possiblle as it could be.
+    /// </remarks>
+    public class Eclipse
     {
+        // The data file sections keywords.
         static string[] dataFileSections = new string[] { "RUNSPEC", "GRID", "PROPS", "SOLUTION", "SUMMARY", "SCHEDULE" , "END"};
 
+        // These lists are used to store data file sections eparately.
+        // this allows for handling them separately.
         static List<string> RUNSPEC_section = new List<string>();
         static List<string> GRID_section = new List<string>();
         static List<string> PROPS_section = new List<string>();
@@ -25,24 +35,41 @@ namespace FIM.Parser
         static List<string> SUMMARY_section = new List<string>();
         static List<string> SCHEDULE_section = new List<string>();
 
+        // internal indexing variables for looking up different keywords in the file.
         static int startIndex = 0, endIndex = 0;
         static bool startIndexSet;
 
+        // this variable is the return result of this class.
+        // an initialized SimulationData instance.
         static SimulationData data = new SimulationData();
+
+
         static PorosityCalculator porosityCalculator = new PorosityCalculator();
         static PVT pvt = new PVT();
         static SCAL scal = new SCAL();
 
         static double So, Sw, Sg, P;
 
+        /// <summary>
+        /// Reads the input files from the specified paths.
+        /// </summary>
+        /// <param name="dataFilePath">The data file path.</param>
+        /// <param name="initializationFilePath">The initialization file path.</param>
+        /// <remarks>
+        /// If the files are located within the same directory "folder" as the simulator executable ".exe", using the names only is sufficient.
+        /// </remarks>
+        /// <returns>
+        /// An initialized instance of the <see cref="SimulationData"/> class containing the data read from the files.
+        /// </returns>
         public static SimulationData ReadInputData(string dataFilePath, string initializationFilePath)
         {
+            // internal variable to store the file's lines as a list.
             List<string> lines;
 
 
             #region Data File
 
-            lines = ReadFile(dataFilePath);
+            lines = Helper.ReadFile(dataFilePath);
 
             // add the sections
             AddSection("RUNSPEC", RUNSPEC_section, lines, dataFileSections);
@@ -74,7 +101,7 @@ namespace FIM.Parser
 
             #region Initialization File
 
-            lines = ReadFile(initializationFilePath);
+            lines = Helper.ReadFile(initializationFilePath);
 
             InitializationFile(lines);
 
@@ -95,52 +122,8 @@ namespace FIM.Parser
             return data;            
         }
 
-        private static void InitializationFile(List<string> lines)
-        {
-            data.timeStepSlashingFactor = getData("TSTEPFACTOR", lines, 1)[0];
-            data.originalRelaxationFactor = getData("RELAXFACTOR", lines, 1)[0];
-            data.minimumRelaxation = getData("MINRELAX", lines, 1)[0];
-            data.relaxationFactorDecrement = getData("RELAXDEC", lines, 1)[0];
-            data.maximumNonLinearIterations = getData("MAXNONLINIT", lines, 1)[0];
-            data.maximumConvergenceErrorRatio = getData("MAXCONV", lines, 1)[0];
-            data.MBE_Tolerance = getData("MAXMBE", lines, 1)[0];
-        }
 
-        private static List<string> ReadFile(string filePath)
-        {
-            List<string> lines = new List<string>();
-
-            // read all the lines.
-            string[] file = File.ReadAllLines(filePath);
-
-            // remove commented-out sections from the lines.
-            for (int i = 0; i < file.Length; i++)
-            {
-                file[i] = Regex.Replace(file[i], @"\-(-+)\s?.*", "");
-            }
-
-            // remove back-slashes
-            for (int i = 0; i < file.Length; i++)
-            {
-                file[i] = Regex.Replace(file[i], @"/", String.Empty);
-            }
-
-            // add non-empty lines to the list.
-            foreach (string line in file)
-            {
-                // not empty.
-                if (Regex.Match(line, @"[A-Za-z0-9]+").Success)
-                {
-                    // add to the lines list
-                    lines.Add(line);
-                }
-            }
-
-            // remove extra spaces at the beginning of the line
-            // remove extra characters after the main data file sections
-
-            return lines;
-        }
+        // get data from input data file.
 
         private static void InitializeRUNSPEC(SimulationData data, List<string> section)
         {
@@ -201,25 +184,25 @@ namespace FIM.Parser
 
             // x
             int index = section.FindIndex(x => x.Contains("DX"));
-            x_dimensionLengths = getData(section[index + 1], data.x);
+            x_dimensionLengths = Helper.GetData(section[index + 1], data.x);
             // y
             index = section.FindIndex(x => x.Contains("DY"));
-            y_dimensionLengths = getData(section[index + 1], data.y);
+            y_dimensionLengths = Helper.GetData(section[index + 1], data.y);
             // z
             index = section.FindIndex(x => x.Contains("DZ"));
-            heights = getData(section[index + 1], data.z);
+            heights = Helper.GetData(section[index + 1], data.z);
 
             // permeabilities
 
             // permeability in the x direction
             index = section.FindIndex(x => x.Contains("PERMX"));
-            layersPermeabilities = getData(section[index + 1], data.z);
+            layersPermeabilities = Helper.GetData(section[index + 1], data.z);
 
             // transmissibilities multipliers in the z direction only.
             index = section.FindIndex(x => x.Contains("MULTZ"));
             if (index != -1)
             {
-                transmissibilitiyMultipliers = getData(section[index + 1], data.z);
+                transmissibilitiyMultipliers = Helper.GetData(section[index + 1], data.z);
             }
             else
             {
@@ -229,7 +212,7 @@ namespace FIM.Parser
             // porosity
             index = section.FindIndex(x => x.Contains("PORO"));
             // only one value of porosity is initially assigned to the whole model.
-            porosityCalculator.porosity_ref = getData(section[index + 1], 1)[0];
+            porosityCalculator.porosity_ref = Helper.GetData(section[index + 1], 1)[0];
 
 
 
@@ -249,59 +232,59 @@ namespace FIM.Parser
 
 
             // rock reference pressure and compressibility
-            double[] rock = getData("ROCK", section, 2);
+            double[] rock = Helper.GetData("ROCK", section, 2);
             porosityCalculator.pressure_ref = rock[0];
             porosityCalculator.Cf = rock[1];
 
-            So = getData("SO", section, 1)[0];
-            Sg = getData("SG", section, 1)[0];
-            Sw = getData("SW", section, 1)[0];
-            P = getData("PRESSURE", section, 1)[0];
+            So = Helper.GetData("SO", section, 1)[0];
+            Sg = Helper.GetData("SG", section, 1)[0];
+            Sw = Helper.GetData("SW", section, 1)[0];
+            P = Helper.GetData("PRESSURE", section, 1)[0];
 
-            bubble_point = getData("BUBBLEPOINT", section, 1)[0];
+            bubble_point = Helper.GetData("BUBBLEPOINT", section, 1)[0];
 
             int index = section.FindIndex(x => x.Contains("PVTO"));
-            oil[0] = getData(section[index + 1]);
-            oil[1] = getData(section[index + 2]);
-            oil[2] = getData(section[index + 3]);
-            oil[3] = getData(section[index + 4]);
-            oil[4] = getData(section[index + 5]);
+            oil[0] = Helper.GetData(section[index + 1]);
+            oil[1] = Helper.GetData(section[index + 2]);
+            oil[2] = Helper.GetData(section[index + 3]);
+            oil[3] = Helper.GetData(section[index + 4]);
+            oil[4] = Helper.GetData(section[index + 5]);
 
-            oil_us[0] = getData(section[index + 6]);
-            oil_us[1] = getData(section[index + 7]);
-            oil_us[2] = getData(section[index + 8]);
-            oil_us[3] = getData(section[index + 9]);
-            oil_us[4] = getData(section[index + 10]);
+            oil_us[0] = Helper.GetData(section[index + 6]);
+            oil_us[1] = Helper.GetData(section[index + 7]);
+            oil_us[2] = Helper.GetData(section[index + 8]);
+            oil_us[3] = Helper.GetData(section[index + 9]);
+            oil_us[4] = Helper.GetData(section[index + 10]);
 
             index = section.FindIndex(x => x.Contains("PVTW"));
 
-            water[0] = getData(section[index + 1]);
-            water[1] = getData(section[index + 2]);
-            water[2] = getData(section[index + 3]);
-            water[3] = getData(section[index + 4]);
-            water[4] = getData(section[index + 5]);
+            water[0] = Helper.GetData(section[index + 1]);
+            water[1] = Helper.GetData(section[index + 2]);
+            water[2] = Helper.GetData(section[index + 3]);
+            water[3] = Helper.GetData(section[index + 4]);
+            water[4] = Helper.GetData(section[index + 5]);
 
-            water_us[0] = getData(section[index + 6]);
-            water_us[1] = getData(section[index + 7]);
-            water_us[2] = getData(section[index + 8]);
-            water_us[3] = getData(section[index + 9]);
-            water_us[4] = getData(section[index + 10]);
+            water_us[0] = Helper.GetData(section[index + 6]);
+            water_us[1] = Helper.GetData(section[index + 7]);
+            water_us[2] = Helper.GetData(section[index + 8]);
+            water_us[3] = Helper.GetData(section[index + 9]);
+            water_us[4] = Helper.GetData(section[index + 10]);
 
 
             index = section.FindIndex(x => x.Contains("PVDG"));
 
-            gas[0] = getData(section[index + 1]);
-            gas[1] = getData(section[index + 2]);
-            gas[2] = getData(section[index + 3]);
-            gas[3] = getData(section[index + 4]);
+            gas[0] = Helper.GetData(section[index + 1]);
+            gas[1] = Helper.GetData(section[index + 2]);
+            gas[2] = Helper.GetData(section[index + 3]);
+            gas[3] = Helper.GetData(section[index + 4]);
 
 
             index = section.FindIndex(x => x.Contains("SCAL"));
 
-            Kr_data[0] = getData(section[index + 1]);
-            Kr_data[1] = getData(section[index + 2]);
-            Kr_data[2] = getData(section[index + 3]);
-            Kr_data[3] = getData(section[index + 4]);
+            Kr_data[0] = Helper.GetData(section[index + 1]);
+            Kr_data[1] = Helper.GetData(section[index + 2]);
+            Kr_data[2] = Helper.GetData(section[index + 3]);
+            Kr_data[3] = Helper.GetData(section[index + 4]);
 
             pvt.Initialize(oil, oil_us, water, water_us, gas, bubble_point);
             scal.Initialize(Kr_data);
@@ -331,7 +314,7 @@ namespace FIM.Parser
 
             for (int i = 0; i < data.wells.Length; i++)
             {
-                WELSPECS[i] = getDataAsString(section[index + 1 + i]);
+                WELSPECS[i] = Helper.GetDataAsString(section[index + 1 + i]);
             }
 
             
@@ -341,7 +324,7 @@ namespace FIM.Parser
 
             for (int i = 0; i < data.wells.Length; i++)
             {
-                WELCONT[i] = getDataAsString(section[index + 1 + i]);
+                WELCONT[i] = Helper.GetDataAsString(section[index + 1 + i]);
             }
 
 
@@ -378,13 +361,25 @@ namespace FIM.Parser
 
             }
 
-            data.originalTimeStep = getData("TSTEP", section)[0];
-            data.endingTime = getData("ENDTIME", section)[0];
+            data.originalTimeStep = Helper.GetData("TSTEP", section)[0];
+            data.endingTime = Helper.GetData("ENDTIME", section)[0];
+        }
+
+        // get data from initialization file.
+
+        private static void InitializationFile(List<string> lines)
+        {
+            data.timeStepSlashingFactor = Helper.GetData("TSTEPFACTOR", lines, 1)[0];
+            data.originalRelaxationFactor = Helper.GetData("RELAXFACTOR", lines, 1)[0];
+            data.minimumRelaxation = Helper.GetData("MINRELAX", lines, 1)[0];
+            data.relaxationFactorDecrement = Helper.GetData("RELAXDEC", lines, 1)[0];
+            data.maximumNonLinearIterations = Helper.GetData("MAXNONLINIT", lines, 1)[0];
+            data.maximumMaterialBalanceErrorRatio = Helper.GetData("MBERATIO", lines, 1)[0];
+            data.MBE_Tolerance = Helper.GetData("MAXMBE", lines, 1)[0];
         }
 
 
-
-
+        // helper method for adding each input data file section to its corresponding list.
         private static void AddSection(string keyWord, List<string> section, List<string> lines, string[] dataFileSections)
         {
 
@@ -408,57 +403,6 @@ namespace FIM.Parser
             {
                 section.Add(lines[i]);
             }
-        }
-
-        private static double[] getData(string line, int size = 1)
-        {
-            string[] data = Regex.Split(line, @"\b\s+\b");
-            double[] numericData;
-
-            if (data.Length == 1)
-            {
-                numericData = Enumerable.Repeat(double.Parse(data[0]), size).ToArray();
-            }
-            else
-            {
-                numericData = new double[data.Length];
-                for (int i = 0; i < numericData.Length; i++)
-                {
-                    numericData[i] = double.Parse(data[i]);
-                }
-            }
-
-            return numericData;
-        }
-
-        private static double[] getData(string keyWord, List<string> section, int size = 1)
-        {
-            int index = section.FindIndex(x => x.Contains(keyWord));
-
-            string[] data = Regex.Split(section[index + 1], @"\b\s+\b");
-            double[] numericData;
-
-            if (data.Length == 1)
-            {
-                numericData = Enumerable.Repeat(double.Parse(data[0]), size).ToArray();
-            }
-            else
-            {
-                numericData = new double[data.Length];
-                for (int i = 0; i < numericData.Length; i++)
-                {
-                    numericData[i] = double.Parse(data[i]);
-                }
-            }
-
-            return numericData;
-        }
-
-        private static string[] getDataAsString(string line, int size = 1)
-        {
-            string[] data = Regex.Split(line, @"\b\s+\b");
-
-            return data;
         }
 
     }

@@ -2,14 +2,10 @@
 using FIM.MaterialBalance;
 using System;
 using FIM.Extensions;
-using FIM.Extensions.FullyImplicit;
 using FIM.Extensions.IMPES;
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FIM.Well;
+
+using System.Linq;
 
 namespace FIM.Solver
 {
@@ -62,11 +58,10 @@ namespace FIM.Solver
         }
 
         // the iteration cycle
-
         private static void IterativeSolver(SimulationData data, double[][] pressureCoefficients, double[] constants, double[] deltaP)
         {
             // an array containing previous "index 0" and current "index 1" material balance errors.
-            double[] convergenceError = new double[2];
+            double[] MBE = new double[2];
 
             // resets time step to its original value at the beginning of each new time step.
             ResetTimeStep(data);
@@ -84,11 +79,14 @@ namespace FIM.Solver
                 // solving the equations.
                 deltaP = SolveForNewP(pressureCoefficients, constants);
 
-                counter = Stabilize(data, convergenceError, deltaP, counter);
+                // update properties with better approximations.
+                counter = Update(data, MBE, deltaP, counter);
 
-            } while (convergenceError[1] >= data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
+                // repeat the cycle if the material balance error is larger than the tolerance specified.
+                // as long as the repetitions are smaller than the maximum number of non-linear iterations specified.
+            } while (MBE[1] >= data.MBE_Tolerance && counter <= data.maximumNonLinearIterations);
 
-
+            // update properties of the new time step after successful convergence.
             UpdateProperties(data);
         }
 
@@ -101,81 +99,7 @@ namespace FIM.Solver
             return constants;
         }
 
-        // contains the algorithms of convergence checking, relaxation of deltas and time cut off.
-        private static int Stabilize(SimulationData data, double[] convergenceError, double[] delta, int counter)
-        {
-            UpdatePropertiesFromNewP(data, delta);
-
-            // check convergence errors.
-            bool repeat = CheckConvergence(data, convergenceError);
-            //bool repeat = false;
-
-            if (!repeat && (data.maximumNonLinearIterations - counter) != 1)
-            {
-                // increment the counter.
-                counter += 1;
-            }
-            else
-            {
-                data.timeStep *= data.timeStepSlashingFactor;
-
-                for (int i = 0; i < data.grid.Length; i++)
-                {
-                    data.grid[i].Reset(data);
-                }
-
-                // reset the convergenceError array so that it violates the convergence criteria
-                convergenceError[0] = 0;
-                convergenceError[1] = data.MBE_Tolerance;
-                //convergenceError[1] = 0;
-
-                // reset the counter.
-                // this way we begin repeating the same time step with all the number of non linear iterations.
-                counter = 0;
-            }
-
-            return counter;
-        }
-
-        // miscellaneous internal helper methods
-
-        // returns the absolute value of the gas material balance error of the whole model.
-        private static bool CheckConvergence(SimulationData data, double[] convergenceError)
-        {
-            bool firstIteration = convergenceError[0] == 0;
-
-            convergenceError[0] = convergenceError[1];
-
-            data.MBE_Oil = Math.Abs(MBE.CheckOil(data));
-            data.MBE_Gas = Math.Abs(MBE.CheckGas(data));
-            data.MBE_Water = Math.Abs(MBE.CheckWater(data));
-
-            convergenceError[1] = Math.Max(data.MBE_Gas, Math.Max(data.MBE_Oil, data.MBE_Water));
-
-            bool MBE_Increasing = (convergenceError[1] > convergenceError[0]);
-            //bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumConvergenceErrorRatio;
-
-            // if this is not the first iteration and either one of the following conditions is true:
-            // 1- material balance error is increasing not decreasing.
-            // 2- the rate of convergence is slow.
-            if (!firstIteration && (MBE_Increasing /*|| slowConvergence*/))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        // resets the time step to the original value.
-        // this code may be modified to make gradual return from the cut off time step to the original value.
-        private static void ResetTimeStep(SimulationData data)
-        {
-            // this will make sure the time step is reset to the original value
-            // it also adjusts the time step sothat the last step will end at the specified ending time.
-            data.timeStep = currentTime + data.originalTimeStep > data.endingTime ? data.endingTime - currentTime : data.originalTimeStep;
-        }
-
-        // updates the n1 time level properties with better approximation after solving the Ax=B equation.
+        // updates the n1 time level properties with better approximations after solving the Ax=B equation.
         private static void UpdatePropertiesFromNewP(SimulationData data, double[] newP)
         {
             BaseBlock block, neighbor_block, upstream_block, downstream_block;
@@ -198,9 +122,9 @@ namespace FIM.Solver
                 if (block.type == Global.BlockType.WellBlock)
                 {
                     BaseWell well = data.wells.Where(x => x.index == i).ToArray()[0];
-                    q_oil = well.q_oil[0];
+                    q_oil = well.q_oil[1];
                     q_free_gas = well.q_free_gas[1];
-                    q_water = well.q_water[0];
+                    q_water = well.q_water[1];
                 }
                 else
                 {
@@ -352,7 +276,7 @@ namespace FIM.Solver
 
         }
 
-        // updates the new time step properties after convergence.
+        // updates the new time step properties after successful convergence.
         private static void UpdateProperties(SimulationData data)
         {
             double P, So, Sg, Sw;
@@ -366,6 +290,80 @@ namespace FIM.Solver
 
                 data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 0);
             }
+        }
+
+        // contains the algorithms of updating properties, convergence checking and time cut off.
+        private static int Update(SimulationData data, double[] convergenceError, double[] delta, int counter)
+        {
+            UpdatePropertiesFromNewP(data, delta);
+
+            // check convergence errors.
+            bool repeat = CheckConvergence(data, convergenceError);
+            //bool repeat = false;
+
+            if (!repeat && (data.maximumNonLinearIterations - counter) != 1)
+            {
+                // increment the counter.
+                counter += 1;
+            }
+            else
+            {
+                data.timeStep *= data.timeStepSlashingFactor;
+
+                for (int i = 0; i < data.grid.Length; i++)
+                {
+                    data.grid[i].Reset(data);
+                }
+
+                // reset the convergenceError array so that it violates the convergence criteria
+                convergenceError[0] = 0;
+                convergenceError[1] = data.MBE_Tolerance;
+                //convergenceError[1] = 0;
+
+                // reset the counter.
+                // this way we begin repeating the same time step with all the number of non linear iterations.
+                counter = 0;
+            }
+
+            return counter;
+        }
+
+        // miscellaneous internal helper methods
+
+        // returns the absolute value of the gas material balance error of the whole model.
+        private static bool CheckConvergence(SimulationData data, double[] convergenceError)
+        {
+            bool firstIteration = convergenceError[0] == 0;
+
+            convergenceError[0] = convergenceError[1];
+
+            data.MBE_Oil = Math.Abs(MBE.CheckOil(data));
+            data.MBE_Gas = Math.Abs(MBE.CheckGas(data));
+            data.MBE_Water = Math.Abs(MBE.CheckWater(data));
+
+            convergenceError[1] = Math.Max(data.MBE_Gas, Math.Max(data.MBE_Oil, data.MBE_Water));
+
+            bool MBE_Increasing = (convergenceError[1] > convergenceError[0]);
+            //bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumConvergenceErrorRatio;
+
+            // if this is not the first iteration and either one of the following conditions is true:
+            // 1- material balance error is increasing not decreasing.
+            // 2- the rate of convergence is slow.
+            if (!firstIteration && (MBE_Increasing /*|| slowConvergence*/))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // resets the time step to the original value.
+        // this code may be modified to make gradual return from the cut off time step to the original value.
+        private static void ResetTimeStep(SimulationData data)
+        {
+            // this will make sure the time step is reset to the original value
+            // it also adjusts the time step sothat the last step will end at the specified ending time.
+            data.timeStep = currentTime + data.originalTimeStep > data.endingTime ? data.endingTime - currentTime : data.originalTimeStep;
         }
     }
 }

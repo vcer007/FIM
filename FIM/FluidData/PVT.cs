@@ -29,13 +29,13 @@ namespace FIM.FluidData
         /// <remarks>
         /// This is used only once to get the PVT data stored within the PVT class instance
         /// </remarks>
-        /// <param name="oilData">The oil_data.</param>
-        /// <param name="oilUnderSaturatedData">The oil_us_data.</param>
-        /// <param name="waterData">The water_data.</param>
-        /// <param name="waterUnderSaturatedData">The water_us_data.</param>
-        /// <param name="gasData">The gas_data.</param>
-        /// <param name="bubblePointPressure">The bubble_point.</param>
-        public PVT(double[][] oilData = null, double[][] oilUnderSaturatedData = null, double[][] waterData = null, double[][] waterUnderSaturatedData = null, double[][] gasData = null, double bubblePointPressure = 14.7)
+        /// <param name="oilData">The saturated oil data.</param>
+        /// <param name="oilUnderSaturatedData">The undersaturated oil data.</param>
+        /// <param name="waterData">The water data.</param>
+        /// <param name="waterUnderSaturatedData">The undersaturated water data.</param>
+        /// <param name="gasData">The gas data.</param>
+        /// <param name="bubblePointPressure">The bubble point pressure.</param>
+        public PVT(double[][] oilData, double[][] oilUnderSaturatedData, double[][] waterData, double[][] waterUnderSaturatedData, double[][] gasData, double bubblePointPressure)
         {
             this.oilData = oilData;
             this.oilUnderSaturatedData = oilUnderSaturatedData;
@@ -48,6 +48,32 @@ namespace FIM.FluidData
             this.bubblePointPressure = bubblePointPressure;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PVT"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This is an empty constructor of a new PVT instance.
+        /// The <see cref="Initialize(double[][], double[][], double[][], double[][], double[][], double)"/> method must be used to assign the data.
+        /// </remarks>
+        public PVT()
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes the member variables in a PVT instance.
+        /// </summary>
+        /// <remarks>
+        /// This method is only used when a <see cref="PVT"/> instance is created using the empty constructor.
+        /// The empty constructor is used to create a <see cref="PVT"/> object "instance" without specifying its data.
+        /// This should be taken with so much care.
+        /// </remarks>
+        /// <param name="oilData">The oil data.</param>
+        /// <param name="oilUnderSaturatedData">The oil under saturated data.</param>
+        /// <param name="waterData">The water data.</param>
+        /// <param name="waterUnderSaturatedData">The water under saturated data.</param>
+        /// <param name="gasData">The gas data.</param>
+        /// <param name="bubblePointPressure">The bubble point pressure.</param>
         public void Initialize(double[][] oilData = null, double[][] oilUnderSaturatedData = null, double[][] waterData = null, double[][] waterUnderSaturatedData = null, double[][] gasData = null, double bubblePointPressure = 14.7)
         {
             this.oilData = oilData;
@@ -360,7 +386,7 @@ namespace FIM.FluidData
 
 
         // uses a Newton-Rapshon iteration to calculate the natural gas Z factor based on Dranchuk and Abu-Kassem equations
-        // this method has no use currently. I developed it for an earlier test scenario an i see it's wasteful to delete it.
+        // this method has no use currently. I developed it for an earlier test scenario and i see it's wasteful to delete it.
         private static double CalculateZ_Factor(double Pc, double Tc, double P, double T, double z_initial)
         {
             double[] A = new double[] { 0.3265, -1.07, -0.5339, 0.01569, -0.05165, 0.5475, -0.7361, 0.1844, 0.1056, 0.6134, 0.721 };

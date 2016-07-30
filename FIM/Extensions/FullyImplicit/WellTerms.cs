@@ -10,10 +10,10 @@ namespace FIM.Extensions.FullyImplicit
         /// <summary>
         /// Add the well terms "flow rates and derivatives" of each phase to their respective position in the Jacobi and the minus R matrices.
         /// </summary>
-        /// <param name="data"></param>
-        /// <param name="Jacobi"></param>
-        /// <param name="minusR"></param>
-        public static void add(SimulationData data, double[][] Jacobi, double[] minusR)
+        /// <param name="data">The <see cref="SimulationData"/> data.</param>
+        /// <param name="Jacobi">The Jacobi matrix.</param>
+        /// <param name="minusR">The minus R matrix.</param>
+        public static void Add(SimulationData data, double[][] Jacobi, double[] minusR)
         {
             int index = 0;
 

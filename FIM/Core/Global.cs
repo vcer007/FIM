@@ -65,36 +65,36 @@ namespace FIM.Core
         /// Implicit means that the time level of the block pressure used for calculating the drawdown is n1.
         /// Explicit means using n0 time level of the block pressure for calculating the well drawdown.
         /// </remarks>
-        public enum WellRateCalculation { Explicit, Implicit}
+        public enum WellRateCalculation { /** Explicit Calculation*/Explicit, /** Implicit calculation*/Implicit}
 
         /// <summary>
         /// Indicates whether the block contains a well or not.
         /// </summary>
-        public enum BlockType { WellBlock, NormalBlock, InactiveBlock }
+        public enum BlockType { /** A well Block*/WellBlock, /** An ordinary block*/NormalBlock, /** An inactive Block*/InactiveBlock }
 
         /// <summary>
         /// Sections in eclipse input data file.
         /// </summary>
-        public enum DataFileSection { RunSpec, Grid, Props, Solution, Summary, Schedule }
+        public enum DataFileSection { /** The Run Specifications*/RunSpec, /** The grid*/Grid, /** The fluids properties*/Props, /** Initial equilibrium conditions*/Solution, /** Repoerts*/Summary, /** Well data*/Schedule }
 
         /// <summary>
         /// The solution methods available.
         /// </summary>
-        public enum SolutionProcedure { FullyImplicit, IMPES }
+        public enum SolutionProcedure { /** A fully implicit solver*/FullyImplicit, /** An IMPES solver*/IMPES }
 
         /// <summary>
         /// Units used for the data supplied in input data files.
         /// </summary>
-        public enum UnitConvention { Field, Metric, Lab }
+        public enum UnitConvention { /** Field unit system*/Field, /** Metric unit system*/Metric, /** Lab unit system*/Lab }
 
         /// <summary>
         /// Methods for interpolation.
         /// </summary>
-        public enum Interpolation {TableLookUp, PolynomialFunction, PowerFunction}
+        public enum Interpolation {/** Table look up and interpolation*/TableLookUp, /** Using a predefined polynomial*/PolynomialFunction, /** Using a predefined power function*/PowerFunction }
 
         /// <summary>
         /// The independent variables accounted for in numerical perturbation.
         /// </summary>
-        public enum Variable {Pressure, SaturationOil, SaturationGas, SaturationWater}
+        public enum Variable {/** Derivative with respect to pressure*/Pressure, /** Derivative with respect to gas saturation*/SaturationGas, /** Derivative with respect to water saturation*/SaturationWater }
     }
 }

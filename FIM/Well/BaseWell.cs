@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace FIM.Well
 {
     /// <summary>
-    /// 
+    /// This class contains the definition of a well's properties and associated methods.
     /// </summary>
     public class BaseWell
     {
@@ -103,7 +103,7 @@ namespace FIM.Well
         public double dq_water_dP, dq_water_dSg, dq_water_dSw;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WellData"/> class.
+        /// Initializes a new instance of the <see cref="BaseWell"/> class.
         /// </summary>
         /// <param name="data">The <see cref="SimulationData"/>.</param>
         /// <param name="index">The index of the block the well is located into.</param>
@@ -485,6 +485,14 @@ namespace FIM.Well
             //return 0;
         }
 
+        /// <summary>
+        /// Gets the well mobility of a certain phase at a specified time level.
+        /// </summary>
+        /// <param name="data">The data.</param>
+        /// <param name="phase">The phase.</param>
+        /// <param name="timeLevel">The time level.</param>
+        /// <returns></returns>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double GetWellMobility(SimulationData data, Global.Phase phase, int timeLevel)
         {
             BaseBlock block = data.grid[this.index];
@@ -503,6 +511,16 @@ namespace FIM.Well
             }
         }
 
+        /// <summary>
+        /// Gets the well mobility according to the values of Kr, viscosity and formation volume factor input to the method.
+        /// </summary>
+        /// <remarks>
+        /// This method differs from <see cref="GetWellMobility(SimulationData, Global.Phase, int)"/> in that it specifies the PVT and SCAL values instead of infering them automatically from the phase.
+        /// </remarks>
+        /// <param name="Kr">The kr.</param>
+        /// <param name="viscosity">The viscosity.</param>
+        /// <param name="FVF">The FVF.</param>
+        /// <returns></returns>
         public static double GetWellMobility(double Kr, double viscosity, double FVF)
         {
             return Kr / (viscosity * FVF);

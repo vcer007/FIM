@@ -31,11 +31,27 @@ namespace FIM.FluidData
             this.kr_Data = kr_Data;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SCAL"/> class.
+        /// </summary>
+        /// <remarks>
+        /// This is an empty constructor of a new SCAL instance.
+        /// The <see cref="Initialize(double[][])"/> method must be used to assign the data.
+        /// </remarks>
         public SCAL()
         {
 
         }
 
+        /// <summary>
+        /// Initializes the specified Kr data.
+        /// </summary>
+        /// <remarks>
+        /// This method is only used when a <see cref="SCAL"/> instance is created using the empty constructor.
+        /// The empty constructor is used to create a <see cref="SCAL"/> object "instance" without specifying its data.
+        /// This should be taken with so much care.
+        /// </remarks>
+        /// <param name="kr_Data">The Kr data.</param>
         public void Initialize(double[][] kr_Data)
         {
             this.kr_Data = kr_Data;
