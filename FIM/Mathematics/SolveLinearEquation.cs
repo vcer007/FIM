@@ -1,15 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using FIM.Core;
-
+﻿/// <summary>
+/// This namespace contains classes used for mathematical calculations.
+/// </summary>
 namespace FIM.Mathematics
 {
-    class SolveLinearEquation
+    /// <summary>
+    /// This class contains method used for solving a set of linear equations.
+    /// </summary>
+    public class SolveLinearEquation
     {
+        /// <summary>
+        /// A direct solver that calculates delta x.
+        /// </summary>
+        /// <remarks>
+        /// This method is based on gaussian elimination.
+        /// </remarks>
+        /// <param name="X">The Jacobi matrix.</param>
+        /// <param name="Y">The minus_R array.</param>
         public static void direct(double[][] X, double[] Y)
         {
             int I, J, K, K1, N;
