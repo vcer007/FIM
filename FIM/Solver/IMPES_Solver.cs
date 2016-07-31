@@ -9,7 +9,10 @@ using System.Linq;
 
 namespace FIM.Solver
 {
-    class IMPES_Solver
+    /// <summary>
+    /// This name space contains the IMPES solver implementations.
+    /// </summary>
+    public class IMPES_Solver
     {
         // the entry point
 

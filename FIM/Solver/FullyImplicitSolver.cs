@@ -6,7 +6,7 @@ using FIM.Extensions;
 using System;
 
 /// <summary>
-/// This name space contains the different solvers implementations.
+/// This name space contains the fully implicit solver implementations.
 /// </summary>
 namespace FIM.Solver
 {
