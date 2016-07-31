@@ -117,7 +117,7 @@ namespace FIM.Core
         public double[] areaList;
 
         /// <summary>
-        /// An <see cref="Array"/> of the distances from the center of the block to the top, bottom and side faces areas of the block "in this order".
+        /// An <see cref="Array"/> of the distances from the center of the block to the top, bottom and side faces of the block "in this order".
         /// </summary>
         /// <remarks>
         /// The size the array is equal to 2 + number of sideways neighboring blocks.
