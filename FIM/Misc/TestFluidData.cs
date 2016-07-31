@@ -1,12 +1,12 @@
-﻿using FIM.Fluid;
+﻿using FIM.FluidData;
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FIM.Misc
 {
+    /// <summary>
+    /// This class i made at an early stage of devloping the simulator to test the data accuracy and interpolation and extrapolation methods used.
+    /// </summary>
     class TestFluidData
     {
         public static void test()
@@ -51,11 +51,11 @@ namespace FIM.Misc
             Kr_data[3] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
             PVT pvt = new PVT(oil, oil_us, water, water_us, gas, 4014.7);
-            Kr kr = new Kr(Kr_data);
+            SCAL kr = new SCAL(Kr_data);
 
             for (double i = 0; i <= 1; i += 0.01)
             {
-                Console.WriteLine(i + ", " + kr.getKr(Core.Global.Phase.Gas, i));
+                Console.WriteLine(i + ", " + kr.GetKr(Core.Global.Phase.Gas, i));
             }
 
             Console.ReadKey();
