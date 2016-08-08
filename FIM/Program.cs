@@ -57,6 +57,7 @@ namespace FIM
 
 
             // this prevents the console window from automatically closing after 
+            Console.WriteLine("Press any key to exit.");
             Console.ReadKey();
         }
 
