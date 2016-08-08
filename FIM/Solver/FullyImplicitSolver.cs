@@ -62,7 +62,6 @@ namespace FIM.Solver
                 //Console.ReadKey();
             }
 
-            Console.WriteLine("Simulation run is successfully completed");
         }
 
         // the iteration cycle
