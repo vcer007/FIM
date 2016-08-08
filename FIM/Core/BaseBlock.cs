@@ -45,7 +45,7 @@ namespace FIM.Core
 
         #endregion
 
-        #region data.porosity properties
+        #region Rock properties
 
         /// <summary>
         /// An <see cref="Array"/> of the grid block porosities at different time levels.

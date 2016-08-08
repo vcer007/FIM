@@ -96,5 +96,15 @@ namespace FIM.Core
         /// The independent variables accounted for in numerical perturbation.
         /// </summary>
         public enum Variable {/** Derivative with respect to pressure*/Pressure, /** Derivative with respect to gas saturation*/SaturationGas, /** Derivative with respect to water saturation*/SaturationWater }
+
+        /// <summary>
+        /// The padding used to format the output text.
+        /// </summary>
+        public static int padding;
+
+        /// <summary>
+        /// The number of the decimal places of the output values.
+        /// </summary>
+        public static string decimalPlaces;
     }
 }

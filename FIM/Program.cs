@@ -11,9 +11,18 @@ using FIM.Initialization;
 
 namespace FIM
 {
-    class Program
+    /// <summary>
+    /// The starting point of the simulator
+    /// </summary>
+    public class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// The first method executed in the simulator.
+        /// </summary>
+        /// <remarks>
+        /// C# runs this method automatically at start.
+        /// </remarks>
+        public static void Main()
         {
             //SimulationData data = Initialization.Model.initiaize();
 
@@ -48,6 +57,9 @@ namespace FIM
 
 
             // this prevents the console window from automatically closing after 
+            Console.WriteLine();
+            Console.WriteLine("Simulation run is successfully completed");
+            Console.WriteLine("Press any key to exit.");
             Console.ReadKey();
         }
 

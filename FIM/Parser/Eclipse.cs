@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using FIM.Report;
+using System.Text;
 
 /// <summary>
 /// This namespace contains classes for handling text files parsing.
@@ -47,6 +49,7 @@ namespace FIM.Parser
         static PorosityCalculator porosityCalculator = new PorosityCalculator();
         static PVT pvt = new PVT();
         static SCAL scal = new SCAL();
+        static Output output = new Output();
 
         static double So, Sw, Sg, P;
 
@@ -83,13 +86,14 @@ namespace FIM.Parser
             InitializeGRID(data, GRID_section, porosityCalculator);
             InitializePROPS(PROPS_section, pvt, scal, porosityCalculator);
             InitializeSOLUTION(SOLUTION_section);
-            InitializeSUMMARY(SUMMARY_section);
             InitializeSCHEDULE(data, SCHEDULE_section);
+            InitializeSUMMARY(SUMMARY_section);
+
 
             data.porosityCalculator = porosityCalculator;
             data.pvt = pvt;
             data.scal = scal;
-
+            data.output = output;
 
             // update block properties
             for (int i = 0; i < data.grid.Length; i++)
@@ -298,7 +302,67 @@ namespace FIM.Parser
 
         private static void InitializeSUMMARY(List<string> section)
         {
-            // To-Do
+            string[] wellKeyWords = new string[] { "WOPR", "WWPR", "WGPR", "WGPRS", "WGPRF", "WBHP", "WGOR" };
+            string[] blockKeyWords = new string[] { "BOFVF", "BWFVF", "BGFVF", "BOSAT", "BWSAT", "BGSAT", "BKRO", "BKRW", "BKRG", "BPR", "BRS" };
+            string[] singleKeyWords = new string[] { "CONS", "FILE", "MBEO", "MBEW", "MBEG"};
+
+            string[] allKeyWords = new string[wellKeyWords.Length + blockKeyWords.Length + singleKeyWords.Length];
+            Array.Copy(wellKeyWords, allKeyWords, wellKeyWords.Length);
+            Array.Copy(blockKeyWords, 0, allKeyWords, wellKeyWords.Length, blockKeyWords.Length);
+            Array.Copy(singleKeyWords, 0, allKeyWords, wellKeyWords.Length + blockKeyWords.Length, singleKeyWords.Length);
+
+            int index;
+            string[] wells;
+            int[] indices;
+            //string keyword;
+
+            output.console = section.FindIndex(line => line.Contains("CONS")) != -1 ? true : false;
+            output.file = section.FindIndex(line => line.Contains("FILE")) != -1 ? true : false;
+
+            foreach (string keyword in wellKeyWords)
+            {
+                index = section.FindIndex(line => line.Contains(keyword));
+                // make sure the keyword exists
+                if (index != -1)
+                {
+                    wells = Helper.GetDataAsString(section[index + 1]);
+                    indices = data.wells.Where(x => x.name.ContainsAnyOf(wells)).Select(x => x.index).ToArray();
+                    output.wellKeyWords.Add(keyword);
+                    output.wellsIndices.Add(indices);
+                }
+
+            }
+
+
+            foreach (string keyword in blockKeyWords)
+            {
+                index = section.FindIndex(line => line.Contains(keyword));
+
+                if (index != -1)
+                {
+                    int[][] indices_array = Helper.GetMultipleRowsIndices(keyword, allKeyWords, section);
+                    indices = new int[indices_array.Length];
+
+                    for (int i = 0; i < indices_array.Length; i++)
+                    {
+                        indices[i] = Misc.Rectangular.xyzToNatural(data.x, data.y, data.z, indices_array[i][0], indices_array[i][1], indices_array[i][2]);
+                    }
+                    output.blockKeyWords.Add(keyword);
+                    output.blocksIndices.Add(indices);
+                }
+
+            }
+
+            for (int i = 2; i < singleKeyWords.Length; i++)
+            {
+                index = section.FindIndex(line => line.Contains(singleKeyWords[i]));
+
+                if (index != -1)
+                {
+                    output.singleKeyWords.Add(singleKeyWords[i]);
+                }
+            }
+
         }
 
         private static void InitializeSCHEDULE(SimulationData data, List<string> section)
@@ -376,6 +440,8 @@ namespace FIM.Parser
             data.maximumNonLinearIterations = Helper.GetData("MAXNONLINIT", lines, 1)[0];
             data.maximumMaterialBalanceErrorRatio = Helper.GetData("MBERATIO", lines, 1)[0];
             data.MBE_Tolerance = Helper.GetData("MAXMBE", lines, 1)[0];
+            Global.padding = (int)Helper.GetData("PADDING", lines, 1)[0];
+            Global.decimalPlaces = "#0." + new string('0', (int)Helper.GetData("DECIPLCS", lines, 1)[0]);
         }
 
 
