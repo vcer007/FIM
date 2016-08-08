@@ -47,6 +47,7 @@ namespace FIM.Solver
             // the simulation loop.
 
             currentTime = 0;
+            data.output.Write(currentTime, data, true);
 
             for (; currentTime < end_time;)
             {
@@ -55,9 +56,12 @@ namespace FIM.Solver
                 // after the iterations. This is because the time step length may change during the iteration.
                 currentTime += data.timeStep;
 
-                Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_water[0] + ", " + data.wells[0].q_oil[0]);
+                //Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_water[0] + ", " + data.wells[0].q_oil[0]);
+                data.output.Write(currentTime, data);
                 //Console.ReadKey();
             }
+
+            Console.WriteLine("Simulation run is successfully completed");
         }
 
         // the iteration cycle
