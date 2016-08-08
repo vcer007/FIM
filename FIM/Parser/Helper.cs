@@ -148,7 +148,48 @@ namespace FIM.Parser
         /// <returns></returns>
         public static string[] GetDataAsString(string line, int size = 1)
         {
-            string[] data = Regex.Split(line, @"\b\s+\b");
+            string[] data = Regex.Split(line, @"\s+").Where(x => !String.IsNullOrEmpty(x)).ToArray();
+
+            return data;
+        }
+
+        /// <summary>
+        /// Gets the indices "x, y, z" in multiple lines.
+        /// </summary>
+        /// <param name="keyWord">The key word to look for.</param>
+        /// <param name="allKeyWords">All key words to detect the end of the keyword.</param>
+        /// <param name="section">All the lines in the section.</param>
+        /// <returns>An array in which each element represents a line converted to a 3 elements array of the indices "x, y, z".</returns>
+        public static int[][] GetMultipleRowsIndices(string keyWord, string[] allKeyWords,List<string> section)
+        {
+            int index = section.FindIndex(x => x.Contains(keyWord)) + 1;
+
+            int index_end = index;
+            for (int i = index; i < section.Count; i++)
+            {
+                if (section[i].ContainsAnyOf(allKeyWords))
+                {
+                    index_end = i - 1;
+                    break;
+                }
+                else if (i == section.Count - 1)
+                {
+                    index_end = i;
+                    break;
+                }
+            }
+
+            int[][] data = new int[index_end - index + 1][];
+            //for (int i = index; i <= index_end; i++)
+            //{
+            //    data[i] = GetData(section[index]).Select(x => (int)x).ToArray();
+            //}
+            for (int i = 0; i < data.Length; i++)
+            {
+                //data[i] = GetData(section[index]).Select(x => (int)x).ToArray();
+                data[i] = Regex.Split(section[index], @"\s+").Where(x => !String.IsNullOrEmpty(x)).Select(x => int.Parse(x) - 1).ToArray();
+                index++;
+            }
 
             return data;
         }
