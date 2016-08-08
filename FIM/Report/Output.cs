@@ -214,15 +214,18 @@ namespace FIM.Report
 
             if (file)
             {
-                if (headLine)
+                if (!console)
                 {
-                    Console.WriteLine("Added the headlines to the output file.");
-                }
-                else
-                {
-                    string numberOrder = stepsCounter == 1 ? "st" : stepsCounter == 2 ? "nd" : stepsCounter == 3 ? "rd" : "th";
-                    Console.WriteLine("Added the {0}{1} time step output to the file.", stepsCounter, numberOrder);
-                    stepsCounter++;
+                    if (headLine)
+                    {
+                        Console.WriteLine("Added the headlines to the output file.");
+                    }
+                    else
+                    {
+                        string numberOrder = stepsCounter == 1 ? "st" : stepsCounter == 2 ? "nd" : stepsCounter == 3 ? "rd" : "th";
+                        Console.WriteLine("Added the {0}{1} time step output to the file.", stepsCounter, numberOrder);
+                        stepsCounter++;
+                    }
                 }
                 
 
