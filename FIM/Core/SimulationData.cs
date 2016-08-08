@@ -1,4 +1,5 @@
 ﻿using FIM.FluidData;
+using FIM.Report;
 using FIM.RockData;
 using FIM.Well;
 
@@ -66,7 +67,11 @@ namespace FIM.Core
         public PorosityCalculator porosityCalculator;
 
         // Solution
-        // Summary
+        // Summary        
+        /// <summary>
+        /// An instance of the <see cref="Output"/> class.
+        /// </summary>
+        public Output output;
 
         // Schedule
 
