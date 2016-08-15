@@ -4,6 +4,7 @@ using FIM.Extensions.FullyImplicit;
 using FIM.Extensions;
 
 using System;
+using FIM.Mathematics;
 
 /// <summary>
 /// This name space contains the fully implicit solver implementations.
@@ -87,7 +88,14 @@ namespace FIM.Solver
                 WellTerms.Add(data, Jacobi, minusR);
 
                 // solving the equations.
-                delta = SolveForDelta(Jacobi, minusR);
+                SparseMatrix matrix = SparseMatrix.FromJagged(Jacobi);
+                //for (int i = 0; i < delta.Length; i++)
+                //{
+                //    delta[i] = Global.EPSILON;
+                //}
+                Mathematics.SolveLinearEquation.Orthomin(matrix, ref delta, minusR);
+
+                //delta = SolveForDelta(Jacobi, minusR);
 
                 // update properties with better approximations.
                 counter = Update(data, MBE, delta, counter);
