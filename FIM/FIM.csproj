@@ -64,6 +64,8 @@
     <Compile Include="Initialization\CartesianGrid.cs" />
     <Compile Include="MaterialBalance\MBE.cs" />
     <Compile Include="Mathematics\SolveLinearEquation.cs" />
+    <Compile Include="Mathematics\SparseMatrix.cs" />
+    <Compile Include="Mathematics\VectorOperations.cs" />
     <Compile Include="Misc\Rectangular.cs" />
     <Compile Include="Misc\TestFluidData.cs" />
     <Compile Include="Parser\Eclipse.cs" />
