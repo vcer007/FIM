@@ -56,6 +56,8 @@ namespace FIM.Report
         /// </remarks>
         public List<string> singleKeyWords = new List<string>();
 
+        public List<Func<BaseBlock, string>> functionsList = new List<Func<BaseBlock, string>>();
+
         /// <summary>
         /// Writes the specified reporting data to the specified locations.
         /// </summary>
