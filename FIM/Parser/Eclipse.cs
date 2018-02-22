@@ -304,7 +304,7 @@ namespace FIM.Parser
         {
             string[] wellKeyWords = new string[] { "WOPR", "WWPR", "WGPR", "WGPRS", "WGPRF", "WBHP", "WGOR" };
             string[] blockKeyWords = new string[] { "BOFVF", "BWFVF", "BGFVF", "BOSAT", "BWSAT", "BGSAT", "BKRO", "BKRW", "BKRG", "BPR", "BRS" };
-            string[] singleKeyWords = new string[] { "CONS", "FILE", "MBEO", "MBEW", "MBEG"};
+            string[] singleKeyWords = new string[] { "CONS", "FILE", "FOPR", "MBEO", "MBEW", "MBEG", "NEWTON", "TCPUTS"};
 
             string[] allKeyWords = new string[wellKeyWords.Length + blockKeyWords.Length + singleKeyWords.Length];
             Array.Copy(wellKeyWords, allKeyWords, wellKeyWords.Length);
@@ -314,6 +314,7 @@ namespace FIM.Parser
             int index;
             string[] wells;
             int[] indices;
+            string[] xyzIndices;
             //string keyword;
 
             output.console = section.FindIndex(line => line.Contains("CONS")) != -1 ? true : false;
@@ -325,7 +326,13 @@ namespace FIM.Parser
                 // make sure the keyword exists
                 if (index != -1)
                 {
-                    wells = Helper.GetDataAsString(section[index + 1]);
+                    var temp = new List<string>();
+                    while (index < section.Count - 1 && !wellKeyWords.Contains(section[index + 1]))
+                    {
+                        temp.AddRange(Helper.GetDataAsString(section[index + 1]));
+                        index++;
+                    }
+                    wells = temp.ToArray();
                     indices = data.wells.Where(x => x.name.ContainsAnyOf(wells)).Select(x => x.index).ToArray();
                     output.wellKeyWords.Add(keyword);
                     output.wellsIndices.Add(indices);
@@ -342,13 +349,21 @@ namespace FIM.Parser
                 {
                     int[][] indices_array = Helper.GetMultipleRowsIndices(keyword, allKeyWords, section);
                     indices = new int[indices_array.Length];
+                    xyzIndices = new string[indices_array.Length];
 
                     for (int i = 0; i < indices_array.Length; i++)
                     {
                         indices[i] = Misc.Rectangular.xyzToNatural(data.x, data.y, data.z, indices_array[i][0], indices_array[i][1], indices_array[i][2]);
                     }
+
+                    for (int i = 0; i < indices_array.Length; i++)
+                    {
+                        xyzIndices[i] = $"{indices_array[i][0] + 1},{indices_array[i][1] + 1},{indices_array[i][2] + 1}";
+                    }
+
                     output.blockKeyWords.Add(keyword);
                     output.blocksIndices.Add(indices);
+                    output.blocksXYZIndices.Add(xyzIndices);
                 }
 
             }
@@ -405,19 +420,28 @@ namespace FIM.Parser
 
                 well_radius = double.Parse(WELSPECS[i][5]);
 
-                type = WELCONT[i][0].Contains("PRODUCER") ? Global.WellType.Production : Global.WellType.Injection;
+                //type = WELCONT[i][0].Contains("PRODUCER") ? Global.WellType.Production : Global.WellType.Injection;
+                int well_control_index;
+                for (well_control_index = 0; well_control_index < WELCONT.Length; well_control_index++)
+                {
+                    if (WELCONT[well_control_index][0] == WELSPECS[i][0]/*well name*/)
+                    {
+                        break;
+                    }
+                }
+                type = WELCONT[well_control_index][4].Contains("PRODUCER") ? Global.WellType.Production : Global.WellType.Injection;
 
                 if (type == Global.WellType.Production)
                 {
-                    control = WELCONT[i][1] == "RATE" ? Global.WellControl.OilRate : Global.WellControl.BHP;
+                    control = WELCONT[well_control_index][1] == "RATE" ? Global.WellControl.OilRate : Global.WellControl.BHP;
                 }
                 else if (type == Global.WellType.Injection)
                 {
-                    control = WELCONT[i][1] == "RATE" ? Global.WellControl.GasRate : Global.WellControl.BHP;
+                    control = WELCONT[well_control_index][1] == "RATE" ? Global.WellControl.GasRate : Global.WellControl.BHP;
                 }
 
-                flow_rate = double.Parse(WELCONT[i][2]);
-                BHP = double.Parse(WELCONT[i][3]);
+                flow_rate = double.Parse(WELCONT[well_control_index][2]);
+                BHP = double.Parse(WELCONT[well_control_index][3]);
 
                 data.wells[i] = new Well.BaseWell(data, well_index, type, control, well_radius, skin_factor, BHP, flow_rate);
 

@@ -7,6 +7,8 @@ namespace FIM.MaterialBalance
     /// </summary>
     public static class MBE
     {
+        static double percentage_factor = 10000000; // ten million
+
         /// <summary>
         /// calculates the Oil material balance error.
         /// </summary>
@@ -31,7 +33,10 @@ namespace FIM.MaterialBalance
                 q += Global.a * data.wells[i].q_oil[1] * data.timeStep;
             }
 
-            return OOIP - (OIP + q);
+            double difference = OOIP - (OIP + q);
+            var pore_volume = GetTotalPoreVolume(1, data);
+
+            return difference / /*(OIP + q) * percentage_factor*/ pore_volume;
         }
 
         /// <summary>
@@ -60,7 +65,10 @@ namespace FIM.MaterialBalance
                 q += Global.a * (data.wells[i].q_free_gas[1] + data.wells[i].q_solution_gas[1]);
             }
 
-            return OGIP - (GIP + q * data.timeStep);
+            double difference = OGIP - (GIP + q * data.timeStep);
+            var pore_volume = GetTotalPoreVolume(1, data);
+
+            return difference / /*(GIP + q * data.timeStep) * percentage_factor*/pore_volume;
         }
 
         /// <summary>
@@ -87,7 +95,10 @@ namespace FIM.MaterialBalance
                 q += Global.a * data.wells[i].q_water[1] * data.timeStep;
             }
 
-            return OWIP - (WIP + q);
+            double difference = OWIP - (WIP + q);
+            var pore_volume = GetTotalPoreVolume(1, data);
+
+            return difference  / /*(WIP + q) * percentage_factor*/pore_volume;
         }
 
         /// <summary>
@@ -137,6 +148,18 @@ namespace FIM.MaterialBalance
             }
 
             return temp;
+        }
+
+        private static double GetTotalPoreVolume(int time_level, SimulationData data)
+        {
+            double poreVolume = 0;
+
+            for (int i = 0; i < data.grid.Length; i++)
+            {
+                poreVolume += data.grid[i].Vp[time_level];
+            }
+
+            return poreVolume;
         }
     }
 }

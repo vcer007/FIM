@@ -5,6 +5,11 @@ using FIM.Extensions;
 
 using System;
 using FIM.Mathematics;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double.Solvers;
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra.Solvers;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 /// <summary>
 /// This name space contains the fully implicit solver implementations.
@@ -21,6 +26,24 @@ namespace FIM.Solver
         // this variable is used to store the current time of the simulation run.
         static double currentTime;
 
+        // private members put here globally in the class to reduce the number of GC runs
+        static Matrix<double> A;
+        static Vector<double> B;
+        static Vector<double> X;
+
+        // an array containing previous "index 0" and current "index 1" material balance errors.
+        static double[] MBE = new double[2];
+
+        // Stop calculation if 1000 iterations reached during calculation
+        static IIterationStopCriterion<double> iterationCountStopCriterion = new IterationCountStopCriterion<double>(1000);
+        // Stop calculation if residuals are below 1E-10 --> the calculation is considered converged
+        static IIterationStopCriterion<double> residualStopCriterion = new ResidualStopCriterion<double>(1e-10);
+        // Create monitor with defined stop criteria
+        static Iterator<double> monitor = new Iterator<double>(iterationCountStopCriterion, residualStopCriterion);
+
+        static IIterativeSolver<double> solver = new BiCgStab();
+        static IPreconditioner<double> preconditioner = new MILU0Preconditioner(false);
+
         /// <summary>
         /// The entry point of the fully implicit simulation cycle.
         /// </summary>
@@ -31,11 +54,16 @@ namespace FIM.Solver
             int size = data.grid.Length * data.phases.Length;
 
             // initialize the initial Jacobi matrix.
-            double[][] jacobian = new double[size][];
-            for (int i = 0; i < jacobian.Length; i++)
-            {
-                jacobian[i] = new double[size];
-            }
+            //double[][] jacobian = new double[size][];
+            //for (int i = 0; i < jacobian.Length; i++)
+            //{
+            //    jacobian[i] = new double[size];
+            //}
+            var jacobi = new MathNet.Numerics.LinearAlgebra.Double.SparseMatrix(size, size);
+
+            //MathNetSparseMatrixInitializer.Initialize(data);
+
+            //jacobi.InitializeStructure(data, 1);
 
             // initalize the empty minus R matrix.
             double[] minusR = new double[size];
@@ -53,23 +81,29 @@ namespace FIM.Solver
 
             for (; currentTime < end_time;)
             {
-                IterativeSolver(data, jacobian, minusR, delta);
+                var time_stamp = DateTime.Now;
+
+                int counter = IterativeSolver(data, jacobi, minusR, delta);
+
+                var duration = DateTime.Now - time_stamp;
                 // this way of updating the loop iterator "currentTime" is used to correctly display current time
                 // after the iterations. This is because the time step length may change during the iteration.
                 currentTime += data.timeStep;
 
                 //Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
-                data.output.Write(currentTime, data);
+                data.output.Write(currentTime, data, false, counter, (int)duration.TotalMilliseconds);
                 //Console.ReadKey();
             }
 
         }
 
         // the iteration cycle
-        private static void IterativeSolver(SimulationData data, double[][] Jacobi, double[] minusR, double[] delta)
+        private static int IterativeSolver(SimulationData data, MathNet.Numerics.LinearAlgebra.Double.SparseMatrix Jacobi, double[] minusR, double[] delta)
         {
-            // an array containing previous "index 0" and current "index 1" material balance errors.
-            double[] MBE = new double[2];
+            //use the native Intel MKL solver "which is several times faster"
+            Control.UseNativeMKL();
+
+            MBE[0] = 0; MBE[1] = 0;
 
             // resets time step to its original value at the beginning of each new time step.
             ResetTimeStep(data);
@@ -84,21 +118,38 @@ namespace FIM.Solver
             {
                 // formulation.
                 NumericalPerturbation.CalculateMinusR_Matrix(data, minusR);
-                NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, Jacobi);
+                NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, ref Jacobi);
                 WellTerms.Add(data, Jacobi, minusR);
 
                 // solving the equations.
-                SparseMatrix matrix = SparseMatrix.FromJagged(Jacobi);
+                //SparseMatrix matrix = SparseMatrix.FromJagged(Jacobi);
                 //for (int i = 0; i < delta.Length; i++)
                 //{
                 //    delta[i] = Global.EPSILON;
                 //}
-                Mathematics.SolveLinearEquation.Orthomin(matrix, ref delta, minusR);
+                //Mathematics.SolveLinearEquation.Orthomin(matrix, ref delta, minusR);
+
+                //A = Matrix<double>.Build.SparseOfRowArrays(Jacobi);
+                B = Vector<double>.Build.Dense(minusR);
+                X = Vector<double>.Build.Dense(delta);
+                //var X = Vector<double>.Build.DenseOfArray(delta);
+
+                //delta = A.SolveIterative(B, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion).AsArray();
+                var iterativeSolverStatus = Jacobi.TrySolveIterative(B, X, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion);
+                delta = X.AsArray();
+                //delta = Jacobi.Solve(B).ToArray();
+
+                ////delta = (A.Inverse() * B).ToArray();
+                //delta = A.Solve(B).ToArray();
+                //delta = A.SolveIterative(B, solver, monitor).ToArray();
+                //delta = A.LU().Solve(B).ToArray();
 
                 //delta = SolveForDelta(Jacobi, minusR);
 
                 // update properties with better approximations.
                 counter = Update(data, MBE, delta, counter);
+
+                //Console.WriteLine(MBE[1]);
 
                 // repeat the cycle if the material balance error is larger than the tolerance specified.
                 // as long as the repetitions are smaller than the maximum number of non-linear iterations specified.
@@ -106,20 +157,24 @@ namespace FIM.Solver
 
             // update properties of the new time step after successful convergence.
             UpdateProperties(data);
+
+            return counter;
         }
 
         // contains the algorithms of updating properties, convergence checking, relaxation of deltas and time cut off.
         private static int Update(SimulationData data, double[] MBE,double[] deltas, int counter)
         {
+            //StabilizeNewton(data, deltas, MBE);
+            UpdatePropertiesFromDeltas(data, deltas);
+
             // check convergence errors.
             bool repeat = CheckConvergence(data, MBE);
 
             // will not repeat the time step. No stagnation or oscillations and the MBE is decreasing.
             if (!repeat && (data.maximumNonLinearIterations - counter) != 1)
             {
-                StabilizeNewton(data, deltas, MBE);
 
-                UpdatePropertiesFromDeltas(data, deltas);
+                //UpdatePropertiesFromDeltas(data, deltas);
 
                 // increment the counter.
                 counter += 1;
@@ -128,6 +183,8 @@ namespace FIM.Solver
             {
                 // slash the time step.
                 data.timeStep *= data.timeStepSlashingFactor;
+
+                //Console.WriteLine($"The new time-step is {data.timeStep}");
 
                 // reset relaxation factor.
                 data.relaxationFactor = data.originalRelaxationFactor;
@@ -165,21 +222,24 @@ namespace FIM.Solver
             double P, So, Sg, Sw;
 
             int counter = 0;
+            double temp;
             for (int i = 0; i < data.grid.Length; i++)
             {
-                P = data.grid[i].P[1] + delta[counter];
+                temp = data.grid[i].P[1] + delta[counter];
+                P = temp > 0 ? temp : data.grid[i].P[1];
                 // assert p is always greater than 0.
-                P = P > 0 ? P : 0;
+                //P = P > 0 ? P : 0;
 
-                Sg = data.grid[i].Sg[1] + delta[counter + 1];
-                // assert Sg is always greater than 0.
-                Sg = Sg > 0 ? Sg : 0;
+                temp = data.grid[i].Sg[1] + delta[counter + 1];
+                //Sg = temp > 0 && temp < 1 ? temp : data.grid[i].Sg[1];
+                Sg = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
-                Sw = data.grid[i].Sw[1] + delta[counter + 2];
-                // assert Sw is always greater than 0.
-                Sw = Sw > 0 ? Sw : 0;
+                temp = data.grid[i].Sw[1] + delta[counter + 2];
+                //Sw = temp > 0 && temp < 1 ? temp : data.grid[i].Sw[1];
+                Sw = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
-                So = 1 - Sw - Sg;
+                temp = 1 - Sw - Sg;
+                So = temp > 0 && temp < 1 ? temp : data.grid[i].So[1];
 
                 data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 1);
 
@@ -213,19 +273,22 @@ namespace FIM.Solver
 
             convergenceError[0] = convergenceError[1];
 
-            data.MBE_Oil = Math.Abs(MBE.CheckOil(data));
-            data.MBE_Gas = Math.Abs(MBE.CheckGas(data));
-            data.MBE_Water = Math.Abs(MBE.CheckWater(data));
+            data.MBE_Oil = Math.Abs(MaterialBalance.MBE.CheckOil(data));
+            data.MBE_Gas = Math.Abs(MaterialBalance.MBE.CheckGas(data));
+            data.MBE_Water = Math.Abs(MaterialBalance.MBE.CheckWater(data));
 
             convergenceError[1] = Math.Max(data.MBE_Gas, Math.Max(data.MBE_Oil, data.MBE_Water));
 
             bool MBE_Increasing = (convergenceError[1] > convergenceError[0]);
             bool slowConvergence = convergenceError[1] / convergenceError[0] > data.maximumMaterialBalanceErrorRatio;
 
-            // if this is not the first iteration and either one of the following conditions is true:
-            // 1- material balance error is increasing not decreasing.
-            // 2- the rate of convergence is slow.
-            if (!firstIteration && (MBE_Increasing || slowConvergence))
+
+            if (!firstIteration && MBE_Increasing)
+            {
+                return true;
+            }
+
+            if (!firstIteration && slowConvergence)
             {
                 data.relaxationFactor -= data.relaxationFactorDecrement;
 
@@ -233,9 +296,26 @@ namespace FIM.Solver
                 {
                     return true;
                 }
-
-                return false;
             }
+
+            return false;
+
+            //// if this is not the first iteration and either one of the following conditions is true:
+            //// 1- material balance error is increasing not decreasing.
+            //// 2- the rate of convergence is slow.
+            //if (!firstIteration && (MBE_Increasing || slowConvergence))
+            //{
+            //    data.relaxationFactor -= data.relaxationFactorDecrement;
+
+            //    //Console.WriteLine($"The new relaxation factor is {data.relaxationFactor}");
+
+            //    if (data.relaxationFactor < data.minimumRelaxation)
+            //    {
+            //        return true;
+            //    }
+
+            //    return false;
+            //}
 
             return false;
         }

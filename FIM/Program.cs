@@ -32,10 +32,12 @@ namespace FIM
             // get the initialization file name as an input.
             Console.WriteLine("Enter the initialization file name : ");
             string initialization_file_name = Console.ReadLine();
+            initialization_file_name = initialization_file_name == string.Empty ? "FIM.INIT" : initialization_file_name;
 
             // get the input data file name as an input.
             Console.WriteLine("Enter the input data file name : ");
             string data_file_name = Console.ReadLine();
+            data_file_name = data_file_name == string.Empty ? "INPUT.DATA" : data_file_name;
 
             Console.WriteLine();
 

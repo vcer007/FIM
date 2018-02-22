@@ -130,7 +130,7 @@ namespace FIM.Well
             this.specifiedFlowRate = specifiedFlowRate;
             if (type == Global.WellType.Injection)
             {
-                this.specifiedFlowRate = -1 * specifiedFlowRate;
+                this.specifiedFlowRate = -1 * specifiedFlowRate * 1000 / Global.a; // the input is in units of MSCF, but the internal units are unified to be bbl/day
             }
 
             this.BHP = new double[Global.STEPS_MEMORY];

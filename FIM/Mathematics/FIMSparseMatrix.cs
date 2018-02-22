@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 
 namespace FIM.Mathematics
 {
-    public class SparseMatrix
+    public class FIMSparseMatrix
     {
         public double[] values;
         public int[] indicesX;
         public int[] indicesY;
         public int[] indicesDiagonal;
 
-        public void SetElement(double value, int x, int y)
-        {
-            
-        }
+        int _rowsCount, _columnsCount;
+
+        int SequentialValueSetter = 0;
 
         public double[] Multiply(double[] vector)
         {
@@ -37,9 +36,9 @@ namespace FIM.Mathematics
             return temp;
         }
 
-        public static SparseMatrix FromJagged(double[][] jaggedArray)
+        public static FIMSparseMatrix FromJagged(double[][] jaggedArray)
         {
-            SparseMatrix matrix = new SparseMatrix();
+            FIMSparseMatrix matrix = new FIMSparseMatrix();
 
             List<double> values = new List<double>();
             List<int> indicesX = new List<int>();

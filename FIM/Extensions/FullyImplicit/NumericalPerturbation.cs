@@ -1,4 +1,9 @@
 ﻿using FIM.Core;
+using MathNet.Numerics.LinearAlgebra.Double;
+
+using FIM.Mathematics;
+using MathNet.Numerics.LinearAlgebra.Storage;
+using System.Linq;
 
 /// <summary>
 /// The name space that organizes extension methods to <see cref="BaseBlock"/> specific to fully implicit simulation.
@@ -545,16 +550,17 @@ namespace FIM.Extensions.FullyImplicit
         /// <param name="Jacobi"></param>
         /// <seealso cref="Solver.FullyImplicitSolver"/>
         /// <seealso cref="WellTerms"/>
-        public static void CalculateJacobi_Matrix(SimulationData data, double[] minusR, double[][] Jacobi)
+        public static void CalculateJacobi_Matrix(SimulationData data, double[] minusR, ref MathNet.Numerics.LinearAlgebra.Double.SparseMatrix Jacobi)
         {
             // this is necessary as the direct solver used modifies the jacobi matrix.
-            for (int i = 0; i < Jacobi.Length; i++)
-            {
-                for (int j = 0; j < Jacobi[i].Length; j++)
-                {
-                    Jacobi[i][j] = 0;
-                }
-            }
+            //for (int i = 0; i < Jacobi.Length; i++)
+            //{
+            //    for (int j = 0; j < Jacobi[i].Length; j++)
+            //    {
+            //        Jacobi[i][j] = 0;
+            //    }
+            //}
+            //Jacobi.Clear();
 
             BaseBlock block;
 
@@ -565,64 +571,64 @@ namespace FIM.Extensions.FullyImplicit
 
                 #region Oil
                 // with respect to P
-                Jacobi[counter][data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter, data.phases.Length * block.index, (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON);
                 // with respect to Sg
-                Jacobi[counter][data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter, data.phases.Length * block.index + 1, (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON);
                 // with respect to Sw
-                Jacobi[counter][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter, data.phases.Length * block.index + 2, (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON);
 
                 for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
                     if (block.neighborBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter][data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter, data.phases.Length * block.neighborBlocksIndices[j], (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON);
                         // with respect to Sg
-                        Jacobi[counter][data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter, data.phases.Length * block.neighborBlocksIndices[j] + 1, (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON);
                         // with respect to Sw
-                        Jacobi[counter][data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter, data.phases.Length * block.neighborBlocksIndices[j] + 2, (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON);
                     }
                 }
                 #endregion
                 #region Gas
                 // with respect to P
-                Jacobi[counter + 1][data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter + 1, data.phases.Length * block.index, (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON);
                 // with respect to Sg
-                Jacobi[counter + 1][data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter + 1, data.phases.Length * block.index + 1, (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON);
                 // with respect to Sw
-                Jacobi[counter + 1][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter + 1, data.phases.Length * block.index + 2, (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON);
 
                 for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
                     if (block.neighborBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter + 1][data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter + 1, data.phases.Length * block.neighborBlocksIndices[j], (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON);
                         // with respect to Sg
-                        Jacobi[counter + 1][data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter + 1, data.phases.Length * block.neighborBlocksIndices[j] + 1, (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON);
                         // with respect to Sw
-                        Jacobi[counter + 1][data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter + 1, data.phases.Length * block.neighborBlocksIndices[j] + 2, (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON);
                     }
                 }
                 #endregion
                 #region Water
                 // with respect to P
-                Jacobi[counter + 2][data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter + 2, data.phases.Length * block.index, (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON);
                 // with respect to Sg
-                Jacobi[counter + 2][data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter + 2, data.phases.Length * block.index + 1, (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON);
                 // with respect to Sw
-                Jacobi[counter + 2][data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
+                TempSparseMatrix.SetAt(counter + 2, data.phases.Length * block.index + 2, (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON);
 
                 for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
                 {
                     if (block.neighborBlocksIndices[j] >= 0)
                     {
                         // with respect to P
-                        Jacobi[counter + 2][data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter + 2, data.phases.Length * block.neighborBlocksIndices[j], (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON);
                         // with respect to Sg
-                        Jacobi[counter + 2][data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter + 2, data.phases.Length * block.neighborBlocksIndices[j] + 1, (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON);
                         // with respect to Sw
-                        Jacobi[counter + 2][data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
+                        TempSparseMatrix.SetAt(counter + 2, data.phases.Length * block.neighborBlocksIndices[j] + 2, (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON);
                     }
                 }
                 #endregion
@@ -630,8 +636,89 @@ namespace FIM.Extensions.FullyImplicit
                 counter += data.phases.Length;
             }
 
-            //To-Do : add well production/injection derivatives.
+            SparseCompressedRowMatrixStorage<double> sparse = new SparseCompressedRowMatrixStorage<double>(data.grid.Length * data.phases.Length, data.grid.Length * data.phases.Length);
 
+            TempSparseMatrix.Sort();
+
+            sparse.Values = TempSparseMatrix.GetValues().ToArray();
+            sparse.RowPointers = TempSparseMatrix.GetRowIndices().ToArray();
+            sparse.ColumnIndices = TempSparseMatrix.GetColumnIndices().ToArray();
+
+            TempSparseMatrix.Reset();
+
+            Jacobi = new SparseMatrix(sparse);
+
+            //int counter = 0;
+            //for (int i = 0; i < data.grid.Length; i++)
+            //{
+            //    block = data.grid[i];
+
+            //    #region Oil
+            //    // with respect to P
+            //    Jacobi[counter, data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
+            //    // with respect to Sg
+            //    Jacobi[counter, data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
+            //    // with respect to Sw
+            //    Jacobi[counter, data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Oil, -1, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
+
+            //    for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
+            //    {
+            //        if (block.neighborBlocksIndices[j] >= 0)
+            //        {
+            //            // with respect to P
+            //            Jacobi[counter, data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON;
+            //            // with respect to Sg
+            //            Jacobi[counter, data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON;
+            //            // with respect to Sw
+            //            Jacobi[counter, data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON;
+            //        }
+            //    }
+            //    #endregion
+            //    #region Gas
+            //    // with respect to P
+            //    Jacobi[counter + 1, data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
+            //    // with respect to Sg
+            //    Jacobi[counter + 1, data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
+            //    // with respect to Sw
+            //    Jacobi[counter + 1, data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Gas, -1, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
+
+            //    for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
+            //    {
+            //        if (block.neighborBlocksIndices[j] >= 0)
+            //        {
+            //            // with respect to P
+            //            Jacobi[counter + 1, data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON;
+            //            // with respect to Sg
+            //            Jacobi[counter + 1, data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON;
+            //            // with respect to Sw
+            //            Jacobi[counter + 1, data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON;
+            //        }
+            //    }
+            //    #endregion
+            //    #region Water
+            //    // with respect to P
+            //    Jacobi[counter + 2, data.phases.Length * block.index] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
+            //    // with respect to Sg
+            //    Jacobi[counter + 2, data.phases.Length * block.index + 1] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
+            //    // with respect to Sw
+            //    Jacobi[counter + 2, data.phases.Length * block.index + 2] = (block.Perturb(data, Global.Phase.Water, -1, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
+
+            //    for (int j = 0; j < block.neighborBlocksIndices.Length; j++)
+            //    {
+            //        if (block.neighborBlocksIndices[j] >= 0)
+            //        {
+            //            // with respect to P
+            //            Jacobi[counter + 2, data.phases.Length * block.neighborBlocksIndices[j]] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON;
+            //            // with respect to Sg
+            //            Jacobi[counter + 2, data.phases.Length * block.neighborBlocksIndices[j] + 1] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON;
+            //            // with respect to Sw
+            //            Jacobi[counter + 2, data.phases.Length * block.neighborBlocksIndices[j] + 2] = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON;
+            //        }
+            //    }
+            //    #endregion
+
+            //    counter += data.phases.Length;
+        //}
         }
 
     }

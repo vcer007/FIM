@@ -57,7 +57,7 @@ namespace FIM.Mathematics
             }
         }
 
-        public static void GaussSeidel(SparseMatrix A, double[] X, double[] B)
+        public static void GaussSeidel(FIMSparseMatrix A, double[] X, double[] B)
         {
             double temp = 0;
 
@@ -84,9 +84,9 @@ namespace FIM.Mathematics
 
         }
 
-        public static void Orthomin(SparseMatrix A, ref double[] X, double[] B)
+        public static void Orthomin(FIMSparseMatrix A, ref double[] X, double[] B)
         {
-            int orthominIterations = 4;
+            int orthominIterations = 8;
             int size = X.Length;
             double maxError = 0;
             double tolerance = 1E-10;

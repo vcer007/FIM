@@ -34,6 +34,11 @@ namespace FIM.Report
         public List<int[]> blocksIndices = new List<int[]>();
 
         /// <summary>
+        /// The indices, in the <see cref="SimulationData.grid"/>, of the blocks whose properties are to be reported.
+        /// </summary>
+        public List<string[]> blocksXYZIndices = new List<string[]>();
+
+        /// <summary>
         /// A list of the grid block properties to be reported.
         /// </summary>
         public List<string> blockKeyWords= new List<string>();
@@ -56,15 +61,13 @@ namespace FIM.Report
         /// </remarks>
         public List<string> singleKeyWords = new List<string>();
 
-        public List<Func<BaseBlock, string>> functionsList = new List<Func<BaseBlock, string>>();
-
         /// <summary>
         /// Writes the specified reporting data to the specified locations.
         /// </summary>
         /// <param name="currentTime">The current time of the simulation run.</param>
         /// <param name="data">The <see cref="SimulationData"/> instance containing access to all the run data.</param>
         /// <param name="headLine">Indicates if this is the first line to be reported. This is used to write the headlines of the report columns.</param>
-        public void Write(double currentTime, SimulationData data, bool headLine = false)
+        public void Write(double currentTime, SimulationData data, bool headLine = false, int counter = 0, int milli_seconds = 0)
         {
             StringBuilder output = new StringBuilder();
 
@@ -83,7 +86,8 @@ namespace FIM.Report
 
                 for (int i = 0; i < blockKeyWords.Count; i++)
                 {
-                    for (int j = 0; j < blocksIndices[i].Length; j++) output.Append( (blockKeyWords[i] + "_BLOCK@" + blocksIndices[i][j]).PadRight(Global.padding));
+                    //for (int j = 0; j < blocksIndices[i].Length; j++) output.Append( (blockKeyWords[i] + "_BLOCK@" + blocksIndices[i][j]).PadRight(Global.padding));
+                    for (int j = 0; j < blocksIndices[i].Length; j++) output.Append((blockKeyWords[i] + "_BLOCK@" + blocksXYZIndices[i][j]).PadRight(Global.padding));
                 }
 
                 foreach (string keyword in singleKeyWords)
@@ -101,31 +105,31 @@ namespace FIM.Report
                     switch (wellKeyWords[i])
                     {
                         case "WBHP":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells[wellsIndices[i][j]].BHP[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells.First(w => w.index == wellsIndices[i][j]).BHP[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
-
+                        
                         case "WOPR":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells[wellsIndices[i][j]].q_oil[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells.First(w => w.index == wellsIndices[i][j]).q_oil[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WWPR":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells[wellsIndices[i][j]].q_water[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells.First(w => w.index == wellsIndices[i][j]).q_water[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WGPRF":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells[wellsIndices[i][j]].q_free_gas[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_free_gas[0] * Global.a).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WGPRS":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells[wellsIndices[i][j]].q_solution_gas[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] * Global.a).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WGOR":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells[wellsIndices[i][j]].q_solution_gas[0] / data.wells[j].q_oil[0]).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] / data.wells.First(w => w.index == wellsIndices[i][j]).q_oil[0]).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WGPR":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells[wellsIndices[i][j]].q_solution_gas[0] + data.wells[j].q_free_gas[0]).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] * Global.a + data.wells.First(w => w.index == wellsIndices[i][j]).q_free_gas[0] * Global.a).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         default:
@@ -191,16 +195,28 @@ namespace FIM.Report
                 {
                     switch (keyword)
                     {
+                        case "FOPR":
+                            output.Append(data.wells.Sum(w => w.q_oil[0]).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
                         case "MBEO":
-                            output.Append(data.MBE_Oil.ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            output.Append((data.MBE_Oil / data.MBE_Tolerance).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "MBEW":
-                            output.Append(data.MBE_Water.ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            output.Append((data.MBE_Water / data.MBE_Tolerance).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "MBEG":
-                            output.Append(data.MBE_Gas.ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            output.Append((data.MBE_Gas / data.MBE_Tolerance).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
+                        case "NEWTON":
+                            output.Append(counter.ToString().PadRight(Global.padding));
+                            break;
+
+                        case "TCPUTS":
+                            output.Append(milli_seconds.ToString().PadRight(Global.padding));
                             break;
 
                         default:
@@ -224,7 +240,17 @@ namespace FIM.Report
                     }
                     else
                     {
-                        string numberOrder = stepsCounter == 1 ? "st" : stepsCounter == 2 ? "nd" : stepsCounter == 3 ? "rd" : "th";
+                        string numberOrder = string.Empty;
+                        string stepsCounterAsString = stepsCounter.ToString();
+                        string lastTwo = stepsCounter > 10 ? stepsCounterAsString.Substring(stepsCounterAsString.Length - 2, 2) : string.Empty;
+                        char lastOne = stepsCounterAsString.Last();
+                        if ((lastTwo == "11") || (lastTwo == "12") || (lastTwo == "13"))
+                            numberOrder = "th";
+                        else
+                        {
+                            numberOrder = lastOne == '3' ? "rd" : lastOne == '2' ? "nd" : lastOne == '1' ? "st" : "th";
+                        }
+
                         Console.WriteLine("Added the {0}{1} time step output to the file.", stepsCounter, numberOrder);
                         stepsCounter++;
                     }
