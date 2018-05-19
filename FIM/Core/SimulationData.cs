@@ -169,6 +169,8 @@ namespace FIM.Core
         /// </remarks>
         public double MBE_Tolerance;
 
+        internal bool Gravity;
+
         // The class constructor.
         /// <summary>
         /// Initializes a new instance of the <see cref="SimulationData"/> class.

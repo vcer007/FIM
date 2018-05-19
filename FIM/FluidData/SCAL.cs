@@ -64,20 +64,20 @@ namespace FIM.FluidData
         /// <param name="saturation">The saturation.</param>
         /// <returns>The value of the relative permeability</returns>
         /// <seealso cref="Global.Phase"/>
-        public double GetKr(Global.Phase phase, double saturation)
-        {
-            switch (phase)
-            {
-                case Global.Phase.Water:
-                    return GetKrw(saturation);
-                case Global.Phase.Oil:
-                    return GetKro(saturation);
-                case Global.Phase.Gas:
-                    return GetKrg(saturation);
-                default:
-                    return 1;
-            }
-        }
+        //public double GetKr(Global.Phase phase, double saturation)
+        //{
+        //    switch (phase)
+        //    {
+        //        case Global.Phase.Water:
+        //            return GetKrw(saturation);
+        //        case Global.Phase.Oil:
+        //            return GetKro(saturation);
+        //        case Global.Phase.Gas:
+        //            return GetKrg(saturation);
+        //        default:
+        //            return 1;
+        //    }
+        //}
 
 
         //Internal helper method to do the table lookups and interpolations
@@ -102,11 +102,11 @@ namespace FIM.FluidData
                     y1 = data_y[i - 1]; x1 = data_x[i - 1];
                     y2 = data_y[i]; x2 = data_x[i];
                     x = x1 + (y - y1) / ((y2 - y1) / (x2 - x1));
-                    break;
+                    return x;
                 }
             }
 
-            return x;
+            return data_x[data_x.Length - 1];
         }
 
 
@@ -115,28 +115,58 @@ namespace FIM.FluidData
         //Inputs: a variable representing the value of the saturation
         //Outputs: the corresponding Kr value
 
-        private double GetKro(double saturation)
+
+        //public double GetKro(double sg, double sw, double swco)
+        //{
+        //    double[] Y, X;
+        //    Y = kr_Data[0]; X = kr_Data[2];
+
+        //    return LookUp(Y, X, sg);
+        //}
+
+        public double GetKro(double sg, double sw, double swco)
         {
             double[] Y, X;
             Y = kr_Data[0]; X = kr_Data[2];
 
-            return LookUp(Y, X, saturation);
+            Y = new double[] { 0, 0.18, 0.28, 0.38, 0.43, 0.48, 0.58, 0.63, 0.68, 0.76, 0.83, 0.86, 0.879, 0.88 };
+            X = new double[] { 0, 0, 0.0001, 0.001, 0.01, 0.021, 0.09, 0.2, 0.35, 0.7, 0.98, 0.997, 1, 1 };
+
+            double so = 1 - sg - sw;
+            so = so < 0 ? 0 : so;
+            double krog = LookUp(Y, X, so);
+            double krow = LookUp(Y, X, so);
+
+            //return LookUp(Y, X, saturation);
+            double temp = (sg + sw - swco);
+            double kro = temp == 0 ? 1 : (sg * krog + (sw - swco) * krow) / temp;
+            return kro > 1 ? 1 : kro;
         }
 
-        private double GetKrg(double saturation)
+        public double GetKrg(double saturation)
         {
             double[] Y, X;
             Y = kr_Data[0]; X = kr_Data[1];
 
-            return LookUp(Y, X, saturation);
+            Y = new double[] { 0, 0.02, 0.05, 0.12, 0.2, 0.25, 0.3, 0.4, 0.45, 0.5, 0.6, 0.7, 0.85, 1.0 };
+            X = new double[] { 0, 0, 0.005, 0.025, 0.075, 0.125, 0.19, 0.41, 0.6, 0.72, 0.87, 0.94, 0.98, 1 };
+
+            double kr = LookUp(Y, X, saturation);
+            return kr > 1 ? 1 : kr;
         }
 
-        private double GetKrw(double saturation)
+        public double GetKrw(double saturation)
         {
-            double[] Y, X;
-            Y = kr_Data[0]; X = kr_Data[3];
 
-            return LookUp(Y, X, saturation);
+            double[] Y, X;
+            //Y = kr_Data[0]; X = kr_Data[3];
+
+            Y = new double[] {0, 0.12, 1};
+            X = new double[] {0, 0, 0.00001/*1*/ };
+
+            double kr = LookUp(Y, X, saturation);
+            return 0;
+            //return kr > 1 ? 1 : kr;
         }
     }
 }

@@ -23,7 +23,9 @@ namespace FIM.Core
         /// The epsilon used for caluclating derivatives numerically.
         /// </summary>
         /// <seealso cref="Global.STEPS_MEMORY"/>
-        public const double EPSILON = 1E-5;
+        public const double EPSILONP = 1;
+        public const double EPSILONS = 1E-3;
+        public const double MINIMUM = 1E-10;
 
         /// <summary>
         /// The size of the properties <see cref="Array"/>.
@@ -33,7 +35,7 @@ namespace FIM.Core
         /// to store different values for each time step.</para>
         /// <para>Typically, the time steps are n0, n+1 and n+1.</para>
         /// <para>The n+2 time level is used for perturbation.</para>
-        /// <para>Independent variables "e.g; pressure, saturation, ..." will have their n+2 values set to n+1 + <see cref="Global.EPSILON"/></para>
+        /// <para>Independent variables "e.g; pressure, saturation, ..." will have their n+2 values set to n+1 + <see cref="Global.EPSILONP"/></para>
         /// <para>Dependent variables "e.g; Bo, Bg, Kr, ..." will have their n+2 values set to
         /// corresponding values to their corresponding independent variable at the n+2 time level.</para>
         /// <para>This way adds more flexibility in using values at different time levels whenever needed.</para>
@@ -56,7 +58,7 @@ namespace FIM.Core
         /// <summary>
         /// The different types of well control schemes.
         /// </summary>
-        public enum WellControl { OilRate, GasRate, BHP}
+        public enum WellControl { OilRate, GasRate, WaterRate, BHP}
 
         /// <summary>
         /// The method used in calculating well flow rates.
@@ -106,5 +108,9 @@ namespace FIM.Core
         /// The number of the decimal places of the output values.
         /// </summary>
         public static string decimalPlaces;
+
+        public static double gamma_c = 0.21584E-3;
+
+        public static double alpha = 32.174;
     }
 }

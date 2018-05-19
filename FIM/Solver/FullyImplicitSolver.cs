@@ -11,6 +11,9 @@ using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra.Solvers;
 using MathNet.Numerics.LinearAlgebra.Double;
 
+using System.Linq;
+using MathNet.Numerics.Providers.LinearAlgebra.Mkl;
+
 /// <summary>
 /// This name space contains the fully implicit solver implementations.
 /// </summary>
@@ -34,14 +37,10 @@ namespace FIM.Solver
         // an array containing previous "index 0" and current "index 1" material balance errors.
         static double[] MBE = new double[2];
 
-        // Stop calculation if 1000 iterations reached during calculation
-        static IIterationStopCriterion<double> iterationCountStopCriterion = new IterationCountStopCriterion<double>(1000);
-        // Stop calculation if residuals are below 1E-10 --> the calculation is considered converged
-        static IIterationStopCriterion<double> residualStopCriterion = new ResidualStopCriterion<double>(1e-10);
         // Create monitor with defined stop criteria
-        static Iterator<double> monitor = new Iterator<double>(iterationCountStopCriterion, residualStopCriterion);
+        //static Iterator<double> monitor = new Iterator<double>(iterationCountStopCriterion, residualStopCriterion);
 
-        static IIterativeSolver<double> solver = new BiCgStab();
+        static IIterativeSolver<double> solver = new GpBiCg();
         static IPreconditioner<double> preconditioner = new MILU0Preconditioner(false);
 
         /// <summary>
@@ -53,6 +52,8 @@ namespace FIM.Solver
             // size of the model grid.
             int size = data.grid.Length * data.phases.Length;
 
+            //data.grid[1].UpdateProperties(data, data.grid[1].P[0], 0.12, 0.1, 0.78, 0);
+            //data.grid[0].UpdateProperties(data, data.grid[1].P[0], 0.12, 0, 0.88, 0);
             // initialize the initial Jacobi matrix.
             //double[][] jacobian = new double[size][];
             //for (int i = 0; i < jacobian.Length; i++)
@@ -101,7 +102,10 @@ namespace FIM.Solver
         private static int IterativeSolver(SimulationData data, MathNet.Numerics.LinearAlgebra.Double.SparseMatrix Jacobi, double[] minusR, double[] delta)
         {
             //use the native Intel MKL solver "which is several times faster"
+
+            //Control.UseManaged();
             Control.UseNativeMKL();
+            //Control.NativeProviderPath = @"C:\MKL";
 
             MBE[0] = 0; MBE[1] = 0;
 
@@ -119,6 +123,10 @@ namespace FIM.Solver
                 // formulation.
                 NumericalPerturbation.CalculateMinusR_Matrix(data, minusR);
                 NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, ref Jacobi);
+                //var test = Jacobi.Storage.Enumerate().ToList();
+                //var test2 = test.Where(x => x != 0);
+                //var test3 = test2.Where(x => x > -1E-7 && x < 1E-7);
+                //var test4 = test3.Select(x => Math.Abs(x)).Min();
                 WellTerms.Add(data, Jacobi, minusR);
 
                 // solving the equations.
@@ -134,6 +142,11 @@ namespace FIM.Solver
                 X = Vector<double>.Build.Dense(delta);
                 //var X = Vector<double>.Build.DenseOfArray(delta);
 
+                // Stop calculation if 1000 iterations reached during calculation
+                IIterationStopCriterion<double> iterationCountStopCriterion = new IterationCountStopCriterion<double>(1000);
+                // Stop calculation if residuals are below 1E-10 --> the calculation is considered converged
+                IIterationStopCriterion<double> residualStopCriterion = new ResidualStopCriterion<double>(1e-5);
+
                 //delta = A.SolveIterative(B, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion).AsArray();
                 var iterativeSolverStatus = Jacobi.TrySolveIterative(B, X, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion);
                 delta = X.AsArray();
@@ -148,6 +161,20 @@ namespace FIM.Solver
 
                 // update properties with better approximations.
                 counter = Update(data, MBE, delta, counter);
+                //if (iterativeSolverStatus == IterationStatus.Converged)
+                //{
+                //}
+                //else
+                //{
+                //    for (int i = 0; i < data.grid.Length; i++)
+                //    {
+                //        data.grid[i].Reset(data);
+                //    }
+                //    data.timeStep *= data.timeStepSlashingFactor;
+                //    counter = 0;
+                //    MBE[0] = 0;
+                //    MBE[1] = data.MBE_Tolerance;
+                //}
 
                 //Console.WriteLine(MBE[1]);
 
@@ -231,12 +258,14 @@ namespace FIM.Solver
                 //P = P > 0 ? P : 0;
 
                 temp = data.grid[i].Sg[1] + delta[counter + 1];
-                //Sg = temp > 0 && temp < 1 ? temp : data.grid[i].Sg[1];
-                Sg = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
+                Sg = temp > 0 && temp < 1 ? temp : data.grid[i].Sg[1];
+                Sg = Sg > 1 ? 1 : Sg;
+                //Sg = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
                 temp = data.grid[i].Sw[1] + delta[counter + 2];
-                //Sw = temp > 0 && temp < 1 ? temp : data.grid[i].Sw[1];
-                Sw = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
+                Sw = temp > 0 && temp < 1 ? temp : data.grid[i].Sw[1];
+                Sw = Sw > 1 ? 1 : Sw;
+                //Sw = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
                 temp = 1 - Sw - Sg;
                 So = temp > 0 && temp < 1 ? temp : data.grid[i].So[1];

@@ -145,6 +145,8 @@ namespace FIM.Parser
                 data.solubleGasPresent = true;
             }
 
+            if (section.Contains("GRAVITY")) data.Gravity = true;
+
             data.phases = phases.ToArray();
 
             if (section.Contains("IMPES"))
@@ -304,7 +306,7 @@ namespace FIM.Parser
         {
             string[] wellKeyWords = new string[] { "WOPR", "WWPR", "WGPR", "WGPRS", "WGPRF", "WBHP", "WGOR" };
             string[] blockKeyWords = new string[] { "BOFVF", "BWFVF", "BGFVF", "BOSAT", "BWSAT", "BGSAT", "BKRO", "BKRW", "BKRG", "BPR", "BRS" };
-            string[] singleKeyWords = new string[] { "CONS", "FILE", "FOPR", "MBEO", "MBEW", "MBEG", "NEWTON", "TCPUTS"};
+            string[] singleKeyWords = new string[] { "CONS", "FILE", "FOPR", "MBEO", "MBEW", "MBEG", "NEWTON", "TCPUTS", "FGIP", "FGIPL", "FGIPG"};
 
             string[] allKeyWords = new string[wellKeyWords.Length + blockKeyWords.Length + singleKeyWords.Length];
             Array.Copy(wellKeyWords, allKeyWords, wellKeyWords.Length);
@@ -437,7 +439,10 @@ namespace FIM.Parser
                 }
                 else if (type == Global.WellType.Injection)
                 {
-                    control = WELCONT[well_control_index][1] == "RATE" ? Global.WellControl.GasRate : Global.WellControl.BHP;
+                    // RATE or GRATE means gas injection
+                    // WRATE means water injection
+                    string temp = WELCONT[well_control_index][1];
+                    control = temp == "RATE" || temp == "GRATE" ? Global.WellControl.GasRate : temp == "WRATE" ? Global.WellControl.WaterRate : Global.WellControl.BHP;
                 }
 
                 flow_rate = double.Parse(WELCONT[well_control_index][2]);

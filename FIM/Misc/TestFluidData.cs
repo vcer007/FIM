@@ -55,7 +55,7 @@ namespace FIM.Misc
 
             for (double i = 0; i <= 1; i += 0.01)
             {
-                Console.WriteLine(i + ", " + kr.GetKr(Core.Global.Phase.Gas, i));
+                //Console.WriteLine(i + ", " + kr.GetKr(Core.Global.Phase.Gas, i));
             }
 
             Console.ReadKey();

@@ -1,4 +1,5 @@
 ﻿using FIM.Core;
+using FIM.MaterialBalance;
 using FIM.Well;
 
 using System;
@@ -125,7 +126,8 @@ namespace FIM.Report
                             break;
 
                         case "WGOR":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] / data.wells.First(w => w.index == wellsIndices[i][j]).q_oil[0]).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            //for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] / data.wells.First(w => w.index == wellsIndices[i][j]).q_oil[0]).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).GetProducingGOR()).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WGPR":
@@ -183,7 +185,7 @@ namespace FIM.Report
                             break;
 
                         case "BRS":
-                            for (int j = 0; j < blocksIndices[i].Length; j++) output.Append(data.grid[blocksIndices[i][j]].Rso[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < blocksIndices[i].Length; j++) output.Append((data.grid[blocksIndices[i][j]].Rso[0]*Global.a/1000).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         default:
@@ -193,6 +195,7 @@ namespace FIM.Report
 
                 foreach (string keyword in singleKeyWords)
                 {
+
                     switch (keyword)
                     {
                         case "FOPR":
@@ -217,6 +220,21 @@ namespace FIM.Report
 
                         case "TCPUTS":
                             output.Append(milli_seconds.ToString().PadRight(Global.padding));
+                            break;
+
+                        case "FGIP":
+                            var temp = MBE.GetGIP(data, 0);
+                            output.Append(temp.ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
+                        case "FGIPG":
+                            temp = MBE.FreeGasIP(data, 0);
+                            output.Append(temp.ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
+                        case "FGIPL":
+                            temp = MBE.SolubleGasIP(data, 0);
+                            output.Append(temp.ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         default:

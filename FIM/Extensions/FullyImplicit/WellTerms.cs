@@ -23,7 +23,7 @@ namespace FIM.Extensions.FullyImplicit
                 index = 3 * data.wells[i].index;
 
                 minusR[index] += data.wells[i].q_oil[1];
-                minusR[index + 1] += data.wells[i].q_free_gas[1] + data.wells[i].q_solution_gas[1];
+                minusR[index + 1] += (data.wells[i].q_free_gas[1] + data.wells[i].q_solution_gas[1]);
                 minusR[index + 2] += data.wells[i].q_water[1];
             }
 

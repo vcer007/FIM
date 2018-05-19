@@ -99,6 +99,12 @@ namespace FIM.Core
         public double[] P;
 
         /// <summary>
+        /// <para>An <see cref="Array"/> of the capillary pressures for oil/water and gas/oil.</para>
+        /// </summary>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
+        public double[] Pcow, Pcgo;
+
+        /// <summary>
         /// The pressure of the previous time step "n-1 time level".
         /// </summary>
         public double P_previousStep;
@@ -198,6 +204,8 @@ namespace FIM.Core
 
         #endregion
 
+        public double Depth;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseBlock"/> class.
         /// </summary>
@@ -221,11 +229,16 @@ namespace FIM.Core
 
             this.P = new double[steps_memory];
 
+            this.Pcow = new double[steps_memory];
+
+            this.Pcgo = new double[steps_memory];
+
             // volumetric
             this.Vp = new double[steps_memory];
 
             // well
             this.type = Global.BlockType.NormalBlock;
         }
+
     }
 }

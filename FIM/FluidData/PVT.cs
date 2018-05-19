@@ -215,8 +215,10 @@ namespace FIM.FluidData
         {
             double y1, y2, x1, x2, x = -1;
 
+            int size = data_y.Length;
+
             y1 = data_y[data_y.Length - 2]; x1 = data_x[data_x.Length - 2];
-            y2 = data_y.Last(); x2 = data_x.Last();
+            y2 = data_y[size - 1]; x2 = data_x[size - 1];
 
             x = x1 + (y - y1) / ((y2 - y1) / (x2 - x1));
 
@@ -358,12 +360,14 @@ namespace FIM.FluidData
 
             if (pressure > bubblePointPressure)
             {
-                return oilUnderSaturatedData[4][0];
+                var temp = oilUnderSaturatedData[4][0];
+                return temp;
             }
             else
             {
                 Y = oilData[0]; X = oilData[4];
-                return LookUp(Y, X, pressure);
+                var temp = LookUp(Y, X, pressure);
+                return temp;
             }
 
             //return 3E-09 * Math.Pow(pressure, 3) - 7E-05 * Math.Pow(pressure, 2) + 0.5573 * pressure - 179.85;

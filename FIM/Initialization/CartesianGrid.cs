@@ -3,6 +3,7 @@ using FIM.Misc;
 
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace FIM.Initialization
 {
@@ -108,7 +109,17 @@ namespace FIM.Initialization
 
             InitializeTransmissibilities(grid);
 
+            InitializeDepths(grid);
+
             return grid;
+        }
+
+        private void InitializeDepths(BaseBlock[] grid)
+        {
+            for (int i = 0; i < grid.Length; i++)
+            {
+                grid[i].Depth = 0.5 * layersHeights[grid[i].layer] + layersHeights.Take(grid[i].layer).Sum();
+            }
         }
 
         // an internal method to initialize blocks neghboring relationshps.

@@ -7,7 +7,6 @@ namespace FIM.MaterialBalance
     /// </summary>
     public static class MBE
     {
-        static double percentage_factor = 10000000; // ten million
 
         /// <summary>
         /// calculates the Oil material balance error.
