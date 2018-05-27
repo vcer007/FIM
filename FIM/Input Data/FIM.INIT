@@ -1,0 +1,44 @@
+-- the slashing factor used to cut the time step when oscillation/stagnation occurs
+TSTEPFACTOR
+ 0.5
+/
+
+-- the relaxation factor used to modify the deltas "in a fully implicit solver" to accelerate convergence
+RELAXFACTOR
+ 1
+/
+
+-- the minimum value for the relaxation factor before modifiying the time step and repeating the step
+MINRELAX
+ 0.5
+/
+
+-- the value used to decrement the relaxation factor
+RELAXDEC
+ 0.1
+/
+
+-- the maximum number of non-linear iterations
+MAXNONLINIT
+ 25
+/
+
+-- the maximum ratio between two subsequent material balance errors. This is used to determine how fast the convergence is.
+MBERATIO
+ 0.5
+/
+
+-- the maximum material balance error allowed "units of SCF"
+MAXMBE
+ 1E-7
+/
+
+-- the number of decimal places of the output
+DECIPLCS
+ 6
+/
+
+-- the padding used for formatting the output
+PADDING
+ 25
+/

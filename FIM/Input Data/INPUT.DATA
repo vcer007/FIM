@@ -1,0 +1,244 @@
+-- =====================================================================
+-- THIS IS THE FIRST SPE COMPARISON PROBLEM"COMPARISON OF SOLUTIONS TO A
+-- THREE-DIMENSIONAL BLACK-OIL RESERVOIR SIMULATION PROBLEM" REPORTED
+-- BY AZIS AND ODEH AT THE SPE SYMPOSIUM ON RESERVOIR SIMULATION 
+-- JANUARY 1981. IT IS  A NON SWELLING AND SWELLING STUDY. A REGULAR
+-- GRID WITH TWO WELLS (INJECTOR AND PRODUCER)AND A IMPES SOLUTION METHOD
+-- IS USED FOR THIS SIMULATION.THE PRODUCTION IS CONTROLLED BY FLOW RATE
+-- AND MIN. BHP. OIL RATE GOR PRESSURE AND GAS SATURATION ARE TO BE REPORTED.
+-- =====================================================================
+RUNSPEC
+TITLE
+ODEH PROBLEM - IMPLICIT OPTION - 900 DAYS
+
+DIMENS
+ 10   10    3
+/
+
+--IMPES
+
+NONNC
+
+OIL
+
+WATER
+
+GAS
+
+DISGAS
+
+FIELD
+
+GRAVITY
+
+WELLDIMS
+ 2
+/
+
+
+GRID    ================================================================
+-------- IN THIS SECTION  THE GEOMETRY OF THE  SIMULATION GRID AND THE
+-------- ROCK PERMEABILITIES AND POROSITIES ARE DEFINED.
+------------------------------------------------------------------------
+DX
+ 1000
+/
+DY
+ 1000
+/
+DZ
+ 20 30 50
+/
+
+PORO
+ 0.3
+/
+
+PERMX
+ 500 50 200
+/
+
+MULTZ
+ 1 1 1/
+/
+
+PROPS    ===============================================================
+-------- THE PROPS SECTION DEFINES THE REL. PERMEABILITIES CAPILLARY
+-------- PRESSURES AND THE PVT PROPERTIES OF THE RESERVOIR FLUIDS
+----------------------------------------------------------------------
+
+-- ROCK COMPRESSIBILITY
+--
+--    REF. PRES   COMPRESSIBILITY
+ROCK
+        14.7          3.0E-6          /
+
+BUBBLEPOINT
+ 4014.7
+/
+
+PRESSURE
+ 4800
+/
+
+SO
+ 0.88
+/
+
+SW
+ 0.12
+/
+
+SG
+ 0
+/
+
+PVTO
+
+-- saturated oil properties
+
+14.7    264.7    514.7    1014.7    2014.7    2514.7    3014.7    4014.7    5014.7    9014.7  -- pressure
+1.062   1.15     1.207    1.295     1.435     1.5       1.565     1.695     1.827     2.357   -- Bo
+1.04    0.975    0.91     0.83      0.695     0.641     0.594     0.51      0.449     0.203   -- viscosity
+46.244  43.544   42.287   41.004    38.995    38.304    37.781    37.046    36.424    34.482  -- density
+1       90.5     180      371       636       775       930       1270      1618      2984    -- RsO
+
+-- undersaturated oil
+
+4014.7    9014.7 -- pressure
+1.695     1.579  -- Bo
+0.51      0.74   -- viscosity
+37.046    39.768 -- density
+1270      1270   -- RsO
+
+/
+
+PVTW
+
+14.7    264.7    514.7    1014.7    2014.7    2514.7    3014.7    4014.7    5014.7    9014.7     -- pressure
+1.041   1.0403   1.0395   1.038     1.035     1.0335    1.032     1.029     1.0258    1.013      -- Bw
+0.31    0.31     0.31     0.31      0.31      0.31      0.31      0.31      0.31      0.31       -- viscosity
+62.238  62.283   62.328   62.418    62.599    62.69     62.781    62.964    63.16     63.959     -- density
+0       0        0        0         0         0         0         0         0         0          -- RsW
+
+4014.7    9014.7 -- pressure
+1.029     1.013  -- Bw
+0.31      0.31   -- viscosity
+62.964    63.959 -- density
+0         0      -- RsW
+
+/
+
+PVDG
+
+14.7       264.7     514.7     1014.7    2014.7    2514.7    3014.7    4014.7    5014.7    9014.7     -- pressure
+0.166666   0.012093  0.006274  0.003197  0.001614  0.001294  0.00108   0.000811  0.000649  0.000386   -- Bg
+0.008      0.0096    0.0112    0.014     0.0189    0.0208    0.0228    0.0268    0.0309    0.047      -- viscosity
+0.0647     0.8916    1.7185    3.3727    6.8806    8.3326    9.9837    13.2952   16.6139   27.948     -- density
+
+
+/
+
+SCAL
+
+0    0.001    0.02    0.05    0.12    0.2    0.25    0.3    0.4    0.45    0.5    0.6    0.7    0.85    1   -- Sg
+0    0        0       0.005   0.025   0.075  0.125   0.19   0.41   0.6     0.72   0.87   0.94   0.98    1   -- Krg
+1    1        0.997   0.98    0.7     0.35   0.2     0.09   0.02   0.01    0.001  0.0001 0      0       0   -- Kro
+0    0        0       0       0       0      0       0      0      0       0      0      0      0       0   -- Krw
+
+
+/
+
+
+
+
+
+SOLUTION ===============================================================
+-------- THE SOLUTION SECTION DEFINES THE INITIAL STATE OF THE SOLUTION
+-------- VARIABLES (PHASE PRESSURES SATURATIONS AND GAS-OIL RATIOS)
+------------------------------------------------------------------------
+
+
+
+SUMMARY  ===============================================================
+-------- THIS SECTION SPECIFIES DATA TO BE WRITTEN TO THE SUMMARY FILES
+-------- AND WHICH MAY LATER BE USED WITH THE ECLIPSE GRAPHICS PACKAGE
+------------------------------------------------------------------------
+
+WOPR
+ PRODUCER_WELL1
+ INJECTOR_WELL
+/
+
+WGPR
+ PRODUCER_WELL1
+ INJECTOR_WELL
+/
+
+WGOR
+ PRODUCER_WELL1
+ /
+
+BPR
+ 10 10 3
+ 1 1 1
+/
+
+MBEG
+
+MBEO
+
+NEWTON
+
+TCPUTS
+
+WGPRF
+ PRODUCER_WELL1
+/
+
+WBHP
+ PRODUCER_WELL1
+/
+
+BGSAT
+ 10 10 3
+ 1 1 1
+/
+
+-- CONS
+FILE
+/
+
+SCHEDULE ===============================================================
+-------- THE SCHEDULE SECTION DEFINES THE OPERATIONS TO BE SIMULATED
+------------------------------------------------------------------------
+
+-- WELL SPECIFICATION DATA
+WELSPECS
+--name            i   j   k  skin  radius
+  PRODUCER_WELL1   10   10   3  0     0.25 /
+  INJECTOR_WELL   1   1   1  0     0.25 /
+/
+
+WELCONT
+-- all units of flow rates are STB/day
+-- injector rate is equivalent to 100 MM SCF/day
+
+--well     control  flow    minimum
+--type     method   rate    BHP
+
+  PRODUCER_WELL1  RATE     20000    1000 PRODUCER
+  INJECTOR_WELL RATE     100000       0 INJECTOR
+/
+
+
+TSTEP
+ 30
+/
+
+ENDTIME
+ 3650
+/
+
+
+END     ================================================================
