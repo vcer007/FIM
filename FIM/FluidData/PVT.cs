@@ -155,6 +155,24 @@ namespace FIM.FluidData
             }
         }
 
+        public double GetWaterCapillaryPressure(double saturation)
+        {
+            double[] Y = new double[] { 0.11, 0.12, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1};
+            double[] X = new double[] { 20, 7, 4, 3, 2.8, 2.6, 2.2, 1, 0};
+
+            double Pc = LookUp(Y, X, saturation);
+            return Pc;
+        }
+
+        public double GetGasCapillaryPressure(double saturation)
+        {
+            double[] Y = new double[] { 0, 0.001, 0.02, 0.05, 0.12, 0.2, 0.25, 0.3, 0.4, 0.45, 0.5, 0.6, 0.7, 0.85, 1 };
+            double[] X = new double[] { 0, 2, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 40, 60, 100};
+
+            double Pc = LookUp(Y, X, saturation);
+            return Pc;
+        }
+
         /// <summary>
         /// Gets the solution Gas/Oil ratio.
         /// </summary>
@@ -351,7 +369,9 @@ namespace FIM.FluidData
 
             double Density = LookUp(Y, X, pressure);
 
-            return pressure <= gasData[0].Last() ? Density : Extrapolate(Y, X, pressure);
+            double last = gasData[0][gasData[0].Length - 1];
+
+            return pressure <= last ? Density : Extrapolate(Y, X, pressure);
         }
 
         private double GetRso(double pressure)

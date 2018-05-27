@@ -23,8 +23,8 @@ namespace FIM.Core
         /// The epsilon used for caluclating derivatives numerically.
         /// </summary>
         /// <seealso cref="Global.STEPS_MEMORY"/>
-        public const double EPSILONP = 1;
-        public const double EPSILONS = 1E-3;
+        public const double EPSILON_P = 1;
+        public const double EPSILON_S = 1E-5;
         public const double MINIMUM = 1E-10;
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace FIM.Core
         /// to store different values for each time step.</para>
         /// <para>Typically, the time steps are n0, n+1 and n+1.</para>
         /// <para>The n+2 time level is used for perturbation.</para>
-        /// <para>Independent variables "e.g; pressure, saturation, ..." will have their n+2 values set to n+1 + <see cref="Global.EPSILONP"/></para>
+        /// <para>Independent variables "e.g; pressure, saturation, ..." will have their n+2 values set to n+1 + <see cref="Global.EPSILON_P"/></para>
         /// <para>Dependent variables "e.g; Bo, Bg, Kr, ..." will have their n+2 values set to
         /// corresponding values to their corresponding independent variable at the n+2 time level.</para>
         /// <para>This way adds more flexibility in using values at different time levels whenever needed.</para>

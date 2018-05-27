@@ -103,8 +103,8 @@ namespace FIM.Solver
         {
             //use the native Intel MKL solver "which is several times faster"
 
-            //Control.UseManaged();
-            Control.UseNativeMKL();
+            Control.UseManaged();
+            //Control.UseNativeMKL();
             //Control.NativeProviderPath = @"C:\MKL";
 
             MBE[0] = 0; MBE[1] = 0;
@@ -122,7 +122,7 @@ namespace FIM.Solver
             {
                 // formulation.
                 NumericalPerturbation.CalculateMinusR_Matrix(data, minusR);
-                NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, ref Jacobi);
+                NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, Jacobi);
                 //var test = Jacobi.Storage.Enumerate().ToList();
                 //var test2 = test.Where(x => x != 0);
                 //var test3 = test2.Where(x => x > -1E-7 && x < 1E-7);
@@ -186,6 +186,7 @@ namespace FIM.Solver
             UpdateProperties(data);
 
             return counter;
+
         }
 
         // contains the algorithms of updating properties, convergence checking, relaxation of deltas and time cut off.

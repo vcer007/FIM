@@ -240,5 +240,15 @@ namespace FIM.Core
             this.type = Global.BlockType.NormalBlock;
         }
 
+
+        public double GetPw(int P_time_level, int S_time_level)
+        {
+            return P[P_time_level] - Pcow[S_time_level];
+        }
+
+        public double GetPg(int P_time_level, int S_time_level)
+        {
+            return P[P_time_level] + Pcgo[S_time_level];
+        }
     }
 }

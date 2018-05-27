@@ -43,15 +43,6 @@ namespace FIM.Extensions
             // data.porosity_calculator
             block.porosity[time_level] = data.porosityCalculator.getPorosity(P);
 
-            // fluid
-            block.Bo[time_level] = data.pvt.GetFVF(Global.Phase.Oil, P);
-            block.Bw[time_level] = data.pvt.GetFVF(Global.Phase.Water, P);
-            block.Bg[time_level] = data.pvt.GetFVF(Global.Phase.Gas, P);
-
-            block.viscosityOil[time_level] = data.pvt.GetViscosity(Global.Phase.Oil, P);
-            block.viscosityWater[time_level] = data.pvt.GetViscosity(Global.Phase.Water, P);
-            block.viscosityGas[time_level] = data.pvt.GetViscosity(Global.Phase.Gas, P);
-
             var new_rs = data.pvt.GetRs(Global.Phase.Oil, P);
             block.Rso[time_level] = new_rs;
             //if (time_level == 2)
@@ -69,6 +60,19 @@ namespace FIM.Extensions
             block.So[time_level] = So;
             block.Sw[time_level] = Sw;
             block.Sg[time_level] = Sg;
+
+            // update capillary first
+            block.Pcgo[time_level] = data.pvt.GetGasCapillaryPressure(Sg);
+            //block.Pcow[time_level] = data.pvt.GetWaterCapillaryPressure(Sw);
+
+            // fluid
+            block.Bo[time_level] = data.pvt.GetFVF(Global.Phase.Oil, P);
+            block.Bw[time_level] = data.pvt.GetFVF(Global.Phase.Water, block.GetPw(time_level, time_level));
+            block.Bg[time_level] = data.pvt.GetFVF(Global.Phase.Gas, block.GetPg(time_level, time_level));
+
+            block.viscosityOil[time_level] = data.pvt.GetViscosity(Global.Phase.Oil, P);
+            block.viscosityWater[time_level] = data.pvt.GetViscosity(Global.Phase.Water, /*block.GetPw(time_level)*/P);
+            block.viscosityGas[time_level] = data.pvt.GetViscosity(Global.Phase.Gas, block.GetPg(time_level, time_level));
 
             //// Kro is only dependent on Sg.
             //block.Kro[time_level] = data.scal.GetKr(Global.Phase.Oil, Sg);
@@ -110,7 +114,7 @@ namespace FIM.Extensions
                 // So we can update three time levels storage "where the third one, n2, is used solely for perturbation".
                 if (data.solutionProcedure == Global.SolutionProcedure.FullyImplicit)
                 {
-                    block.UpdateProperties(data, P + Global.EPSILONP, Sw + Global.EPSILONS, Sg + Global.EPSILONS, So, 2);
+                    block.UpdateProperties(data, P + Global.EPSILON_P, Sw + Global.EPSILON_S, Sg + Global.EPSILON_S, So, 2);
                 }
             }
         }

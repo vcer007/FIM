@@ -85,8 +85,16 @@ namespace FIM.FluidData
         //Objectives: this is a private (internal method for the internal use of this class only) method that makes table lookup interpolation
         //Inputs: two variables representing the X and Y arrays "The two columns of the table" and the Y value
         //Outputs: a variable that represents the X value corresponding to the particular Y value
+        // this function assumes that array elements are sorted ascendingly
         private double LookUp(double[] data_y, double[] data_x, double y)
         {
+            double temp = data_x[data_x.Length - 1];
+
+            if (y > data_y[data_y.Length - 1])
+            {
+                return temp;
+            }
+
             double y1, y2, x1, x2, x = -1;
             for (int i = 0; i < data_y.Length; i++)
             {
@@ -106,7 +114,7 @@ namespace FIM.FluidData
                 }
             }
 
-            return data_x[data_x.Length - 1];
+            return temp;
         }
 
 
@@ -147,9 +155,6 @@ namespace FIM.FluidData
         {
             double[] Y, X;
             Y = kr_Data[0]; X = kr_Data[1];
-
-            Y = new double[] { 0, 0.02, 0.05, 0.12, 0.2, 0.25, 0.3, 0.4, 0.45, 0.5, 0.6, 0.7, 0.85, 1.0 };
-            X = new double[] { 0, 0, 0.005, 0.025, 0.075, 0.125, 0.19, 0.41, 0.6, 0.72, 0.87, 0.94, 0.98, 1 };
 
             double kr = LookUp(Y, X, saturation);
             return kr > 1 ? 1 : kr;

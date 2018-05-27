@@ -4,6 +4,7 @@ using MathNet.Numerics.LinearAlgebra.Double;
 using FIM.Mathematics;
 using MathNet.Numerics.LinearAlgebra.Storage;
 using System.Linq;
+using System.Threading.Tasks;
 
 /// <summary>
 /// The name space that organizes extension methods to <see cref="BaseBlock"/> specific to fully implicit simulation.
@@ -141,7 +142,7 @@ namespace FIM.Extensions.FullyImplicit
 
                     transmissibility = block.transmissibility_list[i];
 
-                    if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
+                    if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
                     {
                         upstream_block = block;
                         downstream_block = neighbor_block;
@@ -156,7 +157,7 @@ namespace FIM.Extensions.FullyImplicit
                     B = 0.5 * (block.Bg[1] + neighbor_block.Bg[1]);
                     viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
 
-                    temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1] - delta_z * gravity);
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity);
 
                     if (data.solubleGasPresent)
                     {
@@ -479,7 +480,7 @@ namespace FIM.Extensions.FullyImplicit
                         }
                         double delta_z = neighbor_block.Depth - block.Depth;
 
-                        if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
+                        if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
                         {
                             upstream_block = block;
                             downstream_block = neighbor_block;
@@ -498,7 +499,7 @@ namespace FIM.Extensions.FullyImplicit
                         viscosity = 0.5 * (block.viscosityGas[pd] + neighbor_block.viscosityGas[npd]);
                         transmissiblity = block.transmissibility_list[i];
 
-                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
+                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.GetPg(npd, nsgd) - block.GetPg(pd, sgd) - delta_z * gravity);
 
                         if (data.solubleGasPresent)
                         {
@@ -598,7 +599,7 @@ namespace FIM.Extensions.FullyImplicit
                     }
                     double delta_z = neighbor_block.Depth - block.Depth;
 
-                    if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
+                    if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
                     {
                         upstream_block = block;
                         downstream_block = neighbor_block;
@@ -617,7 +618,7 @@ namespace FIM.Extensions.FullyImplicit
                     viscosity = 0.5 * (block.viscosityGas[pd] + neighbor_block.viscosityGas[npd]);
                     transmissiblity = block.transmissibility_list[neighbour_block_index];
 
-                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
+                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.GetPg(npd, nsgd) - block.GetPg(pd, sgd) - delta_z * gravity);
 
                     if (data.solubleGasPresent)
                     {
@@ -728,7 +729,7 @@ namespace FIM.Extensions.FullyImplicit
                         }
                         double delta_z = neighbor_block.Depth - block.Depth;
 
-                        if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
+                        if (neighbor_block.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity <= 0)
                         {
                             upstream_block = block;
                             downstream_block = neighbor_block;
@@ -747,7 +748,7 @@ namespace FIM.Extensions.FullyImplicit
                         viscosity = 0.5 * (block.viscosityWater[pd] + neighbor_block.viscosityWater[npd]);
                         transmissiblity = block.transmissibility_list[i];
 
-                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
+                        transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.GetPw(npd, nswd) - block.GetPw(pd, swd) - delta_z * gravity);
 
                         transmissibility_term += transmissibility_temp;
                     }
@@ -762,11 +763,11 @@ namespace FIM.Extensions.FullyImplicit
 
                     if (GravityCalculation)
                     {
-                        gravity = 0.5 * (data.pvt.GetDensity(Global.Phase.Water, block.P[0]) + data.pvt.GetDensity(Global.Phase.Water, neighbor_block.P[0])) * Global.gamma_c * Global.alpha;
+                        gravity = 0.5 * (data.pvt.GetDensity(Global.Phase.Water, block.GetPw(0, 0)) + data.pvt.GetDensity(Global.Phase.Water, neighbor_block.GetPw(0, 0))) * Global.gamma_c * Global.alpha;
                     }
                     double delta_z = neighbor_block.Depth - block.Depth;
 
-                    if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
+                    if (neighbor_block.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity <= 0)
                     {
                         upstream_block = block;
                         downstream_block = neighbor_block;
@@ -785,7 +786,7 @@ namespace FIM.Extensions.FullyImplicit
                     viscosity = 0.5 * (block.viscosityWater[pd] + neighbor_block.viscosityWater[npd]);
                     transmissiblity = block.transmissibility_list[neighbour_block_index];
 
-                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
+                    transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.GetPw(npd, nswd) - block.GetPw(pd, swd) - delta_z * gravity);
 
                     transmissibility_term = transmissibility_temp;
                     for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
@@ -819,15 +820,16 @@ namespace FIM.Extensions.FullyImplicit
 
             BaseBlock block;
             int counter = 0;
+
             for (int i = 0; i < data.grid.Length; i++)
             {
                 block = data.grid[i];
 
+                counter = data.phases.Length * i;
+
                 minusR[counter] = -1 * block.CalculateR(data, Global.Phase.Oil);
                 minusR[counter + 1] = -1 * block.CalculateR(data, Global.Phase.Gas);
                 minusR[counter + 2] = -1 * block.CalculateR(data, Global.Phase.Water);
-
-                counter += data.phases.Length;
             }
         }
 
@@ -839,18 +841,18 @@ namespace FIM.Extensions.FullyImplicit
         /// <param name="Jacobi"></param>
         /// <seealso cref="Solver.FullyImplicitSolver"/>
         /// <seealso cref="WellTerms"/>
-        public static void CalculateJacobi_Matrix(SimulationData data, double[] minusR, ref MathNet.Numerics.LinearAlgebra.Double.SparseMatrix Jacobi)
+        public static void CalculateJacobi_Matrix(SimulationData data, double[] minusR, SparseMatrix Jacobi)
         {
 
-            Jacobi.Clear();
+            //Jacobi.Clear();
 
             BaseBlock block;
-            int total = 0;
 
-            int counter = 0;
             for (int i = 0; i < data.grid.Length; i++)
             {
                 block = data.grid[i];
+
+                int counter = data.phases.Length * i;
 
                 #region Oil
 
@@ -860,43 +862,37 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         int place = j >= 0 ? data.phases.Length * block.neighborBlocksIndices[j] : data.phases.Length * block.index;
                         // with respect to P
-                        var temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILONP;
+                        var temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.Pressure) + minusR[counter]) / Global.EPSILON_P;
                         Jacobi[counter, place] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
 
                         // with respect to Sg
-                        temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILONS;
+                        temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON_S;
                         Jacobi[counter, place + 1] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
 
                         // with respect to Sw
-                        temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILONS;
+                        temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationWater) + minusR[counter]) / Global.EPSILON_S;
                         Jacobi[counter, place + 2] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
                     }
                 }
                 #endregion
                 #region Gas
-                
+
                 for (int j = -1; j < block.neighborBlocksIndices.Length; j++)
                 {
                     if (j == -1 || block.neighborBlocksIndices[j] >= 0)
                     {
                         int place = j >= 0 ? data.phases.Length * block.neighborBlocksIndices[j] : data.phases.Length * block.index;
                         // with respect to P
-                        var temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILONP;
+                        var temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.Pressure) + minusR[counter + 1]) / Global.EPSILON_P;
                         Jacobi[counter + 1, place] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
 
                         // with respect to Sg
-                        temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILONS;
+                        temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON_S;
                         Jacobi[counter + 1, place + 1] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
 
                         // with respect to Sw
-                        temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILONS;
+                        temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationWater) + minusR[counter + 1]) / Global.EPSILON_S;
                         Jacobi[counter + 1, place + 2] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
                     }
                 }
                 #endregion
@@ -908,24 +904,19 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         int place = j >= 0 ? data.phases.Length * block.neighborBlocksIndices[j] : data.phases.Length * block.index;
                         // with respect to P
-                        var temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILONP;
+                        var temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.Pressure) + minusR[counter + 2]) / Global.EPSILON_P;
                         Jacobi[counter + 2, place] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
 
                         // with respect to Sg
-                        temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILONS;
+                        temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON_S;
                         Jacobi[counter + 2, place + 1] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
 
                         // with respect to Sw
-                        temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILONS;
+                        temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationWater) + minusR[counter + 2]) / Global.EPSILON_S;
                         Jacobi[counter + 2, place + 2] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
-                        total++;
                     }
                 }
                 #endregion
-
-                counter += data.phases.Length;
             }
         }
 
