@@ -291,17 +291,17 @@ namespace FIM.Well
                     dq_water_dP = (CalculateFlowRate(block.GetPw(2, 1), temp, block.Krw[1], block.viscosityWater[2], WI, block.Bw[2]) - q_water[1]) / Global.EPSILON_P;
                     // with respect to Sg
                     dq_oil_dSg = 0;
-                    temp = CalculatePwf(block.P[1], this.data.scal.GetKro(block.Sg[2], block.Sw[1], 0.12), block.viscosityOil[1], block.Bo[1]);
+                    temp = CalculatePwf(block.P[1], this.data.scal.GetKro(block.Sg[2], block.Sw[1], data.pvt.connateWaterSaturation), block.viscosityOil[1], block.Bo[1]);
                     dq_free_gas_dSg = (CalculateFlowRate(block.GetPg(1, 1), temp, block.Krg[2], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON_S;
                     //dq_solution_gas_dSg = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILONS;
-                    dq_solution_gas_dSg = (block.Rso[1] * /*q_oil[1]*/CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[2], block.Sw[1], 0.12), block.viscosityOil[1], WI, block.Bo[1]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
+                    dq_solution_gas_dSg = (block.Rso[1] * /*q_oil[1]*/CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[2], block.Sw[1], data.pvt.connateWaterSaturation), block.viscosityOil[1], WI, block.Bo[1]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
                     dq_water_dSg = (CalculateFlowRate(block.GetPw(1, 1), temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON_S;
                     // with respect to Sw
                     dq_oil_dSw = 0;
-                    temp = CalculatePwf(block.P[1], this.data.scal.GetKro(block.Sg[1], block.Sw[2], 0.12), block.viscosityOil[1], block.Bo[1]);
+                    temp = CalculatePwf(block.P[1], this.data.scal.GetKro(block.Sg[1], block.Sw[2], data.pvt.connateWaterSaturation), block.viscosityOil[1], block.Bo[1]);
                     dq_free_gas_dSw = (CalculateFlowRate(block.GetPg(1, 1), temp, block.Krg[1], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON_S;
                     //dq_solution_gas_dSw = (block.Rso[1] * q_oil[1] - block.Rso[1] * q_oil[1]) / Global.EPSILONS;
-                    dq_solution_gas_dSw = (block.Rso[1] * /*q_oil[1]*/CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[1], block.Sw[2], 0.12), block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
+                    dq_solution_gas_dSw = (block.Rso[1] * /*q_oil[1]*/CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[1], block.Sw[2], data.pvt.connateWaterSaturation), block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
                     dq_water_dSw = (CalculateFlowRate(block.GetPw(1, 1), temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON_S;
                 }
                 else if (type == Global.WellType.Injection)
@@ -439,14 +439,14 @@ namespace FIM.Well
                     dq_solution_gas_dP = (block.Rso[2] * CalculateFlowRate(block.P[2], temp, block.Kro[1], block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_P;
                     dq_water_dP = (CalculateFlowRate(block.GetPw(2, 1), temp, block.Krw[1], block.viscosityWater[2], WI, block.Bw[2]) - q_water[1]) / Global.EPSILON_P;
                     // with respect to Sg
-                    dq_oil_dSg = (CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[2], block.Sw[1], 0.12), block.viscosityOil[1], WI, block.Bo[1]) - q_oil[1]) / Global.EPSILON_S;
+                    dq_oil_dSg = (CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[2], block.Sw[1], data.pvt.connateWaterSaturation), block.viscosityOil[1], WI, block.Bo[1]) - q_oil[1]) / Global.EPSILON_S;
                     dq_free_gas_dSg = (CalculateFlowRate(block.GetPg(1, 1), temp, block.Krg[2], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON_S;
-                    dq_solution_gas_dSg = (block.Rso[1] * CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[2], block.Sw[1], 0.12), block.viscosityOil[1], WI, block.Bo[1]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
+                    dq_solution_gas_dSg = (block.Rso[1] * CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[2], block.Sw[1], data.pvt.connateWaterSaturation), block.viscosityOil[1], WI, block.Bo[1]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
                     dq_water_dSg = (CalculateFlowRate(block.GetPw(1, 1), temp, block.Krw[1], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON_S;
                     // with respect to Sw
-                    dq_oil_dSw = (CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[1], block.Sw[2], 0.12), block.viscosityOil[1], WI, block.Bo[1]) - q_oil[1]) / Global.EPSILON_S;
+                    dq_oil_dSw = (CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[1], block.Sw[2], data.pvt.connateWaterSaturation), block.viscosityOil[1], WI, block.Bo[1]) - q_oil[1]) / Global.EPSILON_S;
                     dq_free_gas_dSw = (CalculateFlowRate(block.GetPg(1, 1), temp, block.Krg[1], block.viscosityGas[1], WI, block.Bg[1]) - q_free_gas[1]) / Global.EPSILON_S;
-                    dq_solution_gas_dSw = (block.Rso[1] * CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[1], block.Sw[2], 0.12), block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
+                    dq_solution_gas_dSw = (block.Rso[1] * CalculateFlowRate(block.P[1], temp, this.data.scal.GetKro(block.Sg[1], block.Sw[2], data.pvt.connateWaterSaturation), block.viscosityOil[2], WI, block.Bo[2]) - block.Rso[1] * q_oil[1]) / Global.EPSILON_S;
                     dq_water_dSw = (CalculateFlowRate(block.GetPw(1, 1), temp, block.Krw[2], block.viscosityWater[1], WI, block.Bw[1]) - q_water[1]) / Global.EPSILON_S;
                 }
                 else if (type == Global.WellType.Injection)

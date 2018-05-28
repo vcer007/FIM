@@ -62,8 +62,8 @@ namespace FIM.Extensions
             block.Sg[time_level] = Sg;
 
             // update capillary first
-            block.Pcgo[time_level] = data.pvt.GetGasCapillaryPressure(Sg);
-            //block.Pcow[time_level] = data.pvt.GetWaterCapillaryPressure(Sw);
+            block.Pcgo[time_level] = data.scal.GetGasCapillaryPressure(Sg);
+            block.Pcow[time_level] = data.scal.GetWaterCapillaryPressure(Sw);
 
             // fluid
             block.Bo[time_level] = data.pvt.GetFVF(Global.Phase.Oil, P);
@@ -81,7 +81,7 @@ namespace FIM.Extensions
             //block.Krg[time_level] = data.scal.GetKr(Global.Phase.Gas, Sg);
 
             // Kro is only dependent on Sg.
-            block.Kro[time_level] = data.scal.GetKro(Sg, Sw, 0.12);
+            block.Kro[time_level] = data.scal.GetKro(Sg, Sw, data.pvt.connateWaterSaturation);
             // Krw is dependent on sw
             block.Krw[time_level] = data.scal.GetKrw(Sw);
             block.Krg[time_level] = data.scal.GetKrg(Sg);

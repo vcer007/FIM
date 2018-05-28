@@ -51,7 +51,7 @@ namespace FIM.Parser
         static SCAL scal = new SCAL();
         static Output output = new Output();
 
-        static double So, Sw, Sg, P;
+        static double So, Sw, Sg, P, Swc;
 
         /// <summary>
         /// Reads the input files from the specified paths.
@@ -69,6 +69,13 @@ namespace FIM.Parser
             // internal variable to store the file's lines as a list.
             List<string> lines;
 
+            #region Initialization File
+
+            lines = Helper.ReadFile(initializationFilePath);
+
+            InitializationFile(lines);
+
+            #endregion
 
             #region Data File
 
@@ -100,26 +107,6 @@ namespace FIM.Parser
             {
                 data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 0);
             }
-
-            #endregion
-
-            #region Initialization File
-
-            lines = Helper.ReadFile(initializationFilePath);
-
-            InitializationFile(lines);
-
-            //data.timeStepSlashingFactor = 0.5;
-            //data.originalRelaxationFactor = 1;
-            //data.minimumRelaxation = 0.5;
-            //data.relaxationFactorIncrement = -0.1;
-            //data.maximumNonLinearIterations = 25;
-            //data.maximumConvergenceErrorRatio = 0.5;
-            //data.MBE_Tolerance = 1;
-
-            //data.relaxationFactor = data.originalRelaxationFactor;
-            //data.endingTime = 10 * 365;
-            //data.originalTimeStep = 1;
 
             #endregion
 
@@ -231,10 +218,12 @@ namespace FIM.Parser
 
         private static void InitializePROPS(List<string> section, PVT pvt, SCAL scal, PorosityCalculator porosityCalculator)
         {
+
+            var PROPS_KEYWORDS = new string[] { "SWFN", "SGFN", "SOF3", "ROCK", "DENSITY", "SO", "SG", "SW", "PRESSURE", "BUBBLEPOINT", "SWC", "PVTO", "PVTW", "PVTG", "SCAL"};
+
             double bubble_point;
-            double[][] oil, oil_us, water, water_us, gas;
-            oil = new double[5][]; oil_us = new double[5][]; water = new double[5][]; water_us = new double[5][]; gas = new double[4][];
-            double[][] Kr_data = new double[4][];
+            double[][] oil, oil_us, gas;
+            oil = new double[4][]; oil_us = new double[4][]; gas = new double[4][];
 
 
             // rock reference pressure and compressibility
@@ -242,59 +231,181 @@ namespace FIM.Parser
             porosityCalculator.pressure_ref = rock[0];
             porosityCalculator.Cf = rock[1];
 
+            double[] densities = Helper.GetData("DENSITY", section, 3);
+
             So = Helper.GetData("SO", section, 1)[0];
             Sg = Helper.GetData("SG", section, 1)[0];
             Sw = Helper.GetData("SW", section, 1)[0];
             P = Helper.GetData("PRESSURE", section, 1)[0];
+            Swc = Helper.GetData("SWC", section, 1)[0];
 
             bubble_point = Helper.GetData("BUBBLEPOINT", section, 1)[0];
 
-            int index = section.FindIndex(x => x.Contains("PVTO"));
-            oil[0] = Helper.GetData(section[index + 1]);
-            oil[1] = Helper.GetData(section[index + 2]);
-            oil[2] = Helper.GetData(section[index + 3]);
-            oil[3] = Helper.GetData(section[index + 4]);
-            oil[4] = Helper.GetData(section[index + 5]);
+            int index_pvto = section.FindIndex(x => x.Contains("PVTO"));
+            int index_pvtg = section.FindIndex(x => x.Contains("PVTG"));
+            int index_scal = section.FindIndex(x => x.Contains("SCAL"));
 
-            oil_us[0] = Helper.GetData(section[index + 6]);
-            oil_us[1] = Helper.GetData(section[index + 7]);
-            oil_us[2] = Helper.GetData(section[index + 8]);
-            oil_us[3] = Helper.GetData(section[index + 9]);
-            oil_us[4] = Helper.GetData(section[index + 10]);
+            int end_index = section.FindIndex(index_pvto + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
+            end_index = end_index < 0 ? section.Count : end_index;
+            GetPVTO(oil, oil_us, section,index_pvto + 1, end_index);
 
-            index = section.FindIndex(x => x.Contains("PVTW"));
+            double[] water = Helper.GetData("PVTW", section, 5);
 
-            water[0] = Helper.GetData(section[index + 1]);
-            water[1] = Helper.GetData(section[index + 2]);
-            water[2] = Helper.GetData(section[index + 3]);
-            water[3] = Helper.GetData(section[index + 4]);
-            water[4] = Helper.GetData(section[index + 5]);
+            end_index = section.FindIndex(index_pvtg + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
+            end_index = end_index < 0 ? section.Count : end_index;
+            GetPVTG(gas, section, index_pvtg + 1, end_index);
 
-            water_us[0] = Helper.GetData(section[index + 6]);
-            water_us[1] = Helper.GetData(section[index + 7]);
-            water_us[2] = Helper.GetData(section[index + 8]);
-            water_us[3] = Helper.GetData(section[index + 9]);
-            water_us[4] = Helper.GetData(section[index + 10]);
+            int index_sgfn = section.FindIndex(x => x.Contains("SGFN"));
+            end_index = section.FindIndex(index_sgfn + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
+            end_index = end_index < 0 ? section.Count : end_index;
+            double[][] sgfn = new double[3][];
+            GetSGFN(sgfn, section, index_sgfn + 1, end_index);
 
+            int index_swfn = section.FindIndex(x => x.Contains("SWFN"));
+            end_index = section.FindIndex(index_swfn + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
+            end_index = end_index < 0 ? section.Count : end_index;
+            double[][] swfn = new double[3][];
+            GetSWFN(swfn, section, index_swfn + 1, end_index);
 
-            index = section.FindIndex(x => x.Contains("PVDG"));
-
-            gas[0] = Helper.GetData(section[index + 1]);
-            gas[1] = Helper.GetData(section[index + 2]);
-            gas[2] = Helper.GetData(section[index + 3]);
-            gas[3] = Helper.GetData(section[index + 4]);
+            int index_sof3 = section.FindIndex(x => x.Contains("SOF3"));
+            end_index = section.FindIndex(index_sof3 + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
+            end_index = end_index < 0 ? section.Count : end_index;
+            double[][] sof3 = new double[3][];
+            GetSOF3(sof3, section, index_sof3 + 1, end_index);
 
 
-            index = section.FindIndex(x => x.Contains("SCAL"));
+            pvt.Initialize(oil, oil_us, water, gas, bubble_point, densities, Swc);
+            scal.Initialize(sgfn, swfn, sof3);
 
-            Kr_data[0] = Helper.GetData(section[index + 1]);
-            Kr_data[1] = Helper.GetData(section[index + 2]);
-            Kr_data[2] = Helper.GetData(section[index + 3]);
-            Kr_data[3] = Helper.GetData(section[index + 4]);
+        }
 
-            pvt.Initialize(oil, oil_us, water, water_us, gas, bubble_point);
-            scal.Initialize(Kr_data);
+        private static void GetSOF3(double[][] sof3, List<string> section, int index_start, int index_end)
+        {
+            int count = index_end - index_start;
+            sof3[0] = new double[count];
+            sof3[1] = new double[count];
+            sof3[2] = new double[count];
 
+            for (int i = 0; i < count; i++)
+            {
+                var temp = Helper.GetData(section[i + index_start]);
+
+                sof3[0][i] = temp[0]; // So
+                sof3[1][i] = temp[1]; // Krow
+                sof3[2][i] = temp[2]; // Krog
+            }
+        }
+
+        private static void GetSWFN(double[][] swfn, List<string> section, int index_start, int index_end)
+        {
+            int count = index_end - index_start;
+            swfn[0] = new double[count];
+            swfn[1] = new double[count];
+            swfn[2] = new double[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var temp = Helper.GetData(section[i + index_start]);
+
+                swfn[0][i] = temp[0]; // Sw
+                swfn[1][i] = temp[1]; // Krw
+                swfn[2][i] = temp[2]; // PCOW
+            }
+        }
+
+        private static void GetSGFN(double[][] sgfn, List<string> section, int index_start, int index_end)
+        {
+            int count = index_end - index_start;
+            sgfn[0] = new double[count];
+            sgfn[1] = new double[count];
+            sgfn[2] = new double[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var temp = Helper.GetData(section[i + index_start]);
+
+                sgfn[0][i] = temp[0]; // Sg
+                sgfn[1][i] = temp[1]; // Krg
+                sgfn[2][i] = temp[2]; // PCOG
+            }
+        }
+
+        private static void GetPVTG(double[][] gas, List<string> section, int index_start, int index_end)
+        {
+            int count = index_end - index_start;
+            gas[0] = new double[count];
+            gas[1] = new double[count];
+            gas[2] = new double[count];
+            gas[3] = new double[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var temp = Helper.GetData(section[i + index_start]);
+
+                gas[0][i] = temp[0]; // pressure
+                gas[3][i] = temp[1]; // Rv
+                gas[1][i] = temp[2]; // FVF
+                gas[2][i] = temp[3]; // Viscosity
+            }
+        }
+
+        private static void GetPVTO(double[][] oil, double[][] oil_us, List<string> section, int start_index, int end_index)
+        {
+            int highest_rs_index = 0;
+            int counter = 0;
+
+            var temp_array = new double[end_index - start_index][];
+            for (int i = 0; i < temp_array.Length; i++)
+            {
+                temp_array[i] = Helper.GetData(section[i + start_index]);
+            }
+
+            int saturated_count = temp_array.Count(x => x.Length == 4);
+            int under_saturated_count = temp_array.Length - saturated_count + 1;
+
+            oil[0] = new double[saturated_count];
+            oil[1] = new double[saturated_count];
+            oil[2] = new double[saturated_count];
+            oil[3] = new double[saturated_count];
+
+            oil_us[0] = new double[under_saturated_count];
+            oil_us[1] = new double[under_saturated_count];
+            oil_us[2] = new double[under_saturated_count];
+            oil_us[3] = new double[under_saturated_count];
+
+            for (int i = 0; i < temp_array.Length; i++)
+            {
+                var temp = temp_array[i];
+
+                if (temp.Length == 3)
+                {
+                    if (highest_rs_index == 0)
+                    {
+                        highest_rs_index = counter - 1;
+                        counter = 0;
+
+                        oil_us[0][counter] = oil[0][highest_rs_index];
+                        oil_us[1][counter] = oil[1][highest_rs_index];
+                        oil_us[2][counter] = oil[2][highest_rs_index];
+                        oil_us[3][counter] = oil[3][highest_rs_index];
+                        counter++;
+                    }
+
+                    oil_us[0][counter] = temp[0];
+                    oil_us[1][counter] = temp[1];
+                    oil_us[2][counter] = temp[2];
+                    oil_us[3][counter] = oil[3][highest_rs_index];
+                }
+                else // 4 columns
+                {
+                    oil[0][counter] = temp[1];
+                    oil[1][counter] = temp[2];
+                    oil[2][counter] = temp[3];
+                    oil[3][counter] = temp[0];
+                }
+
+                counter++;
+            }
         }
 
         private static void InitializeSOLUTION(List<string> section)
@@ -471,6 +582,9 @@ namespace FIM.Parser
             data.MBE_Tolerance = Helper.GetData("MAXMBE", lines, 1)[0];
             Global.padding = (int)Helper.GetData("PADDING", lines, 1)[0];
             Global.decimalPlaces = "#0." + new string('0', (int)Helper.GetData("DECIPLCS", lines, 1)[0]);
+            Global.EPSILON_P = Helper.GetData("EPSILON_P", lines, 1)[0];
+            Global.EPSILON_S = Helper.GetData("EPSILON_S", lines, 1)[0];
+            Global.MINIMUM = Helper.GetData("DERIVATIVE_MINIMUM", lines, 1)[0];
         }
 
 

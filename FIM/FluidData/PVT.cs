@@ -18,10 +18,14 @@ namespace FIM.FluidData
         /// <summary>
         /// The bubble point pressure.
         /// </summary>
-        public double bubblePointPressure;
+        public double bubblePointPressure, connateWaterSaturation;
+
+        private double[] surfaceDensities, waterData;
 
         // these arrays are used to store the input PVT data.
-        private double[][] oilData, oilUnderSaturatedData, waterData, waterUnderSaturatedData, gasData;
+        private double[][] oilData, oilUnderSaturatedData, gasData;
+
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PVT"/> class.
@@ -35,13 +39,12 @@ namespace FIM.FluidData
         /// <param name="waterUnderSaturatedData">The undersaturated water data.</param>
         /// <param name="gasData">The gas data.</param>
         /// <param name="bubblePointPressure">The bubble point pressure.</param>
-        public PVT(double[][] oilData, double[][] oilUnderSaturatedData, double[][] waterData, double[][] waterUnderSaturatedData, double[][] gasData, double bubblePointPressure)
+        public PVT(double[][] oilData, double[][] oilUnderSaturatedData, double[] waterData, double[][] waterUnderSaturatedData, double[][] gasData, double bubblePointPressure)
         {
             this.oilData = oilData;
             this.oilUnderSaturatedData = oilUnderSaturatedData;
 
             this.waterData = waterData;
-            this.waterUnderSaturatedData = waterUnderSaturatedData;
 
             this.gasData = gasData;
 
@@ -74,17 +77,20 @@ namespace FIM.FluidData
         /// <param name="waterUnderSaturatedData">The water under saturated data.</param>
         /// <param name="gasData">The gas data.</param>
         /// <param name="bubblePointPressure">The bubble point pressure.</param>
-        public void Initialize(double[][] oilData = null, double[][] oilUnderSaturatedData = null, double[][] waterData = null, double[][] waterUnderSaturatedData = null, double[][] gasData = null, double bubblePointPressure = 14.7)
+        public void Initialize(double[][] oilData = null, double[][] oilUnderSaturatedData = null, double[] waterData = null, double[][] gasData = null, double bubblePointPressure = 14.7, double[] surfaceDensities = null, double Swc = 0.12)
         {
             this.oilData = oilData;
             this.oilUnderSaturatedData = oilUnderSaturatedData;
 
             this.waterData = waterData;
-            this.waterUnderSaturatedData = waterUnderSaturatedData;
 
             this.gasData = gasData;
 
             this.bubblePointPressure = bubblePointPressure;
+
+            this.surfaceDensities = surfaceDensities;
+
+            this.connateWaterSaturation = Swc;
         }
 
         // The publicly accessible methods.
@@ -105,7 +111,7 @@ namespace FIM.FluidData
                 case Global.Phase.Oil:
                     return GetOilFVF(pressure);
                 case Global.Phase.Gas:
-                    return GetGasFVF(pressure) * Global.a;
+                    return GetGasFVF(pressure) * Global.a / 1000;
                 default:
                     return 1;
             }
@@ -140,38 +146,20 @@ namespace FIM.FluidData
         /// <param name="pressure">The pressure.</param>
         /// <returns>The value of density</returns>
         /// <seealso cref="Global.Phase"/>
-        public double GetDensity(Global.Phase phase, double pressure)
-        {
-            switch (phase)
-            {
-                case Global.Phase.Water:
-                    return GetWaterDensity(pressure);
-                case Global.Phase.Oil:
-                    return GetOilDensity(pressure);
-                case Global.Phase.Gas:
-                    return GetGasDensity(pressure);
-                default:
-                    return 1;
-            }
-        }
-
-        public double GetWaterCapillaryPressure(double saturation)
-        {
-            double[] Y = new double[] { 0.11, 0.12, 0.3, 0.4, 0.5, 0.6, 0.8, 0.9, 1};
-            double[] X = new double[] { 20, 7, 4, 3, 2.8, 2.6, 2.2, 1, 0};
-
-            double Pc = LookUp(Y, X, saturation);
-            return Pc;
-        }
-
-        public double GetGasCapillaryPressure(double saturation)
-        {
-            double[] Y = new double[] { 0, 0.001, 0.02, 0.05, 0.12, 0.2, 0.25, 0.3, 0.4, 0.45, 0.5, 0.6, 0.7, 0.85, 1 };
-            double[] X = new double[] { 0, 2, 5, 10, 12.5, 15, 17.5, 20, 22.5, 25, 27.5, 30, 40, 60, 100};
-
-            double Pc = LookUp(Y, X, saturation);
-            return Pc;
-        }
+        //public double GetDensity(Global.Phase phase, double pressure)
+        //{
+        //    switch (phase)
+        //    {
+        //        case Global.Phase.Water:
+        //            return GetWaterDensity(pressure);
+        //        case Global.Phase.Oil:
+        //            return GetOilDensity(pressure);
+        //        case Global.Phase.Gas:
+        //            return GetGasDensity(pressure);
+        //        default:
+        //            return 1;
+        //    }
+        //}
 
         /// <summary>
         /// Gets the solution Gas/Oil ratio.
@@ -186,7 +174,7 @@ namespace FIM.FluidData
                 case Global.Phase.Water:
                     return GetRsw(pressure);
                 case Global.Phase.Oil:
-                    return GetRso(pressure) / Global.a;
+                    return GetRso(pressure) / Global.a * 1000;
                 case Global.Phase.Gas:
                     return 1;
                 default:
@@ -261,23 +249,12 @@ namespace FIM.FluidData
                 return LookUp(Y, X, pressure);
             }
 
-            //return -2E-08 * Math.Pow(pressure, 2) + 0.0002 * pressure + 1.0803;
-
         }
         private double GetWaterFVF(double pressure)
         {
-            double[] Y, X;
-
-            if (pressure > bubblePointPressure)
-            {
-                Y = waterUnderSaturatedData[0]; X = waterUnderSaturatedData[1];
-                return Extrapolate(Y, X, pressure);
-            }
-            else
-            {
-                Y = waterData[0]; X = waterData[1];
-                return LookUp(Y, X, pressure);
-            }
+            double deltaP = pressure - waterData[0];
+            double Bw = (2 * waterData[1] - waterData[2] * deltaP * waterData[1]) / (waterData[2] * deltaP + 2);
+            return Bw;
         }
         private double GetGasFVF(double pressure)
         {
@@ -306,19 +283,13 @@ namespace FIM.FluidData
         }
         private double GetWaterViscosity(double pressure)
         {
-            double[] Y, X;
-
-            if (pressure > bubblePointPressure)
+            if (waterData[4] == 0)
             {
-                Y = waterUnderSaturatedData[0]; X = waterUnderSaturatedData[2];
-                return Extrapolate(Y, X, pressure);
-                //return lookUp(Y, X, pressure);
-
+                return waterData[3];
             }
             else
             {
-                Y = waterData[0]; X = waterData[2];
-                return LookUp(Y, X, pressure);
+                throw new NotImplementedException();
             }
         }
         private double GetGasViscosity(double pressure)
@@ -331,47 +302,20 @@ namespace FIM.FluidData
             return pressure <= gasData[0].Last() ? FVF : Extrapolate(Y, X, pressure);
         }
 
-        private double GetOilDensity(double pressure)
+        public double GetOilDensity(double pressure, double oil_fvf, double Rs)
         {
-            double[] Y, X;
-
-            if (pressure > bubblePointPressure)
-            {
-                Y = oilUnderSaturatedData[0]; X = oilUnderSaturatedData[3];
-                return Extrapolate(Y, X, pressure);
-            }
-            else
-            {
-                Y = oilData[0]; X = oilData[3];
-                return LookUp(Y, X, pressure);
-            }
-
+            double density = (surfaceDensities[0] + surfaceDensities[2] * Rs) / oil_fvf;
+            return density;
         }
-        private double GetWaterDensity(double pressure)
+        public double GetWaterDensity(double pressure, double fvf)
         {
-            double[] Y, X;
-
-            if (pressure > bubblePointPressure)
-            {
-                Y = waterUnderSaturatedData[0]; X = waterUnderSaturatedData[3];
-                return Extrapolate(Y, X, pressure);
-            }
-            else
-            {
-                Y = waterData[0]; X = waterData[3];
-                return LookUp(Y, X, pressure);
-            }
+            double density = surfaceDensities[1] / fvf;
+            return density;
         }
-        private double GetGasDensity(double pressure)
+        public double GetGasDensity(double pressure, double fvf)
         {
-            double[] Y, X;
-            Y = gasData[0]; X = gasData[3];
-
-            double Density = LookUp(Y, X, pressure);
-
-            double last = gasData[0][gasData[0].Length - 1];
-
-            return pressure <= last ? Density : Extrapolate(Y, X, pressure);
+            double density = surfaceDensities[2] / fvf;
+            return density;
         }
 
         private double GetRso(double pressure)
@@ -380,32 +324,20 @@ namespace FIM.FluidData
 
             if (pressure > bubblePointPressure)
             {
-                var temp = oilUnderSaturatedData[4][0];
+                var temp = oilUnderSaturatedData[3][0];
                 return temp;
             }
             else
             {
-                Y = oilData[0]; X = oilData[4];
+                Y = oilData[0]; X = oilData[3];
                 var temp = LookUp(Y, X, pressure);
                 return temp;
             }
 
-            //return 3E-09 * Math.Pow(pressure, 3) - 7E-05 * Math.Pow(pressure, 2) + 0.5573 * pressure - 179.85;
-
         }
         private double GetRsw(double pressure)
         {
-            double[] Y, X;
-
-            if (pressure > bubblePointPressure)
-            {
-                return waterUnderSaturatedData[4][0];
-            }
-            else
-            {
-                Y = waterData[0]; X = waterData[4];
-                return LookUp(Y, X, pressure);
-            }
+            return 0;
         }
 
 
@@ -460,5 +392,19 @@ namespace FIM.FluidData
             return 0.27 * Pr / (density_reduced * Tr);
         }
 
+        public double GetAverageOilGravity(BaseBlock block, BaseBlock neighbor)
+        {
+            return 0.5 * (GetOilDensity(block.P[0], block.Bo[0], block.Rso[0]) + GetOilDensity(neighbor.P[0], neighbor.Bo[0], neighbor.Rso[0])) * Global.gamma_c * Global.alpha;
+        }
+
+        public double GetAverageGasGravity(BaseBlock block, BaseBlock neighbor)
+        {
+            return 0.5 * (GetGasDensity(block.P[0], block.Bg[0]) + GetGasDensity(neighbor.P[0], neighbor.Bg[0])) * Global.gamma_c * Global.alpha;
+        }
+
+        public double GetAverageWaterGravity(BaseBlock block, BaseBlock neighbor)
+        {
+            return 0.5 * (GetWaterDensity(block.P[0], block.Bw[0]) + GetWaterDensity(neighbor.P[0], neighbor.Bw[0])) * Global.gamma_c * Global.alpha;
+        }
     }
 }

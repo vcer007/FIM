@@ -1,4 +1,5 @@
-﻿using FIM.Core;
+﻿using System;
+using FIM.Core;
 
 namespace FIM.FluidData
 {
@@ -15,6 +16,9 @@ namespace FIM.FluidData
     {
         // this array is used to store the input relative permeability data.
         private double[][] kr_Data;
+        private double[][] sgfn;
+        private double[][] swfn;
+        private double[][] sof3;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SCAL"/> class.
@@ -123,29 +127,13 @@ namespace FIM.FluidData
         //Inputs: a variable representing the value of the saturation
         //Outputs: the corresponding Kr value
 
-
-        //public double GetKro(double sg, double sw, double swco)
-        //{
-        //    double[] Y, X;
-        //    Y = kr_Data[0]; X = kr_Data[2];
-
-        //    return LookUp(Y, X, sg);
-        //}
-
         public double GetKro(double sg, double sw, double swco)
         {
-            double[] Y, X;
-            Y = kr_Data[0]; X = kr_Data[2];
-
-            Y = new double[] { 0, 0.18, 0.28, 0.38, 0.43, 0.48, 0.58, 0.63, 0.68, 0.76, 0.83, 0.86, 0.879, 0.88 };
-            X = new double[] { 0, 0, 0.0001, 0.001, 0.01, 0.021, 0.09, 0.2, 0.35, 0.7, 0.98, 0.997, 1, 1 };
-
             double so = 1 - sg - sw;
             so = so < 0 ? 0 : so;
-            double krog = LookUp(Y, X, so);
-            double krow = LookUp(Y, X, so);
+            double krog = LookUp(sof3[0], sof3[2], so);
+            double krow = LookUp(sof3[0], sof3[1], so);
 
-            //return LookUp(Y, X, saturation);
             double temp = (sg + sw - swco);
             double kro = temp == 0 ? 1 : (sg * krog + (sw - swco) * krow) / temp;
             return kro > 1 ? 1 : kro;
@@ -153,25 +141,37 @@ namespace FIM.FluidData
 
         public double GetKrg(double saturation)
         {
-            double[] Y, X;
-            Y = kr_Data[0]; X = kr_Data[1];
-
-            double kr = LookUp(Y, X, saturation);
+            double kr = LookUp(sgfn[0], sgfn[1], saturation);
             return kr > 1 ? 1 : kr;
         }
 
         public double GetKrw(double saturation)
         {
-
-            double[] Y, X;
-            //Y = kr_Data[0]; X = kr_Data[3];
-
-            Y = new double[] {0, 0.12, 1};
-            X = new double[] {0, 0, 0.00001/*1*/ };
-
-            double kr = LookUp(Y, X, saturation);
             return 0;
-            //return kr > 1 ? 1 : kr;
+            double kr = LookUp(swfn[0], swfn[1], saturation);
+            return kr > 1 ? 1 : kr;
+        }
+
+        public double GetWaterCapillaryPressure(double saturation)
+        {
+            if (saturation < swfn[0][0])
+            {
+                return swfn[2][0];
+            }
+
+            return LookUp(this.swfn[0]/*water saturation*/, this.swfn[2]/*capillary*/, saturation);
+        }
+
+        public double GetGasCapillaryPressure(double saturation)
+        {
+            return LookUp(this.sgfn[0]/*water saturation*/, this.sgfn[2]/*capillary*/, saturation);
+        }
+
+        internal void Initialize(double[][] sgfn, double[][] swfn, double[][] sof3)
+        {
+            this.sgfn = sgfn;
+            this.swfn = swfn;
+            this.sof3 = sof3;
         }
     }
 }

@@ -72,7 +72,6 @@
     <Compile Include="Mathematics\FIMSparseMatrix.cs" />
     <Compile Include="Mathematics\VectorOperations.cs" />
     <Compile Include="Misc\Rectangular.cs" />
-    <Compile Include="Misc\TestFluidData.cs" />
     <Compile Include="Parser\Eclipse.cs" />
     <Compile Include="Parser\Helper.cs" />
     <Compile Include="Program.cs" />

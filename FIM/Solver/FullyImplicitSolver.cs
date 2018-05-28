@@ -52,14 +52,6 @@ namespace FIM.Solver
             // size of the model grid.
             int size = data.grid.Length * data.phases.Length;
 
-            //data.grid[1].UpdateProperties(data, data.grid[1].P[0], 0.12, 0.1, 0.78, 0);
-            //data.grid[0].UpdateProperties(data, data.grid[1].P[0], 0.12, 0, 0.88, 0);
-            // initialize the initial Jacobi matrix.
-            //double[][] jacobian = new double[size][];
-            //for (int i = 0; i < jacobian.Length; i++)
-            //{
-            //    jacobian[i] = new double[size];
-            //}
             var jacobi = new MathNet.Numerics.LinearAlgebra.Double.SparseMatrix(size, size);
 
             //MathNetSparseMatrixInitializer.Initialize(data);
@@ -266,6 +258,7 @@ namespace FIM.Solver
                 temp = data.grid[i].Sw[1] + delta[counter + 2];
                 Sw = temp > 0 && temp < 1 ? temp : data.grid[i].Sw[1];
                 Sw = Sw > 1 ? 1 : Sw;
+                //Sw = Sw < data.pvt.connateWaterSaturation ? data.pvt.connateWaterSaturation : Sw;
                 //Sw = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
                 temp = 1 - Sw - Sg;

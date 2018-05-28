@@ -129,6 +129,7 @@ namespace FIM.Parser
                 numericData = new double[data.Length];
                 for (int i = 0; i < numericData.Length; i++)
                 {
+                    data[i] = data[i].Replace("D", "E");
                     numericData[i] = double.Parse(data[i]);
                 }
             }

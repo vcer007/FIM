@@ -23,9 +23,9 @@ namespace FIM.Core
         /// The epsilon used for caluclating derivatives numerically.
         /// </summary>
         /// <seealso cref="Global.STEPS_MEMORY"/>
-        public const double EPSILON_P = 1;
-        public const double EPSILON_S = 1E-5;
-        public const double MINIMUM = 1E-10;
+        public static double EPSILON_P;
+        public static double EPSILON_S;
+        public static double MINIMUM;
 
         /// <summary>
         /// The size of the properties <see cref="Array"/>.
