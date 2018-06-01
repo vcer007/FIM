@@ -128,8 +128,11 @@ namespace FIM.Parser
             if (section.Contains("GAS")) phases.Add(Global.Phase.Gas);
             if (section.Contains("DISGAS"))
             {
-                //phases.Add(Global.Phase.DissolvedGas);
                 data.solubleGasPresent = true;
+            }
+            if (section.Contains("VAPOIL"))
+            {
+                data.vaporizedOilPresent = true;
             }
 
             if (section.Contains("GRAVITY")) data.Gravity = true;

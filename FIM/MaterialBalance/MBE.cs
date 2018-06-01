@@ -1,4 +1,5 @@
-﻿using FIM.Core;
+﻿using System;
+using FIM.Core;
 
 namespace FIM.MaterialBalance
 {
@@ -27,15 +28,30 @@ namespace FIM.MaterialBalance
                 OIP += block.Vp[1] * block.So[1] / block.Bo[1];
             }
 
+            OOIP += GetVaporizedOilInPlace(data, 0);
+            OIP += GetVaporizedOilInPlace(data, 1);
+
             for (int i = 0; i < data.wells.Length; i++)
             {
-                q += Global.a * data.wells[i].q_oil[1] * data.timeStep;
+                q += Global.a * (data.wells[i].q_oil[1] + data.wells[i].q_vap_oil[1]) * data.timeStep;
             }
 
             double difference = OOIP - (OIP + q);
             var pore_volume = GetTotalPoreVolume(1, data);
 
             return difference / /*(OIP + q) * percentage_factor*/ pore_volume;
+        }
+
+        private static double GetVaporizedOilInPlace(SimulationData data, int time_level)
+        {
+            double temp = 0;
+
+            for (int i = 0; i < data.grid.Length; i++)
+            {
+                temp += data.grid[i].Rvo[time_level] * data.grid[i].Vp[time_level] * data.grid[i].Sg[time_level] / data.grid[i].Bg[time_level];
+            }
+
+            return temp;
         }
 
         /// <summary>

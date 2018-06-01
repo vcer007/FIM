@@ -29,7 +29,7 @@ namespace FIM.Extensions.FullyImplicit
             BaseBlock upstream_block, downstream_block, neighbor_block;
             double transmissibility;
 
-            double Kr, B, viscosity, Rso;
+            double Kr, B, viscosity, Rso, Rvo;
             double R = 0;
 
             double temp, accumulation_term;
@@ -44,16 +44,16 @@ namespace FIM.Extensions.FullyImplicit
                         continue;
                     }
                     neighbor_block = data.grid[block.neighborBlocksIndices[i]];
+                    double delta_z = neighbor_block.Depth - block.Depth;
 
                     if (GravityCalculation)
                     {
                         gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                     }
-                    double delta_z = neighbor_block.Depth - block.Depth;
 
                     transmissibility = block.transmissibility_list[i];
 
-                    if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
+                    if (GetOilPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                     {
                         upstream_block = block;
                         downstream_block = neighbor_block;
@@ -71,16 +71,114 @@ namespace FIM.Extensions.FullyImplicit
                     temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1] - delta_z * gravity);
                     block.transmissibility_terms_oil[i] = temp;
 
+                    if (data.vaporizedOilPresent)
+                    {
+                        Kr = upstream_block.Krg[1];
+                        B = 0.5 * (block.Bg[1] + neighbor_block.Bg[1]);
+                        viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
+                        Rvo = 0.5 * (block.Rvo[1] + neighbor_block.Rvo[1]);
+
+                        if (GravityCalculation)
+                        {
+                            gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
+                        }
+
+                        temp += Rvo * transmissibility * Kr / (viscosity * B) * (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity);
+                    }
+
                     R += temp;
 
                 }
 
                 accumulation_term = 1 / (Global.a * data.timeStep) * ((block.Vp[1] * (1 - block.Sw[1] - block.Sg[1]) / block.Bo[1]) - (block.Vp[0] * block.So[0] / block.Bo[0]));
+
+                if (data.vaporizedOilPresent)
+                {
+                    accumulation_term += 1 / (Global.a * data.timeStep) * ((block.Rvo[1] * block.Vp[1] * block.Sg[1] / block.Bg[1]) - (block.Rvo[0] * block.Vp[0] * block.Sg[0] / block.Bg[0]));
+                }
+
                 block.accumulation_term_oil = accumulation_term;
 
                 R -= accumulation_term;
             }
-            else if (phase == Global.Phase.Water)
+            else if (phase == Global.Phase.Gas)
+            {
+                for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
+                {
+                    if (block.neighborBlocksIndices[i] < 0)
+                    {
+                        continue;
+                    }
+                    neighbor_block = data.grid[block.neighborBlocksIndices[i]];
+                    double delta_z = neighbor_block.Depth - block.Depth;
+
+                    if (GravityCalculation)
+                    {
+                        gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
+                    }
+
+                    transmissibility = block.transmissibility_list[i];
+
+                    if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
+                    {
+                        upstream_block = block;
+                        downstream_block = neighbor_block;
+                    }
+                    else
+                    {
+                        upstream_block = neighbor_block;
+                        downstream_block = block;
+                    }
+
+                    Kr = upstream_block.Krg[1];
+                    B = 0.5 * (block.Bg[1] + neighbor_block.Bg[1]);
+                    viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
+
+                    temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity);
+
+                    if (data.solubleGasPresent)
+                    {
+                        B = 0.5 * (block.Bo[1] + neighbor_block.Bo[1]);
+                        viscosity = 0.5 * (block.viscosityOil[1] + neighbor_block.viscosityOil[1]);
+                        Rso = 0.5 * (block.Rso[1] + neighbor_block.Rso[1]);
+
+                        if (GravityCalculation)
+                        {
+                            gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
+                        }
+
+                        if (GetOilPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
+                        {
+                            upstream_block = block;
+                            downstream_block = neighbor_block;
+                        }
+                        else
+                        {
+                            upstream_block = neighbor_block;
+                            downstream_block = block;
+                        }
+
+                        Kr = upstream_block.Kro[1];
+
+                        temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1] - delta_z * gravity);
+                    }
+
+                    block.transmissibility_terms_gas[i] = temp;
+
+                    R += temp;
+                }
+
+                accumulation_term = 1 / (Global.a * data.timeStep) * ((block.Vp[1] * block.Sg[1] / block.Bg[1]) - (block.Vp[0] * block.Sg[0] / block.Bg[0]));
+                // check for presence of soluble_gas in simulation_data
+                if (data.solubleGasPresent)
+                {
+                    accumulation_term += 1 / (Global.a * data.timeStep) * ((block.Rso[1] * block.Vp[1] * (1 - block.Sw[1] - block.Sg[1]) / block.Bo[1]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
+                }
+                block.accumulation_term_gas = accumulation_term;
+
+                R -= accumulation_term;
+            }
+            else// if (phase == Global.Phase.Water)
             {
                 for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
                 {
@@ -124,73 +222,7 @@ namespace FIM.Extensions.FullyImplicit
 
                 R -= accumulation_term;
             }
-            else
-            {
-                for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
-                {
-                    if (block.neighborBlocksIndices[i] < 0)
-                    {
-                        continue;
-                    }
-                    neighbor_block = data.grid[block.neighborBlocksIndices[i]];
-
-                    if (GravityCalculation)
-                    {
-                        gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
-                    }
-                    double delta_z = neighbor_block.Depth - block.Depth;
-
-                    transmissibility = block.transmissibility_list[i];
-
-                    if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
-                    {
-                        upstream_block = block;
-                        downstream_block = neighbor_block;
-                    }
-                    else
-                    {
-                        upstream_block = neighbor_block;
-                        downstream_block = block;
-                    }
-
-                    Kr = upstream_block.Krg[1];
-                    B = 0.5 * (block.Bg[1] + neighbor_block.Bg[1]);
-                    viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
-
-                    temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity);
-
-                    if (data.solubleGasPresent)
-                    {
-                        Kr = upstream_block.Kro[1];
-                        B = 0.5 * (block.Bo[1] + neighbor_block.Bo[1]);
-                        viscosity = 0.5 * (block.viscosityOil[1] + neighbor_block.viscosityOil[1]);
-                        Rso = 0.5 * (block.Rso[1] + neighbor_block.Rso[1]);
-
-                        if (GravityCalculation)
-                        {
-                            gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
-                        }
-
-                        temp += Rso * transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1] - delta_z * gravity);
-                        //temp += Rso * block.transmissibility_terms_oil[i];
-                    }
-
-                    block.transmissibility_terms_gas[i] = temp;
-
-                    R += temp;
-                }
-
-                accumulation_term = 1 / (Global.a * data.timeStep) * ((block.Vp[1] * block.Sg[1] / block.Bg[1]) - (block.Vp[0] * block.Sg[0] / block.Bg[0]));
-                // check for presence of soluble_gas in simulation_data
-                if (data.solubleGasPresent)
-                {
-                    accumulation_term += 1 / (Global.a * data.timeStep) * ((block.Rso[1] * block.Vp[1] * (1 - block.Sw[1] - block.Sg[1]) / block.Bo[1]) - (block.Rso[0] * block.Vp[0] * block.So[0] / block.Bo[0]));
-                }
-                block.accumulation_term_gas = accumulation_term;
-
-                R -= accumulation_term;
-            }
-
+            
             return R;
         }
 
@@ -207,7 +239,7 @@ namespace FIM.Extensions.FullyImplicit
             double transmissibility_term = 0;
             double accumulation_term = 0;
 
-            double kr = 1, viscosity, B, Rso;
+            double kr = 1, viscosity, B, Rso, Rvo;
             BaseBlock upstream_block, downstream_block, neighbor_block;
 
             double transmissiblity;
@@ -275,80 +307,14 @@ namespace FIM.Extensions.FullyImplicit
                         }
 
                         neighbor_block = data.grid[block.neighborBlocksIndices[i]];
+                        double delta_z = neighbor_block.Depth - block.Depth;
 
                         if (GravityCalculation)
                         {
                             gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                         }
-                        double delta_z = neighbor_block.Depth - block.Depth;
 
-                        if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
-                        {
-                            upstream_block = block;
-                            downstream_block = neighbor_block;
-
-                            //kr = upstream_block.Kro[sgd];
-                            if (variable == Global.Variable.SaturationGas)
-                            {
-                                if (sgd == 1)
-                                {
-                                    kr = upstream_block.Kro[sgd];
-                                }
-                                else if (sgd == 2)
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else if (variable == Global.Variable.SaturationWater)
-                            {
-                                if (swd == 1)
-                                {
-                                    kr = upstream_block.Kro[swd];
-                                }
-                                else if (swd == 2)
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else
-                            {
-                                kr = upstream_block.Kro[1];
-                            }
-                            
-                        }
-                        else
-                        {
-                            upstream_block = neighbor_block;
-                            downstream_block = block;
-
-                            //kr = upstream_block.Kro[nsgd];
-                            if (variable == Global.Variable.SaturationGas)
-                            {
-                                if (nsgd == 1)
-                                {
-                                    kr = upstream_block.Kro[nsgd];
-                                }
-                                else
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else if (variable == Global.Variable.SaturationWater)
-                            {
-                                if (nsgd == 1)
-                                {
-                                    kr = upstream_block.Kro[nsgd];
-                                }
-                                else
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else
-                            {
-                                kr = upstream_block.Kro[1];
-                            }
-                        }
+                        kr = GetKr(Global.Phase.Oil, block, neighbor_block, variable, this_block, delta_z, gravity, data);
 
                         B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
                         viscosity = 0.5 * (block.viscosityOil[pd] + neighbor_block.viscosityOil[npd]);
@@ -356,94 +322,94 @@ namespace FIM.Extensions.FullyImplicit
 
                         transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
 
+                        if (data.vaporizedOilPresent)
+                        {
+
+                            Rvo = 0.5 * (block.Rvo[pd] + neighbor_block.Rvo[npd]);
+                            B = 0.5 * (block.Bg[pd] + neighbor_block.Bg[npd]);
+                            viscosity = 0.5 * (block.viscosityGas[pd] + neighbor_block.viscosityGas[npd]);
+
+                            if (GravityCalculation)
+                            {
+                                gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
+                            }
+
+                            if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
+                            {
+                                upstream_block = block;
+                                downstream_block = neighbor_block;
+
+                                kr = upstream_block.Krg[sgd];
+                            }
+                            else
+                            {
+                                upstream_block = neighbor_block;
+                                downstream_block = block;
+
+                                kr = upstream_block.Krg[nsgd];
+                            }
+
+                            transmissibility_temp += Rvo * transmissiblity * kr / (viscosity * B) * (neighbor_block.GetPg(npd, nsgd) - block.GetPg(pd, sgd) - delta_z * gravity);
+                        }
+
                         transmissibility_term += transmissibility_temp;
                     }
                     // accumulation term
                     accumulation_term = 1 / (data.timeStep * Global.a) * ((block.Vp[pd] * (1 - block.Sg[sgd] - block.Sw[swd]) / block.Bo[pd]) - (block.Vp[0] * block.So[0] / block.Bo[0]));
+
+                    if (data.vaporizedOilPresent)
+                    {
+                        accumulation_term += 1 / (data.timeStep * Global.a) * (block.Rvo[pd] * (block.Vp[pd] * block.Sg[sgd] / block.Bg[pd]) - block.Rvo[0] * (block.Vp[0] * block.Sg[0] / block.Bg[0]));
+                    }
                 }
                 else
                 {
                     // transmissibility term
                     neighbor_block = data.grid[block.neighborBlocksIndices[neighbour_block_index]];
+                    double delta_z = neighbor_block.Depth - block.Depth;
 
                     if (GravityCalculation)
                     {
                         gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                     }
-                    double delta_z = neighbor_block.Depth - block.Depth;
 
-                    if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
-                    {
-                        upstream_block = block;
-                        downstream_block = neighbor_block;
-
-                        //kr = upstream_block.Kro[sgd];
-                        if (variable == Global.Variable.SaturationGas)
-                        {
-                            if (sgd == 1)
-                            {
-                                kr = upstream_block.Kro[sgd];
-                            }
-                            else if (sgd == 2)
-                            {
-                                kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                            }
-                        }
-                        else if (variable == Global.Variable.SaturationWater)
-                        {
-                            if (swd == 1)
-                            {
-                                kr = upstream_block.Kro[swd];
-                            }
-                            else if (swd == 2)
-                            {
-                                kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                            }
-                        }
-                        else
-                        {
-                            kr = upstream_block.Kro[1];
-                        }
-                    }
-                    else
-                    {
-                        upstream_block = neighbor_block;
-                        downstream_block = block;
-
-                        //kr = upstream_block.Kro[nsgd];
-                        if (variable == Global.Variable.SaturationGas)
-                        {
-                            if (nsgd == 1)
-                            {
-                                kr = upstream_block.Kro[nsgd];
-                            }
-                            else
-                            {
-                                kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                            }
-                        }
-                        else if (variable == Global.Variable.SaturationWater)
-                        {
-                            if (nsgd == 1)
-                            {
-                                kr = upstream_block.Kro[nsgd];
-                            }
-                            else
-                            {
-                                kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                            }
-                        }
-                        else
-                        {
-                            kr = upstream_block.Kro[1];
-                        }
-                    }
+                    kr = GetKr(Global.Phase.Oil, block, neighbor_block, variable, this_block, delta_z, gravity, data);
 
                     B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
                     viscosity = 0.5 * (block.viscosityOil[pd] + neighbor_block.viscosityOil[npd]);
                     transmissiblity = block.transmissibility_list[neighbour_block_index];
 
                     transmissibility_temp = transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
+
+                    if (data.vaporizedOilPresent)
+                    {
+
+                        Rvo = 0.5 * (block.Rvo[pd] + neighbor_block.Rvo[npd]);
+                        B = 0.5 * (block.Bg[pd] + neighbor_block.Bg[npd]);
+                        viscosity = 0.5 * (block.viscosityGas[pd] + neighbor_block.viscosityGas[npd]);
+
+                        if (GravityCalculation)
+                        {
+                            gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
+                        }
+
+                        if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
+                        {
+                            upstream_block = block;
+                            downstream_block = neighbor_block;
+
+                            kr = upstream_block.Krg[sgd];
+                        }
+                        else
+                        {
+                            upstream_block = neighbor_block;
+                            downstream_block = block;
+
+                            kr = upstream_block.Krg[nsgd];
+                        }
+
+                        transmissibility_temp += Rvo * transmissiblity * kr / (viscosity * B) * (neighbor_block.GetPg(npd, nsgd) - block.GetPg(pd, sgd) - delta_z * gravity);
+                    }
 
                     transmissibility_term = transmissibility_temp;
                     for (int i = 0; i < block.neighborBlocksIndices.Length; i++)
@@ -473,14 +439,14 @@ namespace FIM.Extensions.FullyImplicit
                         }
 
                         neighbor_block = data.grid[block.neighborBlocksIndices[i]];
+                        double delta_z = neighbor_block.Depth - block.Depth;
 
                         if (GravityCalculation)
                         {
                             gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
                         }
-                        double delta_z = neighbor_block.Depth - block.Depth;
 
-                        if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
+                        if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                         {
                             upstream_block = block;
                             downstream_block = neighbor_block;
@@ -503,66 +469,6 @@ namespace FIM.Extensions.FullyImplicit
 
                         if (data.solubleGasPresent)
                         {
-                            if (upstream_block.index == block.index)
-                            {
-                                //kr = upstream_block.Kro[sgd];
-                                if (variable == Global.Variable.SaturationGas)
-                                {
-                                    if (sgd == 1)
-                                    {
-                                        kr = upstream_block.Kro[sgd];
-                                    }
-                                    else if (sgd == 2)
-                                    {
-                                        kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                                    }
-                                }
-                                else if (variable == Global.Variable.SaturationWater)
-                                {
-                                    if (swd == 1)
-                                    {
-                                        kr = upstream_block.Kro[swd];
-                                    }
-                                    else if (swd == 2)
-                                    {
-                                        kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                                    }
-                                }
-                                else
-                                {
-                                    kr = upstream_block.Kro[1];
-                                }
-                            }
-                            else
-                            {
-                                //kr = upstream_block.Kro[nsgd];
-                                if (variable == Global.Variable.SaturationGas)
-                                {
-                                    if (nsgd == 1)
-                                    {
-                                        kr = upstream_block.Kro[nsgd];
-                                    }
-                                    else
-                                    {
-                                        kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                                    }
-                                }
-                                else if (variable == Global.Variable.SaturationWater)
-                                {
-                                    if (nsgd == 1)
-                                    {
-                                        kr = upstream_block.Kro[nsgd];
-                                    }
-                                    else
-                                    {
-                                        kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                                    }
-                                }
-                                else
-                                {
-                                    kr = upstream_block.Kro[1];
-                                }
-                            }
 
                             Rso = 0.5 * (block.Rso[pd] + neighbor_block.Rso[npd]);
                             B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
@@ -572,6 +478,8 @@ namespace FIM.Extensions.FullyImplicit
                             {
                                 gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                             }
+
+                            kr = GetKr(Global.Phase.Oil, block, neighbor_block, variable, this_block, delta_z, gravity, data);
 
                             transmissibility_temp += Rso * transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
                         }
@@ -592,14 +500,14 @@ namespace FIM.Extensions.FullyImplicit
                 {
                     // transmissibility term
                     neighbor_block = data.grid[block.neighborBlocksIndices[neighbour_block_index]];
+                    double delta_z = neighbor_block.Depth - block.Depth;
 
                     if (GravityCalculation)
                     {
                         gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
                     }
-                    double delta_z = neighbor_block.Depth - block.Depth;
 
-                    if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
+                    if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                     {
                         upstream_block = block;
                         downstream_block = neighbor_block;
@@ -622,66 +530,6 @@ namespace FIM.Extensions.FullyImplicit
 
                     if (data.solubleGasPresent)
                     {
-                        if (upstream_block.index == block.index)
-                        {
-                            //kr = upstream_block.Kro[sgd];
-                            if (variable == Global.Variable.SaturationGas)
-                            {
-                                if (sgd == 1)
-                                {
-                                    kr = upstream_block.Kro[sgd];
-                                }
-                                else if (sgd == 2)
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else if (variable == Global.Variable.SaturationWater)
-                            {
-                                if (swd == 1)
-                                {
-                                    kr = upstream_block.Kro[swd];
-                                }
-                                else if (swd == 2)
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else
-                            {
-                                kr = upstream_block.Kro[1];
-                            }
-                        }
-                        else
-                        {
-                            //kr = upstream_block.Kro[nsgd];
-                            if (variable == Global.Variable.SaturationGas)
-                            {
-                                if (nsgd == 1)
-                                {
-                                    kr = upstream_block.Kro[nsgd];
-                                }
-                                else
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[2], upstream_block.Sw[1], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else if (variable == Global.Variable.SaturationWater)
-                            {
-                                if (nsgd == 1)
-                                {
-                                    kr = upstream_block.Kro[nsgd];
-                                }
-                                else
-                                {
-                                    kr = data.scal.GetKro(upstream_block.Sg[1], upstream_block.Sw[2], data.pvt.connateWaterSaturation);
-                                }
-                            }
-                            else
-                            {
-                                kr = upstream_block.Kro[1];
-                            }
-                        }
 
                         Rso = 0.5 * (block.Rso[pd] + neighbor_block.Rso[npd]);
                         B = 0.5 * (block.Bo[pd] + neighbor_block.Bo[npd]);
@@ -691,6 +539,8 @@ namespace FIM.Extensions.FullyImplicit
                         {
                             gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                         }
+
+                        kr = GetKr(Global.Phase.Oil, block, neighbor_block, variable, this_block, delta_z, gravity, data);
 
                         transmissibility_temp += Rso * transmissiblity * kr / (viscosity * B) * (neighbor_block.P[npd] - block.P[pd] - delta_z * gravity);
                     }
@@ -722,12 +572,12 @@ namespace FIM.Extensions.FullyImplicit
                         }
 
                         neighbor_block = data.grid[block.neighborBlocksIndices[i]];
+                        double delta_z = neighbor_block.Depth - block.Depth;
 
                         if (GravityCalculation)
                         {
                             gravity = data.pvt.GetAverageWaterGravity(block, neighbor_block);
                         }
-                        double delta_z = neighbor_block.Depth - block.Depth;
 
                         if (neighbor_block.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity <= 0)
                         {
@@ -760,12 +610,12 @@ namespace FIM.Extensions.FullyImplicit
                 {
                     // transmissibility term
                     neighbor_block = data.grid[block.neighborBlocksIndices[neighbour_block_index]];
+                    double delta_z = neighbor_block.Depth - block.Depth;
 
                     if (GravityCalculation)
                     {
                         gravity = data.pvt.GetAverageWaterGravity(block, neighbor_block);
                     }
-                    double delta_z = neighbor_block.Depth - block.Depth;
 
                     if (neighbor_block.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity <= 0)
                     {
@@ -920,5 +770,105 @@ namespace FIM.Extensions.FullyImplicit
             }
         }
 
+        public static double GetKr(Global.Phase phase, BaseBlock block, BaseBlock neighbor, Global.Variable diff_variable, bool thisBlock, double delta_z, double gravity, SimulationData data)
+        {
+            double potential_difference = 0;
+
+            switch (phase)
+            {
+                case Global.Phase.Water:
+                    potential_difference = GetWaterPotentialDifference(neighbor, block, delta_z, gravity);
+                    break;
+                case Global.Phase.Oil:
+                    potential_difference = GetOilPotentialDifference(neighbor, block, delta_z, gravity);
+                    break;
+                case Global.Phase.Gas:
+                    potential_difference = GetGasPotentialDifference(neighbor, block, delta_z, gravity);
+                    break;
+                default:
+                    break;
+            }
+
+
+            BaseBlock upstream, downstream;
+            if (potential_difference <= 0)
+            {
+                upstream = block;
+                downstream = neighbor;
+            }
+            else
+            {
+                upstream = neighbor;
+                downstream = block;
+            }
+
+            double Kr;
+            switch (phase)
+            {
+                case Global.Phase.Water:
+                    if (thisBlock && upstream == block && diff_variable == Global.Variable.SaturationWater
+                        ||
+                        !thisBlock && upstream == neighbor && diff_variable == Global.Variable.SaturationWater)
+                    {
+                        Kr = upstream.Krw[2];
+                    }
+                    else
+                    {
+                        Kr = upstream.Krw[1];
+                    }
+                    break;
+                case Global.Phase.Oil:
+                    if (thisBlock && upstream == block && diff_variable != Global.Variable.Pressure
+                        ||
+                        !thisBlock && upstream == neighbor && diff_variable != Global.Variable.Pressure)
+                    {
+                        if (diff_variable == Global.Variable.SaturationGas)
+                        {
+                            Kr = data.scal.GetKro(upstream.Sg[2], upstream.Sw[1], data.pvt.connateWaterSaturation);
+                        }
+                        else // saturation water
+                        {
+                            Kr = data.scal.GetKro(upstream.Sg[1], upstream.Sw[2], data.pvt.connateWaterSaturation);
+                        }
+                    }
+                    else
+                    {
+                        Kr = upstream.Kro[1];
+                    }
+                    break;
+                case Global.Phase.Gas:
+                    if (thisBlock && upstream == block && diff_variable == Global.Variable.SaturationGas
+                        ||
+                        !thisBlock && upstream == neighbor && diff_variable == Global.Variable.SaturationGas)
+                    {
+                        Kr = upstream.Krg[2];
+                    }
+                    else
+                    {
+                        Kr = upstream.Krg[1];
+                    }
+                    break;
+                default:
+                    Kr = 1;
+                    break;
+            }
+
+            return Kr;
+        }
+
+        public static double GetOilPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
+        {
+            return neighbor.P[1] - block.P[1] - delta_z * gravity;
+        }
+
+        public static double GetGasPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
+        {
+            return neighbor.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity;
+        }
+
+        public static double GetWaterPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
+        {
+            return neighbor.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity;
+        }
     }
 }

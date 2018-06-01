@@ -147,7 +147,11 @@ namespace FIM.FluidData
 
         public double GetKrw(double saturation)
         {
-            return 0;
+            //return 0;
+            if (saturation < swfn[0][0])
+            {
+                return 0;
+            }
             double kr = LookUp(swfn[0], swfn[1], saturation);
             return kr > 1 ? 1 : kr;
         }

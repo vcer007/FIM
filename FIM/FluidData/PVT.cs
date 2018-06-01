@@ -63,6 +63,13 @@ namespace FIM.FluidData
 
         }
 
+        internal double GetRv(double p)
+        {
+            var Y = oilData[0]; var X = oilData[3];
+            var temp = LookUp(Y, X, p);
+            return temp * Global.a / 1000; // cubic feet / scf
+        }
+
         /// <summary>
         /// Initializes the member variables in a PVT instance.
         /// </summary>
@@ -107,11 +114,11 @@ namespace FIM.FluidData
             switch (phase)
             {
                 case Global.Phase.Water:
-                    return GetWaterFVF(pressure);
+                    return GetWaterFVF(pressure); // bbl / stb
                 case Global.Phase.Oil:
-                    return GetOilFVF(pressure);
+                    return GetOilFVF(pressure); // bbl / stb
                 case Global.Phase.Gas:
-                    return GetGasFVF(pressure) * Global.a / 1000;
+                    return GetGasFVF(pressure) * Global.a / 1000; // cubic feet per scf
                 default:
                     return 1;
             }
@@ -174,7 +181,7 @@ namespace FIM.FluidData
                 case Global.Phase.Water:
                     return GetRsw(pressure);
                 case Global.Phase.Oil:
-                    return GetRso(pressure) / Global.a * 1000;
+                    return GetRso(pressure) / Global.a * 1000; // stb / bbl
                 case Global.Phase.Gas:
                     return 1;
                 default:
@@ -241,7 +248,14 @@ namespace FIM.FluidData
             if (pressure > bubblePointPressure)
             {
                 Y = oilUnderSaturatedData[0]; X = oilUnderSaturatedData[1];
-                return Extrapolate(Y, X, pressure);
+                if (pressure < Y[Y.Length - 1])
+                {
+                    return LookUp(Y, X, pressure);
+                }
+                else
+                {
+                    return Extrapolate(Y, X, pressure);
+                }
             }
             else
             {
@@ -312,9 +326,9 @@ namespace FIM.FluidData
             double density = surfaceDensities[1] / fvf;
             return density;
         }
-        public double GetGasDensity(double pressure, double fvf)
+        public double GetGasDensity(double pressure, double fvf, double Rv)
         {
-            double density = surfaceDensities[2] / fvf;
+            double density = (surfaceDensities[2] + Rv * surfaceDensities[0]) / fvf;
             return density;
         }
 
@@ -399,7 +413,7 @@ namespace FIM.FluidData
 
         public double GetAverageGasGravity(BaseBlock block, BaseBlock neighbor)
         {
-            return 0.5 * (GetGasDensity(block.P[0], block.Bg[0]) + GetGasDensity(neighbor.P[0], neighbor.Bg[0])) * Global.gamma_c * Global.alpha;
+            return 0.5 * (GetGasDensity(block.P[0], block.Bg[0], block.Rvo[0]) + GetGasDensity(neighbor.P[0], neighbor.Bg[0], neighbor.Rvo[0])) * Global.gamma_c * Global.alpha;
         }
 
         public double GetAverageWaterGravity(BaseBlock block, BaseBlock neighbor)

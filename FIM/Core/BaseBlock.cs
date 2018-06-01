@@ -92,6 +92,8 @@ namespace FIM.Core
         /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Rso;
 
+        public double[] Rvo;
+
         /// <summary>
         /// <para>An <see cref="Array"/> of the pressure ratio at different time levels.</para>
         /// </summary>
@@ -226,6 +228,8 @@ namespace FIM.Core
             this.viscosityOil = new double[steps_memory]; this.viscosityGas = new double[steps_memory]; this.viscosityWater = new double[steps_memory];
 
             this.Rso = new double[steps_memory];
+
+            this.Rvo = new double[steps_memory];
 
             this.P = new double[steps_memory];
 

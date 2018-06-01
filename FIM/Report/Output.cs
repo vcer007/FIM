@@ -110,7 +110,15 @@ namespace FIM.Report
                             break;
                         
                         case "WOPR":
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells.First(w => w.index == wellsIndices[i][j]).GetTotalOilProduction().ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
+                        case "WOPRF":
                             for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells.First(w => w.index == wellsIndices[i][j]).q_oil[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
+                        case "WOPRS":
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append(data.wells.First(w => w.index == wellsIndices[i][j]).q_vap_oil[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WWPR":

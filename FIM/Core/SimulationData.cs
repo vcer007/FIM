@@ -36,6 +36,8 @@ namespace FIM.Core
         /// <seealso cref="phases"/>
         public bool solubleGasPresent;
 
+        public bool vaporizedOilPresent;
+
         /// <summary>
         /// Model grid dimensions.
         /// </summary>

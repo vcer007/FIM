@@ -51,11 +51,18 @@ namespace FIM.Extensions
             //}
             //else
             //{
+            //    var new_rs = data.pvt.GetRs(Global.Phase.Oil, P);
             //    if (block.Sg[time_level] == 0 || new_rs < block.Rso[0])
             //    {
             //        block.Rso[time_level] = new_rs;
             //    }
             //}
+
+            if (data.vaporizedOilPresent)
+            {
+                var new_rv = data.pvt.GetRv(P);
+                block.Rvo[time_level] = new_rv;
+            }
 
             block.So[time_level] = So;
             block.Sw[time_level] = Sw;
@@ -106,7 +113,7 @@ namespace FIM.Extensions
                 // block way we update n1 time level properties also automatically
                 // after updating n0 time level properties.
                 // note that the initial guess here for n1 is assumed to be the same values as the ones at n0.
-                block.UpdateProperties(data, P, Sw, Sg, So, 1);
+                block.UpdateProperties(data, P + Global.EPSILON_P, Sw, Sg, So, 1);
             }
             else if (time_level == 1)
             {
