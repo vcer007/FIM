@@ -36,14 +36,17 @@ namespace FIM.Extensions
         public static void UpdateProperties(this BaseBlock block, SimulationData data, double P, double Sw, double Sg, double So, int time_level = 0)
         {
             // pressure
-            block.P_previousStep = block.P[0];
+            if ((time_level == 0 && P < block.minimum_P) || block.minimum_P == 0)
+            {
+                block.minimum_P = P;
+            }
 
             block.P[time_level] = P;
 
             // data.porosity_calculator
             block.porosity[time_level] = data.porosityCalculator.getPorosity(P);
 
-            var new_rs = data.pvt.GetRs(Global.Phase.Oil, P);
+            var new_rs = data.pvt.GetRs(Global.Phase.Oil, P, block.minimum_P);
             block.Rso[time_level] = new_rs;
             //if (time_level == 2)
             //{

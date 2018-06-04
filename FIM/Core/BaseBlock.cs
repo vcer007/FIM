@@ -109,7 +109,7 @@ namespace FIM.Core
         /// <summary>
         /// The pressure of the previous time step "n-1 time level".
         /// </summary>
-        public double P_previousStep;
+        public double minimum_P;
 
         #endregion
 

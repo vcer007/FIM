@@ -174,18 +174,25 @@ namespace FIM.FluidData
         /// <param name="phase">The phase.</param>
         /// <param name="pressure">The pressure.</param>
         /// <returns>The value of RsO.</returns>
-        public double GetRs(Global.Phase phase, double pressure)
+        public double GetRs(Global.Phase phase, double pressure, double minimum_P)
         {
-            switch (phase)
+            if (pressure > minimum_P)
             {
-                case Global.Phase.Water:
-                    return GetRsw(pressure);
-                case Global.Phase.Oil:
-                    return GetRso(pressure) / Global.a * 1000; // stb / bbl
-                case Global.Phase.Gas:
-                    return 1;
-                default:
-                    return 1;
+                return GetRs(phase, minimum_P, minimum_P);
+            }
+            else
+            {
+                switch (phase)
+                {
+                    case Global.Phase.Water:
+                        return GetRsw(pressure);
+                    case Global.Phase.Oil:
+                        return GetRso(pressure) / Global.a * 1000; // stb / bbl
+                    case Global.Phase.Gas:
+                        return 1;
+                    default:
+                        return 1;
+                }
             }
         }
 

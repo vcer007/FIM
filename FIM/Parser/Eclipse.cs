@@ -246,6 +246,7 @@ namespace FIM.Parser
 
             int index_pvto = section.FindIndex(x => x.Contains("PVTO"));
             int index_pvtg = section.FindIndex(x => x.Contains("PVTG"));
+            int index_pvdg = section.FindIndex(x => x.Contains("PVDG"));
             int index_scal = section.FindIndex(x => x.Contains("SCAL"));
 
             int end_index = section.FindIndex(index_pvto + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
@@ -254,9 +255,26 @@ namespace FIM.Parser
 
             double[] water = Helper.GetData("PVTW", section, 5);
 
-            end_index = section.FindIndex(index_pvtg + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
-            end_index = end_index < 0 ? section.Count : end_index;
-            GetPVTG(gas, section, index_pvtg + 1, end_index);
+            if (index_pvdg >= 0)
+            {
+                end_index = section.FindIndex(index_pvdg + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
+                end_index = end_index < 0 ? section.Count : end_index;
+                GetPVDG(gas, section, index_pvdg + 1, end_index);
+            }
+
+            if (index_pvtg >= 0)
+            {
+                end_index = section.FindIndex(index_pvtg + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
+                end_index = end_index < 0 ? section.Count : end_index;
+                GetPVTG(gas, section, index_pvtg + 1, end_index);
+            }
+
+            //if (data.vaporizedOilPresent)
+            //{
+            //}
+            //else
+            //{
+            //}
 
             int index_sgfn = section.FindIndex(x => x.Contains("SGFN"));
             end_index = section.FindIndex(index_sgfn + 1, x => x.ContainsAnyOf(PROPS_KEYWORDS));
@@ -280,6 +298,25 @@ namespace FIM.Parser
             pvt.Initialize(oil, oil_us, water, gas, bubble_point, densities, Swc);
             scal.Initialize(sgfn, swfn, sof3);
 
+        }
+
+        private static void GetPVDG(double[][] gas, List<string> section, int index_start, int index_end)
+        {
+            int count = index_end - index_start;
+            gas[0] = new double[count];
+            gas[1] = new double[count];
+            gas[2] = new double[count];
+            gas[3] = new double[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                var temp = Helper.GetData(section[i + index_start]);
+
+                gas[0][i] = temp[0]; // pressure
+                gas[3][i] = 0; // Rv
+                gas[1][i] = temp[1]; // FVF
+                gas[2][i] = temp[2]; // Viscosity
+            }
         }
 
         private static void GetSOF3(double[][] sof3, List<string> section, int index_start, int index_end)
