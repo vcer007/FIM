@@ -196,7 +196,7 @@ namespace FIM.Extensions.FullyImplicit
 
                     transmissibility = block.transmissibility_list[i];
 
-                    if (neighbor_block.P[1] - block.P[1] - delta_z * gravity <= 0)
+                    if (GetWaterPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                     {
                         upstream_block = block;
                         downstream_block = neighbor_block;
@@ -579,7 +579,7 @@ namespace FIM.Extensions.FullyImplicit
                             gravity = data.pvt.GetAverageWaterGravity(block, neighbor_block);
                         }
 
-                        if (neighbor_block.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity <= 0)
+                        if (GetWaterPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                         {
                             upstream_block = block;
                             downstream_block = neighbor_block;
@@ -617,7 +617,7 @@ namespace FIM.Extensions.FullyImplicit
                         gravity = data.pvt.GetAverageWaterGravity(block, neighbor_block);
                     }
 
-                    if (neighbor_block.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity <= 0)
+                    if (GetWaterPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                     {
                         upstream_block = block;
                         downstream_block = neighbor_block;
@@ -693,9 +693,6 @@ namespace FIM.Extensions.FullyImplicit
         /// <seealso cref="WellTerms"/>
         public static void CalculateJacobi_Matrix(SimulationData data, double[] minusR, SparseMatrix Jacobi)
         {
-
-            //Jacobi.Clear();
-
             BaseBlock block;
 
             for (int i = 0; i < data.grid.Length; i++)
@@ -716,7 +713,16 @@ namespace FIM.Extensions.FullyImplicit
                         Jacobi[counter, place] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
 
                         // with respect to Sg
-                        temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / Global.EPSILON_S;
+                        double epsilon_sg = Global.EPSILON_S;
+                        if (j == -1)
+                        {
+                            epsilon_sg = block.epsilon_sg;
+                        }
+                        else
+                        {
+                            epsilon_sg = data.grid[block.neighborBlocksIndices[j]].epsilon_sg;
+                        }
+                        temp = (block.Perturb(data, Global.Phase.Oil, j, Global.Variable.SaturationGas) + minusR[counter]) / epsilon_sg;
                         Jacobi[counter, place + 1] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
 
                         // with respect to Sw
@@ -737,7 +743,16 @@ namespace FIM.Extensions.FullyImplicit
                         Jacobi[counter + 1, place] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
 
                         // with respect to Sg
-                        temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / Global.EPSILON_S;
+                        double epsilon_sg = Global.EPSILON_S;
+                        if (j == -1)
+                        {
+                            epsilon_sg = block.epsilon_sg;
+                        }
+                        else
+                        {
+                            epsilon_sg = data.grid[block.neighborBlocksIndices[j]].epsilon_sg;
+                        }
+                        temp = (block.Perturb(data, Global.Phase.Gas, j, Global.Variable.SaturationGas) + minusR[counter + 1]) / epsilon_sg;
                         Jacobi[counter + 1, place + 1] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
 
                         // with respect to Sw
@@ -758,7 +773,16 @@ namespace FIM.Extensions.FullyImplicit
                         Jacobi[counter + 2, place] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
 
                         // with respect to Sg
-                        temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / Global.EPSILON_S;
+                        double epsilon_sg = Global.EPSILON_S;
+                        if (j == -1)
+                        {
+                            epsilon_sg = block.epsilon_sg;
+                        }
+                        else
+                        {
+                            epsilon_sg = data.grid[block.neighborBlocksIndices[j]].epsilon_sg;
+                        }
+                        temp = (block.Perturb(data, Global.Phase.Water, j, Global.Variable.SaturationGas) + minusR[counter + 2]) / epsilon_sg;
                         Jacobi[counter + 2, place + 1] = temp > -Global.MINIMUM && temp < Global.MINIMUM ? Global.MINIMUM : temp;
 
                         // with respect to Sw

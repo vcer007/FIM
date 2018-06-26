@@ -68,6 +68,8 @@ namespace FIM.Core
         /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Sw, So, Sg;
 
+        public double Sw_old, So_old, Sg_old;
+
         /// <summary>
         /// <para>An <see cref="Array"/> of the fluid relative permeabilities at different time levels.</para>
         /// </summary>
@@ -99,6 +101,8 @@ namespace FIM.Core
         /// </summary>
         /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] P;
+
+        public double P_old;
 
         /// <summary>
         /// <para>An <see cref="Array"/> of the capillary pressures for oil/water and gas/oil.</para>
@@ -208,6 +212,8 @@ namespace FIM.Core
 
         public double Depth;
 
+        public double epsilon_sg;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseBlock"/> class.
         /// </summary>
@@ -242,6 +248,8 @@ namespace FIM.Core
 
             // well
             this.type = Global.BlockType.NormalBlock;
+
+            this.epsilon_sg = Global.EPSILON_S;
         }
 
 

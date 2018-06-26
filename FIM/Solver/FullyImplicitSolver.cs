@@ -30,7 +30,6 @@ namespace FIM.Solver
         static double currentTime;
 
         // private members put here globally in the class to reduce the number of GC runs
-        static Matrix<double> A;
         static Vector<double> B;
         static Vector<double> X;
 
@@ -43,6 +42,11 @@ namespace FIM.Solver
         static IIterativeSolver<double> solver = new GpBiCg();
         static IPreconditioner<double> preconditioner = new MILU0Preconditioner(false);
 
+        // Stop calculation if 1000 iterations reached during calculation
+        static IIterationStopCriterion<double> iterationCountStopCriterion = new IterationCountStopCriterion<double>(1000);
+        // Stop calculation if residuals are below 1E-10 --> the calculation is considered converged
+        static IIterationStopCriterion<double> residualStopCriterion = new ResidualStopCriterion<double>(1e-5);
+
         /// <summary>
         /// The entry point of the fully implicit simulation cycle.
         /// </summary>
@@ -53,10 +57,6 @@ namespace FIM.Solver
             int size = data.grid.Length * data.phases.Length;
 
             var jacobi = new MathNet.Numerics.LinearAlgebra.Double.SparseMatrix(size, size);
-
-            //MathNetSparseMatrixInitializer.Initialize(data);
-
-            //jacobi.InitializeStructure(data, 1);
 
             // initalize the empty minus R matrix.
             double[] minusR = new double[size];
@@ -72,7 +72,7 @@ namespace FIM.Solver
             currentTime = 0;
             data.output.Write(currentTime, data, true);
 
-            for (; currentTime < end_time;)
+            while (currentTime < end_time)
             {
                 var time_stamp = DateTime.Now;
 
@@ -83,9 +83,7 @@ namespace FIM.Solver
                 // after the iterations. This is because the time step length may change during the iteration.
                 currentTime += data.timeStep;
 
-                //Console.WriteLine(currentTime + ", " + data.grid[0].P[0] + ", " + data.grid[0].Sg[0] + ", " + data.MBE_Gas + ", " + data.wells[0].BHP[1] + ", " + data.wells[0].q_free_gas[0] + ", " + data.wells[0].q_solution_gas[0] + ", " + data.wells[0].q_oil[0]);
                 data.output.Write(currentTime, data, false, counter, (int)duration.TotalMilliseconds);
-                //Console.ReadKey();
             }
 
         }
@@ -93,12 +91,6 @@ namespace FIM.Solver
         // the iteration cycle
         private static int IterativeSolver(SimulationData data, MathNet.Numerics.LinearAlgebra.Double.SparseMatrix Jacobi, double[] minusR, double[] delta)
         {
-            //use the native Intel MKL solver "which is several times faster"
-
-            Control.UseManaged();
-            //Control.UseNativeMKL();
-            //Control.NativeProviderPath = @"C:\MKL";
-
             MBE[0] = 0; MBE[1] = 0;
 
             // resets time step to its original value at the beginning of each new time step.
@@ -115,60 +107,17 @@ namespace FIM.Solver
                 // formulation.
                 NumericalPerturbation.CalculateMinusR_Matrix(data, minusR);
                 NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, Jacobi);
-                //var test = Jacobi.Storage.Enumerate().ToList();
-                //var test2 = test.Where(x => x != 0);
-                //var test3 = test2.Where(x => x > -1E-7 && x < 1E-7);
-                //var test4 = test3.Select(x => Math.Abs(x)).Min();
                 WellTerms.Add(data, Jacobi, minusR);
 
-                // solving the equations.
-                //SparseMatrix matrix = SparseMatrix.FromJagged(Jacobi);
-                //for (int i = 0; i < delta.Length; i++)
-                //{
-                //    delta[i] = Global.EPSILON;
-                //}
-                //Mathematics.SolveLinearEquation.Orthomin(matrix, ref delta, minusR);
-
-                //A = Matrix<double>.Build.SparseOfRowArrays(Jacobi);
                 B = Vector<double>.Build.Dense(minusR);
                 X = Vector<double>.Build.Dense(delta);
-                //var X = Vector<double>.Build.DenseOfArray(delta);
-
-                // Stop calculation if 1000 iterations reached during calculation
-                IIterationStopCriterion<double> iterationCountStopCriterion = new IterationCountStopCriterion<double>(1000);
-                // Stop calculation if residuals are below 1E-10 --> the calculation is considered converged
-                IIterationStopCriterion<double> residualStopCriterion = new ResidualStopCriterion<double>(1e-5);
 
                 //delta = A.SolveIterative(B, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion).AsArray();
                 var iterativeSolverStatus = Jacobi.TrySolveIterative(B, X, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion);
                 delta = X.AsArray();
-                //delta = Jacobi.Solve(B).ToArray();
-
-                ////delta = (A.Inverse() * B).ToArray();
-                //delta = A.Solve(B).ToArray();
-                //delta = A.SolveIterative(B, solver, monitor).ToArray();
-                //delta = A.LU().Solve(B).ToArray();
-
-                //delta = SolveForDelta(Jacobi, minusR);
 
                 // update properties with better approximations.
                 counter = Update(data, MBE, delta, counter);
-                //if (iterativeSolverStatus == IterationStatus.Converged)
-                //{
-                //}
-                //else
-                //{
-                //    for (int i = 0; i < data.grid.Length; i++)
-                //    {
-                //        data.grid[i].Reset(data);
-                //    }
-                //    data.timeStep *= data.timeStepSlashingFactor;
-                //    counter = 0;
-                //    MBE[0] = 0;
-                //    MBE[1] = data.MBE_Tolerance;
-                //}
-
-                //Console.WriteLine(MBE[1]);
 
                 // repeat the cycle if the material balance error is larger than the tolerance specified.
                 // as long as the repetitions are smaller than the maximum number of non-linear iterations specified.
@@ -204,7 +153,7 @@ namespace FIM.Solver
                 // slash the time step.
                 data.timeStep *= data.timeStepSlashingFactor;
 
-                //Console.WriteLine($"The new time-step is {data.timeStep}");
+                Console.WriteLine($"The new time-step is {data.timeStep}");
 
                 // reset relaxation factor.
                 data.relaxationFactor = data.originalRelaxationFactor;
@@ -217,7 +166,6 @@ namespace FIM.Solver
                 // reset the convergenceError array so that it violates the convergence criteria
                 MBE[0] = 0;
                 MBE[1] = data.MBE_Tolerance;
-                //convergenceError[1] = 0;
 
                 // reset the counter.
                 // this way we begin repeating the same time step with all the number of non linear iterations.
@@ -225,15 +173,6 @@ namespace FIM.Solver
             }
 
             return counter;
-        }
-
-        // solves the Ax=B equation "where A is the Jacobi and B is minus R" for deltas.
-        private static double[] SolveForDelta(double[][] Jacobi, double[] minusR)
-        {
-            // note that this method while calculating delta_x "from the Jacobi and minus R matrices", it modifies them as a side effect.
-            // this should be taken with much care.
-            Mathematics.SolveLinearEquation.direct(Jacobi, minusR);
-            return minusR;
         }
 
         // updates the n1 time level properties with better approximation after solving the Ax=B equation.
@@ -251,18 +190,18 @@ namespace FIM.Solver
                 //P = P > 0 ? P : 0;
 
                 temp = data.grid[i].Sg[1] + delta[counter + 1];
-                Sg = temp > 0 && temp < 1 ? temp : data.grid[i].Sg[1];
-                Sg = Sg > 1 ? 1 : Sg;
+                Sg = temp >= 0 && temp <= 1 ? temp : /*data.grid[i].Sg[1]*/0;
+                //Sg = Sg > 1 ? 1 : Sg;
                 //Sg = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
                 temp = data.grid[i].Sw[1] + delta[counter + 2];
-                Sw = temp > 0 && temp < 1 ? temp : data.grid[i].Sw[1];
-                Sw = Sw > 1 ? 1 : Sw;
+                Sw = temp >= 0 && temp <= 1 ? temp : data.grid[i].Sw[1];
+                //Sw = Sw > 1 ? 1 : Sw;
                 //Sw = Sw < data.pvt.connateWaterSaturation ? data.pvt.connateWaterSaturation : Sw;
                 //Sw = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
                 temp = 1 - Sw - Sg;
-                So = temp > 0 && temp < 1 ? temp : data.grid[i].So[1];
+                So = temp >= 0 && temp <= 1 ? temp : data.grid[i].So[1];
 
                 data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 1);
 

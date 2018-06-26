@@ -28,18 +28,21 @@ namespace FIM.MaterialBalance
                 OIP += block.Vp[1] * block.So[1] / block.Bo[1];
             }
 
-            OOIP += GetVaporizedOilInPlace(data, 0);
-            OIP += GetVaporizedOilInPlace(data, 1);
+            if (data.vaporizedOilPresent)
+            {
+                OOIP += GetVaporizedOilInPlace(data, 0);
+                OIP += GetVaporizedOilInPlace(data, 1);
+            }
 
             for (int i = 0; i < data.wells.Length; i++)
             {
-                q += Global.a * (data.wells[i].q_oil[1] + data.wells[i].q_vap_oil[1]) * data.timeStep;
+                q += Global.a * (data.wells[i].q_oil[1] + (data.vaporizedOilPresent ? data.wells[i].q_vap_oil[1] : 0)) * data.timeStep;
             }
 
             double difference = OOIP - (OIP + q);
             var pore_volume = GetTotalPoreVolume(1, data);
 
-            return difference / /*(OIP + q) * percentage_factor*/ pore_volume;
+            return difference / pore_volume;
         }
 
         private static double GetVaporizedOilInPlace(SimulationData data, int time_level)
@@ -77,13 +80,13 @@ namespace FIM.MaterialBalance
 
             for (int i = 0; i < data.wells.Length; i++)
             {
-                q += Global.a * (data.wells[i].q_free_gas[1] + data.wells[i].q_solution_gas[1]);
+                q += Global.a * (data.wells[i].q_free_gas[1] + (data.solubleGasPresent ? data.wells[i].q_solution_gas[1] : 0));
             }
 
             double difference = OGIP - (GIP + q * data.timeStep);
             var pore_volume = GetTotalPoreVolume(1, data);
 
-            return difference / /*(GIP + q * data.timeStep) * percentage_factor*/pore_volume;
+            return difference / pore_volume;
         }
 
         /// <summary>
@@ -113,7 +116,7 @@ namespace FIM.MaterialBalance
             double difference = OWIP - (WIP + q);
             var pore_volume = GetTotalPoreVolume(1, data);
 
-            return difference  / /*(WIP + q) * percentage_factor*/pore_volume;
+            return difference  / pore_volume;
         }
 
         /// <summary>
@@ -124,7 +127,7 @@ namespace FIM.MaterialBalance
         /// <returns>The value of GIP</returns>
         public static double GetGIP(SimulationData data, int timeLevel)
         {
-            double temp = FreeGasIP(data, timeLevel) + SolubleGasIP(data, timeLevel);
+            double temp = FreeGasIP(data, timeLevel) +  (data.solubleGasPresent ? SolubleGasIP(data, timeLevel) : 0);
 
             return temp;
         }
