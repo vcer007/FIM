@@ -80,7 +80,7 @@ namespace FIM.Report
                 {
                     for (int j = 0; j < wellsIndices[i].Length; j++)
                     {
-                        string temp = (wellKeyWords[i] + "_" + data.wells.Where(x => x.index == wellsIndices[i][j]).ToArray()[0].name).PadRight(Global.padding);
+                        string temp = (wellKeyWords[i]).PadRight(Global.padding);
                         output.Append(temp);
                     }
                 }
@@ -88,12 +88,41 @@ namespace FIM.Report
                 for (int i = 0; i < blockKeyWords.Count; i++)
                 {
                     //for (int j = 0; j < blocksIndices[i].Length; j++) output.Append( (blockKeyWords[i] + "_BLOCK@" + blocksIndices[i][j]).PadRight(Global.padding));
-                    for (int j = 0; j < blocksIndices[i].Length; j++) output.Append((blockKeyWords[i] + "_BLOCK@" + blocksXYZIndices[i][j]).PadRight(Global.padding));
+                    for (int j = 0; j < blocksIndices[i].Length; j++) output.Append((blockKeyWords[i]).PadRight(Global.padding));
                 }
 
                 foreach (string keyword in singleKeyWords)
                 {
                     output.Append(keyword.PadRight(Global.padding));
+                }
+
+                output.AppendLine();
+                output.AppendLine();
+
+                output.Append(string.Empty.PadRight(Global.padding));
+
+                for (int i = 0; i < wellKeyWords.Count; i++)
+                {
+                    for (int j = 0; j < wellsIndices[i].Length; j++)
+                    {
+                        string temp = data.wells.First(x => x.index == wellsIndices[i][j]).name.PadRight(Global.padding);
+                        output.Append(temp);
+                    }
+                }
+
+                output.AppendLine();
+                output.Append(string.Empty.PadRight(Global.padding));
+                for (int i = 0; i < wellKeyWords.Count; i++)
+                {
+                    for (int j = 0; j < wellsIndices[i].Length; j++)
+                    {
+                        output.Append(string.Empty.PadRight(Global.padding));
+                    }
+                }
+
+                for (int i = 0; i < blockKeyWords.Count; i++)
+                {
+                    for (int j = 0; j < blocksIndices[i].Length; j++) output.Append((string.Join("  ", blocksXYZIndices[i][j].Split(','))).PadRight(Global.padding));
                 }
             }
             else

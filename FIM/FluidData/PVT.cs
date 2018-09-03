@@ -116,7 +116,7 @@ namespace FIM.FluidData
                 case Global.Phase.Water:
                     return GetWaterFVF(pressure); // bbl / stb
                 case Global.Phase.Oil:
-                    return GetOilFVF(pressure); // bbl / stb
+                    //return GetOilFVF(pressure); // bbl / stb
                 case Global.Phase.Gas:
                     return GetGasFVF(pressure) * Global.a / 1000; // cubic feet per scf
                 default:
@@ -248,13 +248,21 @@ namespace FIM.FluidData
 
         // private methods used for the internal plumbing.
 
-        private double GetOilFVF(double pressure)
+        public double GetOilFVF(double pressure, double minimum_pressure)
         {
-            double[] Y, X;
+            double[] Y = new double[2], X = new double[2];
 
-            if (pressure > bubblePointPressure)
+            if (pressure > minimum_pressure)
             {
-                Y = oilUnderSaturatedData[0]; X = oilUnderSaturatedData[1];
+                double ratio = oilUnderSaturatedData[0][0] / minimum_pressure;
+
+                Y[0] = oilUnderSaturatedData[0][0] / ratio;
+                Y[1] = oilUnderSaturatedData[0].Last() / ratio;
+
+                ratio = oilUnderSaturatedData[1][0] / LookUp(oilData[0], oilData[1], minimum_pressure);
+                X[0] = oilUnderSaturatedData[1][0] / ratio;
+                X[1] = oilUnderSaturatedData[1].Last() / ratio;
+
                 if (pressure < Y[Y.Length - 1])
                 {
                     return LookUp(Y, X, pressure);

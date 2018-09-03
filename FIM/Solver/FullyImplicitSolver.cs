@@ -72,6 +72,9 @@ namespace FIM.Solver
             currentTime = 0;
             data.output.Write(currentTime, data, true);
 
+            // initial values
+            data.output.Write(currentTime, data, false, 0, 0);
+
             while (currentTime < end_time)
             {
                 var time_stamp = DateTime.Now;
