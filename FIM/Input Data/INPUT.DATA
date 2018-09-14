@@ -12,7 +12,7 @@ TITLE
 ODEH PROBLEM - IMPLICIT OPTION - 900 DAYS
 
 DIMENS
- 10   10    3
+ 1   1    2
 /
 
 --IMPES
@@ -26,6 +26,8 @@ WATER
 GAS
 
 DISGAS
+
+VAPOIL
 
 FIELD
 
@@ -47,7 +49,7 @@ DY
  1000
 /
 DZ
- 20 30 50
+ 20 30
 /
 
 PORO
@@ -55,7 +57,7 @@ PORO
 /
 
 PERMX
- 500 50 200
+ 500 50
 /
 
 MULTZ
@@ -120,23 +122,24 @@ PVTO
 PVTW
        4014.7     1.029        3.13D-6           0.31            0 /
 
---   PGAS   Rv   BGAS   VISGAS
+--   PGAS   Rv       BGAS       VISGAS
 PVTG
-     14.7   0    166.666   0.008
-    264.7   0    12.093    0.0096
-    514.7   0    6.274     0.0112
-   1014.7   0    3.197     0.014
-   2014.7   0    1.614     0.0189
-   2514.7   0    1.294     0.0208
-   3014.7   0    1.080     0.0228
-   4014.7   0    0.811     0.0268
-   5014.7   0    0.649     0.0309
-   9014.7   0    0.386     0.047   /
+     14.7    0.0     166.666    0.008     /
+     264.7   0.12    12.093     0.0096    /
+     514.7   0.14    6.274      0.0112    /
+     1014.7  0.16    3.197      0.014     /
+     2014.7  0.18    1.614      0.0189    /
+     2514.7  0.2     1.294      0.0208    /
+     3014.7  0.22    1.080      0.0228    /
+     4014.7  0.24    0.811      0.0268    /
+     5014.7  0.26    0.649      0.0309    /
+     9014.7  0.28    0.386      0.047     / 
+/
 
 --  SWAT   KRW   PCOW
 SWFN
     0.12  0       0
-    1.0   0.00001 0  /
+    1.0   1       0  /
 
 -- SIMILARLY FOR GAS
 --
@@ -195,47 +198,66 @@ SUMMARY  ===============================================================
 ------------------------------------------------------------------------
 
 WOPR
- PRODUCER_WELL1
- INJECTOR_WELL
+ PRODUCER
 /
 
+WOPRF
+ PRODUCER
+/
+
+WOPRS
+ PRODUCER
+/
+
+WWPR
+ PRODUCER
+/
+ 
+
 WGPR
- PRODUCER_WELL1
- INJECTOR_WELL
+ PRODUCER
+/
+
+WGPRF
+ PRODUCER
 /
 
 WGOR
- PRODUCER_WELL1
+ PRODUCER
  /
 
-BPR
- 10 10 3
- 1 1 1
-/
-
-MBEG
-
-MBEO
-
-NEWTON
-
-TCPUTS
-
-WGPRF
- PRODUCER_WELL1
-/
-
 WBHP
- PRODUCER_WELL1
+ PRODUCER
+/
+
+BPR
+ 1  1 1
+ 1  1  2
 /
 
 BGSAT
- 10 10 3
- 1 1 1
+ 1  1 1
+ 1  1  2
+/
+
+BWSAT
+ 1  1  1
+ 1  1  2
+/
+
+BOSAT
+ 1  1  1
+ 1  1  2
 /
 
 BRS
- 10 10 3
+ 1  1  1
+ 1  1  2
+/
+
+BRV
+ 1  1  1
+ 1  1  2
 /
 
 -- CONS
@@ -249,8 +271,8 @@ SCHEDULE ===============================================================
 -- WELL SPECIFICATION DATA
 WELSPECS
 --name            i   j   k  skin  radius
-  PRODUCER_WELL1   10   10   3  0     0.25 /
-  INJECTOR_WELL   1   1   1  0     0.25 /
+  PRODUCER   1   1   2  0     0.25 /
+  INJECTOR   1   1   1  0     0.25 /
 /
 
 WELCONT
@@ -260,8 +282,8 @@ WELCONT
 --well     control  flow    minimum
 --type     method   rate    BHP
 
-  PRODUCER_WELL1  RATE     20000    1000 PRODUCER
-  INJECTOR_WELL RATE     100000       0 INJECTOR
+  PRODUCER  RATE     100    500 PRODUCER
+  INJECTOR   WRATE   0    0    INJECTOR
 /
 
 
@@ -270,7 +292,7 @@ TSTEP
 /
 
 ENDTIME
- 3650
+ 4500
 /
 
 

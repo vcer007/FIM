@@ -30,7 +30,7 @@ MBERATIO
 
 -- the maximum material balance error allowed "units of SCF"
 MAXMBE
- 1E-7
+ 1E-5
 /
 
 -- the number of decimal places of the output
@@ -44,7 +44,7 @@ PADDING
 /
 
 EPSILON_P
- 1
+ -0.1
 /
 
 EPSILON_S
@@ -52,5 +52,5 @@ EPSILON_S
 /
 
 DERIVATIVE_MINIMUM
- 1E-10
+ 1E-15
 /
