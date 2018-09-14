@@ -168,7 +168,7 @@ namespace FIM.FluidData
 
         public double GetGasCapillaryPressure(double saturation)
         {
-            return LookUp(this.sgfn[0]/*water saturation*/, this.sgfn[2]/*capillary*/, saturation);
+            return LookUp(this.sgfn[0]/*gas saturation*/, this.sgfn[2]/*capillary*/, saturation);
         }
 
         internal void Initialize(double[][] sgfn, double[][] swfn, double[][] sof3)

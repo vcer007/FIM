@@ -65,9 +65,21 @@ namespace FIM.FluidData
 
         internal double GetRv(double p)
         {
-            var Y = oilData[0]; var X = oilData[3];
-            var temp = LookUp(Y, X, p);
-            return temp * Global.a / 1000; // cubic feet / scf
+            var Y = gasData[0]; var X = gasData[3];
+            int count = Y.Length;
+            if (p < Y[0])
+            {
+                return X[0] * Global.a / 1000; // cubic feet / scf
+            }
+            else if (p > Y[count - 1])
+            {
+                return X[count - 1] * Global.a / 1000; // cubic feet / scf
+            }
+            else
+            {
+                var temp = LookUp(Y, X, p);
+                return temp * Global.a / 1000; // cubic feet / scf
+            }
         }
 
         /// <summary>
@@ -116,7 +128,7 @@ namespace FIM.FluidData
                 case Global.Phase.Water:
                     return GetWaterFVF(pressure); // bbl / stb
                 case Global.Phase.Oil:
-                    //return GetOilFVF(pressure); // bbl / stb
+                    return GetOilFVF(pressure); // bbl / stb
                 case Global.Phase.Gas:
                     return GetGasFVF(pressure) * Global.a / 1000; // cubic feet per scf
                 default:
@@ -247,6 +259,22 @@ namespace FIM.FluidData
 
 
         // private methods used for the internal plumbing.
+        double GetOilFVF(double pressure)
+        {
+            double[] Y, X;
+
+            if (pressure > bubblePointPressure)
+            {
+                Y = oilUnderSaturatedData[0]; X = oilUnderSaturatedData[1];
+                return Extrapolate(Y, X, pressure);
+            }
+            else
+            {
+                Y = oilData[0]; X = oilData[1];
+                return LookUp(Y, X, pressure);
+            }
+        }
+
 
         public double GetOilFVF(double pressure, double minimum_pressure)
         {

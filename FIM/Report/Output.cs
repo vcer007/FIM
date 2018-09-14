@@ -155,11 +155,11 @@ namespace FIM.Report
                             break;
 
                         case "WGPRF":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_free_gas[0] * Global.a).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_free_gas[0] * Global.a / 1000).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WGPRS":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] * Global.a).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] * Global.a / 1000).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         case "WGOR":
@@ -168,7 +168,7 @@ namespace FIM.Report
                             break;
 
                         case "WGPR":
-                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] * Global.a + data.wells.First(w => w.index == wellsIndices[i][j]).q_free_gas[0] * Global.a).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            for (int j = 0; j < wellsIndices[i].Length; j++) output.Append((data.wells.First(w => w.index == wellsIndices[i][j]).q_solution_gas[0] * Global.a / 1000 + data.wells.First(w => w.index == wellsIndices[i][j]).q_free_gas[0] * Global.a / 1000).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         default:
@@ -223,6 +223,10 @@ namespace FIM.Report
 
                         case "BRS":
                             for (int j = 0; j < blocksIndices[i].Length; j++) output.Append((data.grid[blocksIndices[i][j]].Rso[0]*Global.a/1000).ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
+                        case "BRV":
+                            for (int j = 0; j < blocksIndices[i].Length; j++) output.Append((data.grid[blocksIndices[i][j]].Rvo[0] * 1000 / Global.a).ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
                         default:

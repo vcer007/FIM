@@ -69,11 +69,18 @@ namespace FIM.Extensions.FullyImplicit
                     viscosity = 0.5 * (block.viscosityOil[1] + neighbor_block.viscosityOil[1]);
 
                     temp = transmissibility * Kr / (viscosity * B) * (neighbor_block.P[1] - block.P[1] - delta_z * gravity);
-                    block.transmissibility_terms_oil[i] = temp;
 
                     if (data.vaporizedOilPresent)
                     {
-                        Kr = upstream_block.Krg[1];
+                        if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
+                        {
+                            Kr = block.Krg[1];
+                        }
+                        else
+                        {
+                            Kr = neighbor_block.Krg[1];
+                        }
+                        //Kr = upstream_block.Krg[1];
                         B = 0.5 * (block.Bg[1] + neighbor_block.Bg[1]);
                         viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
                         Rvo = 0.5 * (block.Rvo[1] + neighbor_block.Rvo[1]);
@@ -85,6 +92,8 @@ namespace FIM.Extensions.FullyImplicit
 
                         temp += Rvo * transmissibility * Kr / (viscosity * B) * (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity);
                     }
+
+                    block.transmissibility_terms_oil[i] = temp;
 
                     R += temp;
 
@@ -333,8 +342,8 @@ namespace FIM.Extensions.FullyImplicit
                             {
                                 gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
                             }
-
-                            if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
+                            
+                            if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                             {
                                 upstream_block = block;
                                 downstream_block = neighbor_block;
@@ -393,7 +402,7 @@ namespace FIM.Extensions.FullyImplicit
                             gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
                         }
 
-                        if (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity <= 0)
+                        if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                         {
                             upstream_block = block;
                             downstream_block = neighbor_block;

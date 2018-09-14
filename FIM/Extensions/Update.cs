@@ -35,15 +35,7 @@ namespace FIM.Extensions
         /// <seealso cref="Reset(BaseBlock, SimulationData)"/>
         public static void UpdateProperties(this BaseBlock block, SimulationData data, double P, double Sw, double Sg, double So, int time_level = 0)
         {
-            // old values
-            if (time_level == 0)
-            {
-                block.P_old = block.P[0];
-                block.Sw_old = block.Sw[0];
-                block.So_old = block.So[0];
-                block.Sg_old = block.Sg[0];
-            }
-
+            // set the epsilon used for calculating Sg derivatives
             if (time_level == 0)
             {
                 if (block.Sg[0] == 0 || block.Sg[0] < Sg)

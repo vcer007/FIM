@@ -455,8 +455,8 @@ namespace FIM.Parser
 
         private static void InitializeSUMMARY(List<string> section)
         {
-            string[] wellKeyWords = new string[] { "WOPR", "WWPR", "WGPR", "WGPRS", "WGPRF", "WBHP", "WGOR" };
-            string[] blockKeyWords = new string[] { "BOFVF", "BWFVF", "BGFVF", "BOSAT", "BWSAT", "BGSAT", "BKRO", "BKRW", "BKRG", "BPR", "BRS" };
+            string[] wellKeyWords = new string[] { "WOPR", "WOPRF", "WOPRS", "WWPR", "WGPR", "WGPRS", "WGPRF", "WBHP", "WGOR" };
+            string[] blockKeyWords = new string[] { "BOFVF", "BWFVF", "BGFVF", "BOSAT", "BWSAT", "BGSAT", "BKRO", "BKRW", "BKRG", "BPR", "BRS", "BRV" };
             string[] singleKeyWords = new string[] { "CONS", "FILE", "FOPR", "MBEO", "MBEW", "MBEG", "NEWTON", "TCPUTS", "FGIP", "FGIPL", "FGIPG"};
 
             string[] allKeyWords = new string[wellKeyWords.Length + blockKeyWords.Length + singleKeyWords.Length];
