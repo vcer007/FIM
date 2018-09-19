@@ -50,6 +50,10 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                     }
+                    else
+                    {
+                        gravity = 0;
+                    }
 
                     transmissibility = block.transmissibility_list[i];
 
@@ -72,6 +76,15 @@ namespace FIM.Extensions.FullyImplicit
 
                     if (data.vaporizedOilPresent)
                     {
+                        if (GravityCalculation)
+                        {
+                            gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
+                        }
+                        else
+                        {
+                            gravity = 0;
+                        }
+
                         if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                         {
                             Kr = block.Krg[1];
@@ -85,10 +98,6 @@ namespace FIM.Extensions.FullyImplicit
                         viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
                         Rvo = 0.5 * (block.Rvo[1] + neighbor_block.Rvo[1]);
 
-                        if (GravityCalculation)
-                        {
-                            gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
-                        }
 
                         temp += Rvo * transmissibility * Kr / (viscosity * B) * (neighbor_block.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity);
                     }
@@ -125,6 +134,10 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
                     }
+                    else
+                    {
+                        gravity = 0;
+                    }
 
                     transmissibility = block.transmissibility_list[i];
 
@@ -154,6 +167,10 @@ namespace FIM.Extensions.FullyImplicit
                         if (GravityCalculation)
                         {
                             gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
+                        }
+                        else
+                        {
+                            gravity = 0;
                         }
 
                         if (GetOilPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
@@ -201,6 +218,11 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         gravity = data.pvt.GetAverageWaterGravity(block, neighbor_block);
                     }
+                    else
+                    {
+                        gravity = 0;
+                    }
+
                     double delta_z = neighbor_block.Depth - block.Depth;
 
                     transmissibility = block.transmissibility_list[i];
@@ -322,6 +344,10 @@ namespace FIM.Extensions.FullyImplicit
                         {
                             gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                         }
+                        else
+                        {
+                            gravity = 0;
+                        }
 
                         kr = GetKr(Global.Phase.Oil, block, neighbor_block, variable, this_block, delta_z, gravity, data);
 
@@ -342,7 +368,11 @@ namespace FIM.Extensions.FullyImplicit
                             {
                                 gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
                             }
-                            
+                            else
+                            {
+                                gravity = 0;
+                            }
+
                             if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
                             {
                                 upstream_block = block;
@@ -381,6 +411,10 @@ namespace FIM.Extensions.FullyImplicit
                     {
                         gravity = data.pvt.GetAverageOilGravity(block, neighbor_block);
                     }
+                    else
+                    {
+                        gravity = 0;
+                    }
 
                     kr = GetKr(Global.Phase.Oil, block, neighbor_block, variable, this_block, delta_z, gravity, data);
 
@@ -400,6 +434,10 @@ namespace FIM.Extensions.FullyImplicit
                         if (GravityCalculation)
                         {
                             gravity = data.pvt.GetAverageGasGravity(block, neighbor_block);
+                        }
+                        else
+                        {
+                            gravity = 0;
                         }
 
                         if (GetGasPotentialDifference(neighbor_block, block, delta_z, gravity) <= 0)
