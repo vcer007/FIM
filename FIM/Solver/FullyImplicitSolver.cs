@@ -255,6 +255,8 @@ namespace FIM.Solver
 
             if (!firstIteration && slowConvergence)
             {
+                return true;
+
                 data.relaxationFactor -= data.relaxationFactorDecrement;
 
                 if (data.relaxationFactor < data.minimumRelaxation)
