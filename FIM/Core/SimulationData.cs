@@ -36,6 +36,10 @@ namespace FIM.Core
         /// <seealso cref="phases"/>
         public bool solubleGasPresent;
 
+        /// <summary>
+        /// A boolean to indicate if vaporized is present.
+        /// </summary>
+        /// <seealso cref="phases"/>
         public bool vaporizedOilPresent;
 
         /// <summary>

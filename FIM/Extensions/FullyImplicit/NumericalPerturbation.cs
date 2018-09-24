@@ -22,8 +22,6 @@ namespace FIM.Extensions.FullyImplicit
         {
             bool GravityCalculation = data.Gravity;
 
-            // Note : Kro, Krw, Krg are all calculated based on Sg.
-
             double gravity = 0;
 
             BaseBlock upstream_block, downstream_block, neighbor_block;
@@ -93,7 +91,6 @@ namespace FIM.Extensions.FullyImplicit
                         {
                             Kr = neighbor_block.Krg[1];
                         }
-                        //Kr = upstream_block.Krg[1];
                         B = 0.5 * (block.Bg[1] + neighbor_block.Bg[1]);
                         viscosity = 0.5 * (block.viscosityGas[1] + neighbor_block.viscosityGas[1]);
                         Rvo = 0.5 * (block.Rvo[1] + neighbor_block.Rvo[1]);
@@ -841,7 +838,7 @@ namespace FIM.Extensions.FullyImplicit
             }
         }
 
-        public static double GetKr(Global.Phase phase, BaseBlock block, BaseBlock neighbor, Global.Variable diff_variable, bool thisBlock, double delta_z, double gravity, SimulationData data)
+        static double GetKr(Global.Phase phase, BaseBlock block, BaseBlock neighbor, Global.Variable diff_variable, bool thisBlock, double delta_z, double gravity, SimulationData data)
         {
             double potential_difference = 0;
 
@@ -927,17 +924,17 @@ namespace FIM.Extensions.FullyImplicit
             return Kr;
         }
 
-        public static double GetOilPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
+        static double GetOilPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
         {
             return neighbor.P[1] - block.P[1] - delta_z * gravity;
         }
 
-        public static double GetGasPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
+        static double GetGasPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
         {
             return neighbor.GetPg(1, 1) - block.GetPg(1, 1) - delta_z * gravity;
         }
 
-        public static double GetWaterPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
+        static double GetWaterPotentialDifference(BaseBlock neighbor, BaseBlock block, double delta_z, double gravity)
         {
             return neighbor.GetPw(1, 1) - block.GetPw(1, 1) - delta_z * gravity;
         }

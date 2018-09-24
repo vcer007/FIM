@@ -24,7 +24,18 @@ namespace FIM.Core
         /// </summary>
         /// <seealso cref="Global.STEPS_MEMORY"/>
         public static double EPSILON_P;
+
+        /// <summary>
+        /// The epsilon used for caluclating derivatives in saturation dependent properties numerically.
+        /// </summary>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public static double EPSILON_S;
+
+        /// <summary>
+        /// This value is used to replace infinitely small numbers in the jacobian matrix with zero.
+        /// This optimization improves convergence.
+        /// </summary>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public static double MINIMUM;
 
         /// <summary>
@@ -109,8 +120,14 @@ namespace FIM.Core
         /// </summary>
         public static string decimalPlaces;
 
+        /// <summary>
+        /// Constant used for gravity calculations conversion.
+        /// </summary>
         public static double gamma_c = 0.21584E-3;
 
+        /// <summary>
+        /// Constant used for gravity calculations conversion.
+        /// </summary>
         public static double alpha = 32.174;
     }
 }

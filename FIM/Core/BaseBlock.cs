@@ -92,6 +92,10 @@ namespace FIM.Core
         /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Rso;
 
+        /// <summary>
+        /// <para>An <see cref="Array"/> of the Vaporized Oil/Gas ratio at different time levels.</para>
+        /// </summary>
+        /// <seealso cref="Global.STEPS_MEMORY"/>
         public double[] Rvo;
 
         /// <summary>
@@ -206,8 +210,14 @@ namespace FIM.Core
 
         #endregion
 
+        /// <summary>
+        /// Represents the depth to the block's center
+        /// </summary>
         public double Depth;
 
+        /// <summary>
+        /// this value is used for perturbation
+        /// </summary>
         public double epsilon_sg;
 
         /// <summary>
@@ -248,16 +258,27 @@ namespace FIM.Core
             this.epsilon_sg = Global.EPSILON_S;
         }
 
-
+        /// <summary>
+        /// returns the capillary pressure of the water phase
+        /// </summary>
+        /// <param name="P_time_level"></param>
+        /// <param name="S_time_level"></param>
+        /// <returns></returns>
         public double GetPw(int P_time_level, int S_time_level)
         {
             return P[P_time_level] - Pcow[S_time_level];
         }
 
+
+        /// <summary>
+        /// returns the capillary pressure of the gas phase
+        /// </summary>
+        /// <param name="P_time_level"></param>
+        /// <param name="S_time_level"></param>
+        /// <returns></returns>
         public double GetPg(int P_time_level, int S_time_level)
         {
             return P[P_time_level] + Pcgo[S_time_level];
-            //return P[P_time_level];
         }
     }
 }

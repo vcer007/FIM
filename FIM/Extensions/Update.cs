@@ -81,7 +81,6 @@ namespace FIM.Extensions
             block.Pcow[time_level] = data.scal.GetWaterCapillaryPressure(Sw);
 
             // fluid
-            //block.Bo[time_level] = data.pvt.GetFVF(Global.Phase.Oil, P);
             block.Bo[time_level] = data.pvt.GetOilFVF(P, block.minimum_P);
             block.Bw[time_level] = data.pvt.GetFVF(Global.Phase.Water, block.GetPw(time_level, time_level));
             block.Bg[time_level] = data.pvt.GetFVF(Global.Phase.Gas, block.GetPg(time_level, time_level));
@@ -95,21 +94,6 @@ namespace FIM.Extensions
             // Krw is dependent on sw
             block.Krw[time_level] = data.scal.GetKrw(Sw);
             // Krg is dependent on sg
-            //if (time_level == 2)
-            //{
-            //    if (Sg < 0.02 && block.epsilon_sg < 0)
-            //    {
-            //        block.Krg[2] = block.Krg[1];
-            //    }
-            //    else
-            //    {
-            //        block.Krg[time_level] = data.scal.GetKrg(Sg);
-            //    }
-            //}
-            //else
-            //{
-            //    block.Krg[time_level] = data.scal.GetKrg(Sg);
-            //}
             block.Krg[time_level] = data.scal.GetKrg(Sg);
 
             // volumetric

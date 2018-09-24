@@ -189,19 +189,12 @@ namespace FIM.Solver
             {
                 temp = data.grid[i].P[1] + delta[counter];
                 P = temp > 0 ? temp : data.grid[i].P[1];
-                // assert p is always greater than 0.
-                //P = P > 0 ? P : 0;
 
                 temp = data.grid[i].Sg[1] + delta[counter + 1];
                 Sg = temp >= 0 && temp <= 1 ? temp : /*data.grid[i].Sg[1]*/0;
-                //Sg = Sg > 1 ? 1 : Sg;
-                //Sg = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
                 temp = data.grid[i].Sw[1] + delta[counter + 2];
                 Sw = temp >= 0 && temp <= 1 ? temp : data.grid[i].Sw[1];
-                //Sw = Sw > 1 ? 1 : Sw;
-                //Sw = Sw < data.pvt.connateWaterSaturation ? data.pvt.connateWaterSaturation : Sw;
-                //Sw = temp > 1 ? 1 : (temp < 0 ? 0 : temp);
 
                 temp = 1 - Sw - Sg;
                 So = temp >= 0 && temp <= 1 ? temp : data.grid[i].So[1];
