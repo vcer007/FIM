@@ -26,26 +26,52 @@ namespace FIM.Extensions
         /// <param name="data">The <seealso cref="SimulationData"/> object thaat contains all the input data.</param>
         /// <param name="P">The new pressure value.</param>
         /// <param name="Sw">The new water saturation value.</param>
-        /// <param name="Sg">The new gas saturation value.</param>
+        /// <param name="X">The new gas saturation value.</param>
         /// <param name="So">The new oil saturation value.</param>
         /// <param name="time_level"><para>Default value is 0.</para>
         /// <para>The time_level at which the properties should be updated.</para>
         /// </param>
         /// <seealso cref="Global.STEPS_MEMORY"/>
         /// <seealso cref="Reset(BaseBlock, SimulationData)"/>
-        public static void UpdateProperties(this BaseBlock block, SimulationData data, double P, double Sw, double Sg, double So, int time_level = 0)
+        public static void UpdateProperties(this BaseBlock block, SimulationData data, double P, double Sw, double X, double So, int time_level = 0)
         {
-            // set the epsilon used for calculating Sg derivatives
-            if (time_level == 0)
+            double Sg, Rso;
+            if (data.isGasResolutionAllowed)
             {
-                if (block.Sg[0] == 0 || block.Sg[0] < Sg)
+                if (block.IsSaturated())
                 {
-                    block.epsilon_sg = Global.EPSILON_S;
+                    Sg = X;
+                    Rso = block.Rso[time_level];
                 }
                 else
                 {
-                    block.epsilon_sg = Global.EPSILON_S;
+                    Rso = X;
+                    block.Sg[0] = block.Sg[1] = block.Sg[2] = 0;
+                    block.Pcgo[0] = block.Pcgo[1] = block.Pcgo[2] = 0;
+                    block.Krg[0] = block.Krg[1] = block.Krg[2] = 0;
+                    Sg = block.Sg[time_level];
                 }
+            }
+            else
+            {
+                Sg = X;
+                Rso = block.Rso[time_level];
+            }
+
+            if (time_level == 0)
+            {
+                //if (P < block.P[0])
+                //{
+                //    block.epsilon_p = Global.EPSILON_P;
+                //}
+                //else
+                //{
+                //    block.epsilon_p = Global.EPSILON_P;
+                //}
+
+                block.epsilon_p = Global.EPSILON_P;
+
+                block.changedVariableAlready = false;
             }
 
             // pressure
@@ -60,11 +86,30 @@ namespace FIM.Extensions
 
             block.P[time_level] = P;
 
-            // data.porosity_calculator
             block.porosity[time_level] = data.porosityCalculator.getPorosity(P);
 
-            var new_rs = data.pvt.GetRs(Global.Phase.Oil, P, block.minimum_P);
-            block.Rso[time_level] = new_rs;
+            if (data.isGasResolutionAllowed)
+            {
+                if (block.IsSaturated())
+                {
+                    block.Rso[time_level] = data.pvt.GetSaturatedRso(P);
+                }
+                else
+                {
+                    block.Rso[time_level] = Rso;
+                }
+            }
+            else
+            {
+                var new_rs = data.pvt.GetRs(Global.Phase.Oil, P, block.minimum_P);
+                block.Rso[time_level] = new_rs;
+            }
+
+            double new_bubble_point = block.minimum_P;
+            if (data.isGasResolutionAllowed)
+            {
+                new_bubble_point = data.pvt.GetBubblePointPressure(Rso);
+            }
 
             if (data.vaporizedOilPresent)
             {
@@ -81,11 +126,56 @@ namespace FIM.Extensions
             block.Pcow[time_level] = data.scal.GetWaterCapillaryPressure(Sw);
 
             // fluid
-            block.Bo[time_level] = data.pvt.GetOilFVF(P, block.minimum_P);
+            if (data.isGasResolutionAllowed)
+            {
+
+                if (block.IsSaturated())
+                {
+                    block.Bo[time_level] = data.pvt.GetSaturatedBo(P);
+                }
+                else
+                {
+                    if (time_level == 2)
+                    {
+                        block.Bo[2] = data.pvt.GetUnderSaturatedBo(P, new_bubble_point);
+                        block.Bo[3] = data.pvt.GetUnderSaturatedBo(block.P[1], new_bubble_point);
+                    }
+                    else
+                    {
+                        block.Bo[time_level] = data.pvt.GetUnderSaturatedBo(P, new_bubble_point);
+                    }
+                }
+            }
+            else
+            {
+                block.Bo[time_level] = data.pvt.GetOilFVF(P, block.minimum_P);
+            }
             block.Bw[time_level] = data.pvt.GetFVF(Global.Phase.Water, block.GetPw(time_level, time_level));
             block.Bg[time_level] = data.pvt.GetFVF(Global.Phase.Gas, block.GetPg(time_level, time_level));
 
-            block.viscosityOil[time_level] = data.pvt.GetViscosity(Global.Phase.Oil, P);
+            if (data.isGasResolutionAllowed)
+            {
+                if (block.IsSaturated())
+                {
+                    block.viscosityOil[time_level] = data.pvt.GetSaturatedOilViscosity(P);
+                }
+                else
+                {
+                    if (time_level == 2)
+                    {
+                        block.viscosityOil[2] = data.pvt.GetUnderSaturatedOilViscosity(P, new_bubble_point);
+                        block.viscosityOil[3] = data.pvt.GetUnderSaturatedOilViscosity(block.P[1], new_bubble_point);
+                    }
+                    else
+                    {
+                        block.viscosityOil[time_level] = data.pvt.GetUnderSaturatedOilViscosity(P, new_bubble_point);
+                    }
+                }
+            }
+            else
+            {
+                block.viscosityOil[time_level] = data.pvt.GetViscosity(Global.Phase.Oil, P);
+            }
             block.viscosityWater[time_level] = data.pvt.GetViscosity(Global.Phase.Water, block.GetPw(time_level, time_level));
             block.viscosityGas[time_level] = data.pvt.GetViscosity(Global.Phase.Gas, block.GetPg(time_level, time_level));
 
@@ -113,10 +203,11 @@ namespace FIM.Extensions
 
             if (time_level == 0)
             {
+
                 // block way we update n1 time level properties also automatically
                 // after updating n0 time level properties.
                 // note that the initial guess here for n1 is assumed to be the same values as the ones at n0.
-                block.UpdateProperties(data, P, Sw, Sg, So, 1);
+                block.UpdateProperties(data, P, Sw, X, So, 1);
             }
             else if (time_level == 1)
             {
@@ -124,7 +215,7 @@ namespace FIM.Extensions
                 // So we can update three time levels storage "where the third one, n2, is used solely for perturbation".
                 if (data.solutionProcedure == Global.SolutionProcedure.FullyImplicit)
                 {
-                    block.UpdateProperties(data, P + Global.EPSILON_P, Sw + Global.EPSILON_S, Sg + block.epsilon_sg, So, 2);
+                    block.UpdateProperties(data, P + block.epsilon_p, Sw + block.epsilon_x, X + block.epsilon_x, So - 2 * block.epsilon_x, 2);
                 }
             }
         }
@@ -143,7 +234,22 @@ namespace FIM.Extensions
         {
             // to reset the properties of the block, simply call updateProperties_n0_n1 with input parameters from
             // the n0 time level.
-            block.UpdateProperties(data, block.P[0], block.Sw[0], block.Sg[0], block.So[0], 0);
+            if (data.isGasResolutionAllowed)
+            {
+                block.Sg[1] = block.Sg[0] > 0 ? block.Sg[1] : 0;
+                if (block.IsSaturated())
+                {
+                    block.UpdateProperties(data, block.P[0], block.Sw[0], block.Sg[0], block.So[0], 0);
+                }
+                else
+                {
+                    block.UpdateProperties(data, block.P[0], block.Sw[0], block.Rso[0], block.So[0], 0);
+                }
+            }
+            else
+            {
+                block.UpdateProperties(data, block.P[0], block.Sw[0], block.Sg[0], block.So[0], 0);
+            }
         }
     }
 }

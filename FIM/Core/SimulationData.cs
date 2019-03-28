@@ -43,6 +43,11 @@ namespace FIM.Core
         public bool vaporizedOilPresent;
 
         /// <summary>
+        /// This variable determines if gas is allowed to re-dissolve in oil. This is equivalent to eclipse having no DRSDT keyword.
+        /// </summary>
+        public bool isGasResolutionAllowed;
+
+        /// <summary>
         /// Model grid dimensions.
         /// </summary>
         public int x, y, z;

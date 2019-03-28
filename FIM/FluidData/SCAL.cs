@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using FIM.Core;
 
 namespace FIM.FluidData
@@ -61,35 +62,13 @@ namespace FIM.FluidData
             this.kr_Data = kr_Data;
         }
 
-        /// <summary>
-        /// Gets the relative permeability for a certain phase.
-        /// </summary>
-        /// <param name="phase">The phase.</param>
-        /// <param name="saturation">The saturation.</param>
-        /// <returns>The value of the relative permeability</returns>
-        /// <seealso cref="Global.Phase"/>
-        //public double GetKr(Global.Phase phase, double saturation)
-        //{
-        //    switch (phase)
-        //    {
-        //        case Global.Phase.Water:
-        //            return GetKrw(saturation);
-        //        case Global.Phase.Oil:
-        //            return GetKro(saturation);
-        //        case Global.Phase.Gas:
-        //            return GetKrg(saturation);
-        //        default:
-        //            return 1;
-        //    }
-        //}
-
-
         //Internal helper method to do the table lookups and interpolations
         //Method Name: lookUp
         //Objectives: this is a private (internal method for the internal use of this class only) method that makes table lookup interpolation
         //Inputs: two variables representing the X and Y arrays "The two columns of the table" and the Y value
         //Outputs: a variable that represents the X value corresponding to the particular Y value
         // this function assumes that array elements are sorted ascendingly
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         private double LookUp(double[] data_y, double[] data_x, double y)
         {
             double temp = data_x[data_x.Length - 1];
@@ -121,12 +100,14 @@ namespace FIM.FluidData
             return temp;
         }
 
-
-        //Method Name: getKr "where Kr may be Kro, Krw or Krg"
-        //Objectives: calculate the corresponding Kr value at a certain saturation
-        //Inputs: a variable representing the value of the saturation
-        //Outputs: the corresponding Kr value
-
+        /// <summary>
+        /// Calculates Kro according to the sof3 table.
+        /// Check eclipse's manual for further details.
+        /// </summary>
+        /// <param name="sg"></param>
+        /// <param name="sw"></param>
+        /// <param name="swco"></param>
+        /// <returns></returns>
         public double GetKro(double sg, double sw, double swco)
         {
             double so = 1 - sg - sw;
@@ -139,12 +120,23 @@ namespace FIM.FluidData
             return kro > 1 ? 1 : kro;
         }
 
+        /// <summary>
+        /// Looks up the Krg value.
+        /// </summary>
+        /// <param name="saturation"></param>
+        /// <returns></returns>
         public double GetKrg(double saturation)
         {
             double kr = LookUp(sgfn[0], sgfn[1], saturation);
             return kr > 1 ? 1 : kr;
         }
 
+
+        /// <summary>
+        /// Looks up the water Krw value.
+        /// </summary>
+        /// <param name="saturation"></param>
+        /// <returns></returns>
         public double GetKrw(double saturation)
         {
             //return 0;
@@ -156,6 +148,11 @@ namespace FIM.FluidData
             return kr > 1 ? 1 : kr;
         }
 
+        /// <summary>
+        /// Looks up the water capillary pressure value .
+        /// </summary>
+        /// <param name="saturation"></param>
+        /// <returns></returns>
         public double GetWaterCapillaryPressure(double saturation)
         {
             if (saturation < swfn[0][0])
@@ -166,6 +163,11 @@ namespace FIM.FluidData
             return LookUp(this.swfn[0]/*water saturation*/, this.swfn[2]/*capillary*/, saturation);
         }
 
+        /// <summary>
+        /// Looks up the gas capillary pressure value.
+        /// </summary>
+        /// <param name="saturation"></param>
+        /// <returns></returns>
         public double GetGasCapillaryPressure(double saturation)
         {
             return LookUp(this.sgfn[0]/*gas saturation*/, this.sgfn[2]/*capillary*/, saturation);

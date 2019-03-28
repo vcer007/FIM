@@ -115,6 +115,26 @@ namespace FIM.Core
         /// </summary>
         public double minimum_P;
 
+        /// <summary>
+        /// A Function to check if the block is saturated. i.e. the block's gas saturation is greater than 0.
+        /// </summary>
+        /// <returns>True if saturated, false otherwise</returns>
+        public bool IsSaturated()
+        {
+            return Sg[1] > 0;
+        }
+
+        /// <summary>
+        /// this is used to change block's variable "from Rs to Sg or vice versa" only once per time step
+        /// </summary>
+        public bool changedVariableAlready = false;
+
+        /// <summary>
+        /// This variable is not currently used. It was intended to be used so a block will directly set the time-stemp it needs to converge.
+        /// </summary>
+        public double timeStepNeeded = 0;
+
+
         #endregion
 
         #region Volumetric data
@@ -216,9 +236,16 @@ namespace FIM.Core
         public double Depth;
 
         /// <summary>
+        /// A small value used for perturbation.
+        /// </summary>
+        /// <seealso cref="epsilon_x"/>
+        public double epsilon_p;
+
+        /// <summary>
         /// this value is used for perturbation
         /// </summary>
-        public double epsilon_sg;
+        /// <seealso cref="epsilon_p"/>
+        public double epsilon_x;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseBlock"/> class.
@@ -231,13 +258,13 @@ namespace FIM.Core
             this.porosity = new double[steps_memory];
 
             // fluid
-            this.Bo = new double[steps_memory]; this.Bg = new double[steps_memory]; this.Bw = new double[steps_memory];
+            this.Bo = new double[steps_memory + 1]; this.Bg = new double[steps_memory]; this.Bw = new double[steps_memory];
 
             this.So = new double[steps_memory]; this.Sg = new double[steps_memory]; this.Sw = new double[steps_memory];
 
             this.Kro = new double[steps_memory]; this.Krg = new double[steps_memory]; this.Krw = new double[steps_memory];
 
-            this.viscosityOil = new double[steps_memory]; this.viscosityGas = new double[steps_memory]; this.viscosityWater = new double[steps_memory];
+            this.viscosityOil = new double[steps_memory + 1]; this.viscosityGas = new double[steps_memory]; this.viscosityWater = new double[steps_memory];
 
             this.Rso = new double[steps_memory];
 
@@ -255,7 +282,7 @@ namespace FIM.Core
             // well
             this.type = Global.BlockType.NormalBlock;
 
-            this.epsilon_sg = Global.EPSILON_S;
+            this.epsilon_x = Global.EPSILON_S;
         }
 
         /// <summary>

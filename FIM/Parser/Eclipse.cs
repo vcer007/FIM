@@ -105,7 +105,9 @@ namespace FIM.Parser
             // update block properties
             for (int i = 0; i < data.grid.Length; i++)
             {
-                data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 0);
+                var rso = data.pvt.GetRs(Global.Phase.Oil, P, data.pvt.bubblePointPressure);
+                var x = data.isGasResolutionAllowed ? rso : Sg;
+                data.grid[i].UpdateProperties(data, P, Sw, x, So, 0);
             }
 
             #endregion
@@ -134,7 +136,10 @@ namespace FIM.Parser
             {
                 data.vaporizedOilPresent = true;
             }
-
+            if (section.Contains("GASRES"))
+            {
+                data.isGasResolutionAllowed = true;
+            }
             if (section.Contains("GRAVITY")) data.Gravity = true;
 
             data.phases = phases.ToArray();
@@ -225,8 +230,9 @@ namespace FIM.Parser
             var PROPS_KEYWORDS = new string[] { "SWFN", "SGFN", "SOF3", "ROCK", "DENSITY", "SO", "SG", "SW", "PRESSURE", "BUBBLEPOINT", "SWC", "PVTO", "PVTW", "PVTG", "SCAL"};
 
             double bubble_point;
-            double[][] oil, oil_us, gas;
-            oil = new double[4][]; oil_us = new double[4][]; gas = new double[4][];
+            double[][] oil, gas;
+            List<double[][]> oil_us;
+            oil = new double[4][]; oil_us = new List<double[][]>(); gas = new double[4][];
 
 
             // rock reference pressure and compressibility
@@ -389,63 +395,57 @@ namespace FIM.Parser
             }
         }
 
-        private static void GetPVTO(double[][] oil, double[][] oil_us, List<string> section, int start_index, int end_index)
+        private static void GetPVTO(double[][] oil, List<double[][]> oil_us, List<string> section, int start_index, int end_index)
         {
-            int highest_rs_index = 0;
-            int counter = 0;
-
             var temp_array = new double[end_index - start_index][];
             for (int i = 0; i < temp_array.Length; i++)
             {
                 temp_array[i] = Helper.GetData(section[i + start_index]);
             }
 
-            int saturated_count = temp_array.Count(x => x.Length == 4);
-            int under_saturated_count = temp_array.Length - saturated_count + 1;
-
-            oil[0] = new double[saturated_count];
-            oil[1] = new double[saturated_count];
-            oil[2] = new double[saturated_count];
-            oil[3] = new double[saturated_count];
-
-            oil_us[0] = new double[under_saturated_count];
-            oil_us[1] = new double[under_saturated_count];
-            oil_us[2] = new double[under_saturated_count];
-            oil_us[3] = new double[under_saturated_count];
-
+            List<double[]> temp = new List<double[]>();
+            double rs = 0;
             for (int i = 0; i < temp_array.Length; i++)
             {
-                var temp = temp_array[i];
-
-                if (temp.Length == 3)
+                var item = temp_array[i];
+                if (item.Length == 3 && i > 0 && temp_array[i - 1].Length == 4)
                 {
-                    if (highest_rs_index == 0)
+                    rs = temp_array[i - 1][0];
+                    temp.Add(new double[] {temp_array[i - 1][1], temp_array[i - 1][2], temp_array[i - 1][3], rs});
+                }
+
+                if (item.Length == 3)
+                {
+                    temp.Add(new double[] {item[0], item[1], item[2], rs});
+                }
+                else
+                {
+                    if (temp.Count > 0)
                     {
-                        highest_rs_index = counter - 1;
-                        counter = 0;
-
-                        oil_us[0][counter] = oil[0][highest_rs_index];
-                        oil_us[1][counter] = oil[1][highest_rs_index];
-                        oil_us[2][counter] = oil[2][highest_rs_index];
-                        oil_us[3][counter] = oil[3][highest_rs_index];
-                        counter++;
+                        oil_us.Add(temp.ToArray());
+                        temp.Clear();
                     }
-
-                    oil_us[0][counter] = temp[0];
-                    oil_us[1][counter] = temp[1];
-                    oil_us[2][counter] = temp[2];
-                    oil_us[3][counter] = oil[3][highest_rs_index];
                 }
-                else // 4 columns
-                {
-                    oil[0][counter] = temp[1];
-                    oil[1][counter] = temp[2];
-                    oil[2][counter] = temp[3];
-                    oil[3][counter] = temp[0];
-                }
-
-                counter++;
             }
+            if (temp.Count > 0)
+            {
+                oil_us.Add(temp.ToArray());
+                temp.Clear();
+            }
+
+            temp.Clear();
+            foreach (var item in temp_array)
+            {
+                if (item.Length == 4)
+                {
+                    temp.Add(new double[] {item[1], item[2], item[3], item[0]});
+                }
+            }
+
+            oil[0] = temp.Select(x => x[0]).ToArray();
+            oil[1] = temp.Select(x => x[1]).ToArray();
+            oil[2] = temp.Select(x => x[2]).ToArray();
+            oil[3] = temp.Select(x => x[3]).ToArray();
         }
 
         private static void InitializeSOLUTION(List<string> section)
@@ -456,7 +456,7 @@ namespace FIM.Parser
         private static void InitializeSUMMARY(List<string> section)
         {
             string[] wellKeyWords = new string[] { "WOPR", "WOPRF", "WOPRS", "WWPR", "WGPR", "WGPRS", "WGPRF", "WBHP", "WGOR" };
-            string[] blockKeyWords = new string[] { "BOFVF", "BWFVF", "BGFVF", "BOSAT", "BWSAT", "BGSAT", "BKRO", "BKRW", "BKRG", "BPR", "BRS", "BRV" };
+            string[] blockKeyWords = new string[] { "BOFVF", "BWFVF", "BGFVF", "BOSAT", "BWSAT", "BGSAT", "BKRO", "BKRW", "BKRG", "BPR", "BRS", "BRV", "BPORO", "BOVIS", "BODEN" };
             string[] singleKeyWords = new string[] { "CONS", "FILE", "FOPR", "MBEO", "MBEW", "MBEG", "NEWTON", "TCPUTS", "FGIP", "FGIPL", "FGIPG"};
 
             string[] allKeyWords = new string[wellKeyWords.Length + blockKeyWords.Length + singleKeyWords.Length];

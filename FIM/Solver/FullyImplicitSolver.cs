@@ -107,15 +107,19 @@ namespace FIM.Solver
 
             do
             {
+                Control.UseNativeMKL();
+
                 // formulation.
                 NumericalPerturbation.CalculateMinusR_Matrix(data, minusR);
-                NumericalPerturbation.CalculateJacobi_Matrix(data, minusR, Jacobi);
+                Jacobi = NumericalPerturbation.CalculateJacobi_Matrix(data, minusR);
                 WellTerms.Add(data, Jacobi, minusR);
 
                 B = Vector<double>.Build.Dense(minusR);
                 X = Vector<double>.Build.Dense(delta);
 
+
                 //delta = A.SolveIterative(B, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion).AsArray();
+                //Jacobi.Solve(B, X);
                 var iterativeSolverStatus = Jacobi.TrySolveIterative(B, X, solver, preconditioner, iterationCountStopCriterion, residualStopCriterion);
                 delta = X.AsArray();
 
@@ -138,6 +142,9 @@ namespace FIM.Solver
         {
             //StabilizeNewton(data, deltas, MBE);
             UpdatePropertiesFromDeltas(data, deltas);
+
+            // To-Do:
+            // check if any block requested a specific time-step
 
             // check convergence errors.
             bool repeat = CheckConvergence(data, MBE);
@@ -181,7 +188,7 @@ namespace FIM.Solver
         // updates the n1 time level properties with better approximation after solving the Ax=B equation.
         private static void UpdatePropertiesFromDeltas(SimulationData data, double[] delta)
         {
-            double P, So, Sg, Sw;
+            double P, So, Sg, Rso, X, Sw;
 
             int counter = 0;
             double temp;
@@ -190,8 +197,59 @@ namespace FIM.Solver
                 temp = data.grid[i].P[1] + delta[counter];
                 P = temp > 0 ? temp : data.grid[i].P[1];
 
-                temp = data.grid[i].Sg[1] + delta[counter + 1];
-                Sg = temp >= 0 && temp <= 1 ? temp : /*data.grid[i].Sg[1]*/0;
+                if (data.isGasResolutionAllowed)
+                {
+                    if (data.grid[i].IsSaturated())
+                    {
+                        temp = data.grid[i].Sg[1] + delta[counter + 1];
+                        temp = temp <= 1 ? temp : 1;
+                        if (temp < 0)
+                        {
+                            // it turns into undersaturated
+                            Sg = 0;
+                            data.grid[i].Sg[1] = Sg;
+                            Rso = data.grid[i].Rso[1];
+                            X = Rso;
+                        }
+                        else
+                        {
+                            Sg = temp;
+                            X = Sg;
+                        }
+                    }
+                    else
+                    {
+                        temp = data.grid[i].Rso[1] + delta[counter + 1];
+                        //var saturated_rso = data.pvt.GetSaturatedRso(P);
+                        var rso_at_bubble_point = data.pvt.GetSaturatedRso(P);
+                        var bubble_point = data.pvt.GetBubblePointPressure(temp);
+                        if (P < bubble_point)
+                        {
+                            // it turns into saturated
+                            var delta_sg = (temp - rso_at_bubble_point) * data.grid[i].So[1] / data.grid[i].Bo[1] * data.grid[i].Bg[1];
+                            Sg = data.grid[i].epsilon_x/*(temp - rso_at_bubble_point) * data.grid[i].So[1] / data.grid[i].Bo[1] * data.grid[i].Bg[1]*/;
+                            Sg = Math.Max(data.grid[i].epsilon_x, Sg);
+                            data.grid[i].Sg[1] = Sg;
+                            Rso = rso_at_bubble_point;
+                            X = Sg;
+                        }
+                        else
+                        {
+                            temp = temp < rso_at_bubble_point ? temp : temp;
+                            Rso = temp;
+                            Sg = data.grid[i].Sg[1];
+                            X = Rso;
+                        }
+                    }
+
+                }
+                else
+                {
+                    temp = data.grid[i].Sg[1] + delta[counter + 1];
+                    Sg = temp < 0 ? 0 : temp;
+                    X = Sg;
+                }
+
 
                 temp = data.grid[i].Sw[1] + delta[counter + 2];
                 Sw = temp >= 0 && temp <= 1 ? temp : data.grid[i].Sw[1];
@@ -199,7 +257,7 @@ namespace FIM.Solver
                 temp = 1 - Sw - Sg;
                 So = temp >= 0 && temp <= 1 ? temp : data.grid[i].So[1];
 
-                data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 1);
+                data.grid[i].UpdateProperties(data, P, Sw, X, So, 1);
 
                 counter += data.phases.Length;
             }
@@ -209,16 +267,32 @@ namespace FIM.Solver
         // updates the new time step properties after convergence.
         private static void UpdateProperties(SimulationData data)
         {
-            double P, So, Sg, Sw;
+            double P, So, Sg, Rso, X, Sw;
 
             for (int i = 0; i < data.grid.Length; i++)
             {
                 P = data.grid[i].P[1];
                 Sg = data.grid[i].Sg[1];
+                Rso = data.grid[i].Rso[1];
+                if (data.isGasResolutionAllowed)
+                {
+                    if (data.grid[i].IsSaturated())
+                    {
+                        X = Sg;
+                    }
+                    else
+                    {
+                        X = Rso;
+                    }
+                }
+                else
+                {
+                    X = Sg;
+                }
                 Sw = data.grid[i].Sw[1];
                 So = 1 - Sw - Sg;
 
-                data.grid[i].UpdateProperties(data, P, Sw, Sg, So, 0);
+                data.grid[i].UpdateProperties(data, P, Sw, X, So, 0);
             }
         }
 

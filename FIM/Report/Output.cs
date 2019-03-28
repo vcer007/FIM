@@ -185,6 +185,10 @@ namespace FIM.Report
                             for (int j = 0; j < blocksIndices[i].Length; j++) output.Append(data.grid[blocksIndices[i][j]].Bo[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
 
+                        case "BOVIS":
+                            for (int j = 0; j < blocksIndices[i].Length; j++) output.Append(data.grid[blocksIndices[i][j]].viscosityOil[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
                         case "BWFVF":
                             for (int j = 0; j < blocksIndices[i].Length; j++) output.Append(data.grid[blocksIndices[i][j]].Bw[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
                             break;
@@ -207,6 +211,10 @@ namespace FIM.Report
 
                         case "BPR":
                             for (int j = 0; j < blocksIndices[i].Length; j++) output.Append(data.grid[blocksIndices[i][j]].P[0].ToString(Global.decimalPlaces).PadRight(Global.padding));
+                            break;
+
+                        case "BODEN":
+                            for (int j = 0; j < blocksIndices[i].Length; j++) { BaseBlock block = data.grid[blocksIndices[i][j]]; output.Append((data.pvt.GetOilDensity(block.P[0], block.Bo[0], block.Rso[0])).ToString(Global.decimalPlaces).PadRight(Global.padding)); };
                             break;
 
                         case "BOSAT":
@@ -260,7 +268,7 @@ namespace FIM.Report
                             break;
 
                         case "TCPUTS":
-                            output.Append(milli_seconds.ToString().PadRight(Global.padding));
+                            output.Append((milli_seconds / 1000.0).ToString().PadRight(Global.padding));
                             break;
 
                         case "FGIP":

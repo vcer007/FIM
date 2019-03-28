@@ -57,7 +57,7 @@ namespace FIM.Core
         // Enumerations.
 
         /// <summary>
-        /// The different phases available for a black-oil system.
+        /// The different main phases available for a black-oil system.
         /// </summary>
         public enum Phase {Water, Oil, Gas/*, DissolvedGas*/}
 
@@ -108,7 +108,7 @@ namespace FIM.Core
         /// <summary>
         /// The independent variables accounted for in numerical perturbation.
         /// </summary>
-        public enum Variable {/** Derivative with respect to pressure*/Pressure, /** Derivative with respect to gas saturation*/SaturationGas, /** Derivative with respect to water saturation*/SaturationWater }
+        public enum Variable {/** Derivative with respect to pressure*/Pressure, /** Derivative with respect to gas saturation or Rs*/X, /** Derivative with respect to water saturation*/SaturationWater }
 
         /// <summary>
         /// The padding used to format the output text.
